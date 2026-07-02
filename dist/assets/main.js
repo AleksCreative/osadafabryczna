@@ -7,7 +7,15 @@ const IMAGE_BOUNDS = [
 const TARGET_HEIGHT = 100; // fixed marker height
 const ZOOM_STEP_FACTOR = 1.2; // scale factor per zoom level
 const MOBILE_PANEL_MARKER_GAP = 72;
+const EXTRA_PANEL_MARGIN = 8;
+const PANEL_MARKER_GAP_SCALE = 0.6;
+const ACTIVE_MARKER_SCALE = 1.12;
+const PANEL_MARKER_PAN_DURATION = 0.75;
+const PANEL_MARKER_PAN_TIMEOUT = 950;
+const PANEL_MARKER_FLY_DURATION = 1.05;
+const PANEL_MARKER_FLY_TIMEOUT = 1300;
 const urlParams = new URLSearchParams(window.location.search);
+let activeBuildingMarker = null;
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -51,23 +59,79 @@ map.fitBounds(IMAGE_BOUNDS);
 
 
 // Locate user
-map.locate({ setView: false, watch: true, maxZoom: 18 });
-
+let geolocationEnabled = false;
+const geolocationToggle = document.getElementById('geolocation-toggle');
 const userMarker = L.marker([0,0], { 
   icon: L.icon({ 
     iconUrl: '/wp-content/themes/osadafabryczna/dist/assets/user-location.png', 
     iconSize: [30,30], 
     iconAnchor: [15,15] 
   }) 
-}).addTo(map);
+});
+
+function updateGeolocationButtonState(isEnabled, isSupported = true) {
+  if (!geolocationToggle) {
+    return;
+  }
+
+  geolocationToggle.classList.toggle('is-active', isEnabled);
+  geolocationToggle.setAttribute('aria-pressed', String(isEnabled));
+  geolocationToggle.disabled = !isSupported;
+
+  const label = geolocationToggle.querySelector('.geolocation-toggle__label');
+  if (label) {
+    label.textContent = isEnabled ? 'Lokalizacja: włączona' : 'Włącz lokalizację';
+  }
+}
+
+function setGeolocationEnabled(enabled) {
+  if (!('geolocation' in navigator)) {
+    updateGeolocationButtonState(false, false);
+    return;
+  }
+
+  geolocationEnabled = enabled;
+
+  if (enabled) {
+    if (!map.hasLayer(userMarker)) {
+      userMarker.addTo(map);
+    }
+
+    map.locate({ setView: false, watch: true, maxZoom: 18 });
+    updateGeolocationButtonState(true, true);
+  } else {
+    if (map.hasLayer(userMarker)) {
+      userMarker.remove();
+    }
+
+    map.stopLocate?.();
+    updateGeolocationButtonState(false, true);
+  }
+}
 
 map.on('locationfound', e => {
+  if (!geolocationEnabled) {
+    return;
+  }
+
   userMarker.setLatLng(e.latlng);
 });
 
 map.on('locationerror', err => {
   console.warn('Geolocation error:', err.message);
+
+  if (geolocationEnabled) {
+    setGeolocationEnabled(false);
+  }
 });
+
+if (geolocationToggle) {
+  geolocationToggle.addEventListener('click', () => {
+    setGeolocationEnabled(!geolocationEnabled);
+  });
+}
+
+updateGeolocationButtonState(false, 'geolocation' in navigator);
 
 // Fetch buildings and add markers
 async function addMarkers() {
@@ -103,13 +167,16 @@ async function addMarkers() {
     iconUrl: marker_icon,
     iconSize: [iconWidth, TARGET_HEIGHT],
     iconAnchor: [iconWidth / 2, TARGET_HEIGHT],
-    popupAnchor: [0, -TARGET_HEIGHT - 5]
+    popupAnchor: [0, -TARGET_HEIGHT - 5],
+    className: 'building-marker'
   });
 
   const marker = L.marker([lat, lng], { icon }).addTo(map);
 
   // --- Marker click: mobile slide-up panel + desktop side panel ---
   marker.on('click', () => {
+    setActiveBuildingMarker(marker);
+
     if (typeof marker.bringToFront === 'function') {
       marker.bringToFront();
     }
@@ -117,20 +184,41 @@ async function addMarkers() {
 
 if (window.innerWidth < 768) {
       // --- MOBILE ---
-      map.flyTo([lat, lng], targetZoom, { animate: true, duration: 0.7 });
-
-      // Wait for flyTo to finish before opening panel
-      map.once('moveend', () => {
-        openPanel(budynek);
-
-        keepMarkerAbovePanel(marker);
-        window.setTimeout(() => keepMarkerAbovePanel(marker), 380);
+      openPanel(budynek);
+      const panel = document.getElementById('slide-panel');
+      const targetCenter = getMarkerFocusLatLng(marker, targetZoom);
+      map.flyTo(targetCenter, targetZoom, {
+        animate: true,
+        duration: PANEL_MARKER_FLY_DURATION,
+        easeLinearity: 0.15
       });
+
+      const flyToDone = waitForMapMove(map, PANEL_MARKER_FLY_TIMEOUT);
+      waitForPanelOpen(panel)
+        .then(() => flyToDone)
+        .then(() => queueMarkerVisibilityCheck(marker));
+      window.setTimeout(() => {
+        flyToDone.then(() => queueMarkerVisibilityCheck(marker));
+      }, 900);
 
     } else {
       // --- DESKTOP ---
-      map.flyTo([lat, lng], targetZoom, { animate: true, duration: 0.7 });
       openPanel(budynek);
+      const panel = document.getElementById('slide-panel');
+      const targetCenter = getMarkerFocusLatLng(marker, targetZoom);
+      map.flyTo(targetCenter, targetZoom, {
+        animate: true,
+        duration: PANEL_MARKER_FLY_DURATION,
+        easeLinearity: 0.15
+      });
+
+      const flyToDone = waitForMapMove(map, PANEL_MARKER_FLY_TIMEOUT);
+      waitForPanelOpen(panel)
+        .then(() => flyToDone)
+        .then(() => queueMarkerVisibilityCheck(marker));
+      window.setTimeout(() => {
+        flyToDone.then(() => queueMarkerVisibilityCheck(marker));
+      }, 900);
     }
   });
 
@@ -154,20 +242,8 @@ if (window.innerWidth < 768) {
 
 // Dynamic icon scaling on zoom
 map.on('zoomend', () => {
-  const currentZoom = map.getZoom();
   markers.forEach(marker => {
-    const scale = Math.pow(ZOOM_STEP_FACTOR, currentZoom - marker.options.baseZoom);
-    const newHeight = marker.options.baseHeight * scale;
-    const newWidth = marker.options.baseWidth * scale;
-
-    const icon = L.icon({
-      iconUrl: marker.options.iconUrl,
-      iconSize: [newWidth, newHeight],
-      iconAnchor: [newWidth / 2, newHeight],
-      popupAnchor: [0, -newHeight - 5]
-    });
-
-    marker.setIcon(icon);
+    updateBuildingMarkerIcon(marker);
   });
 });
 
@@ -180,23 +256,251 @@ map.on('zoomend', () => {
 
 
 
-function keepMarkerAbovePanel(marker) {
+function waitForPanelOpen(panel, timeout = 800) {
+  return new Promise(resolve => {
+    if (!panel) {
+      resolve();
+      return;
+    }
+
+    let settled = false;
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      panel.removeEventListener('transitionend', onTransitionEnd);
+      window.clearTimeout(timeoutId);
+      resolve();
+    };
+
+    const onTransitionEnd = event => {
+      if (event.target === panel && event.propertyName === 'transform') {
+        finish();
+      }
+    };
+
+    panel.addEventListener('transitionend', onTransitionEnd);
+    const timeoutId = window.setTimeout(finish, timeout);
+
+    requestAnimationFrame(() => {
+      const style = window.getComputedStyle(panel);
+      if (!panel.classList.contains('open') || style.transitionDuration === '0s') {
+        finish();
+      }
+    });
+  });
+}
+
+const markerVisibilityChecks = new WeakMap();
+
+function getPanelMarkerGap() {
+  return (MOBILE_PANEL_MARKER_GAP + EXTRA_PANEL_MARGIN) * PANEL_MARKER_GAP_SCALE;
+}
+
+function createBuildingMarkerIcon(marker) {
+  const isActive = marker === activeBuildingMarker;
+  const map = marker._map;
+  const currentZoom = map ? map.getZoom() : marker.options.baseZoom;
+  const zoomScale = Math.pow(ZOOM_STEP_FACTOR, currentZoom - marker.options.baseZoom);
+  const activeScale = isActive ? ACTIVE_MARKER_SCALE : 1;
+  const newHeight = marker.options.baseHeight * zoomScale * activeScale;
+  const newWidth = marker.options.baseWidth * zoomScale * activeScale;
+
+  return L.icon({
+    iconUrl: marker.options.iconUrl,
+    iconSize: [newWidth, newHeight],
+    iconAnchor: [newWidth / 2, newHeight],
+    popupAnchor: [0, -newHeight - 5],
+    className: isActive ? 'building-marker building-marker--active' : 'building-marker'
+  });
+}
+
+function updateBuildingMarkerIcon(marker) {
+  if (!marker || !marker.options.baseHeight || !marker.options.baseWidth || !marker.options.iconUrl) {
+    return;
+  }
+
+  marker.setIcon(createBuildingMarkerIcon(marker));
+
+  if (marker === activeBuildingMarker && typeof marker.bringToFront === 'function') {
+    marker.bringToFront();
+  }
+}
+
+function setActiveBuildingMarker(marker) {
+  const previousMarker = activeBuildingMarker;
+  activeBuildingMarker = marker;
+
+  if (previousMarker && previousMarker !== marker) {
+    updateBuildingMarkerIcon(previousMarker);
+  }
+
+  updateBuildingMarkerIcon(marker);
+}
+
+function clearActiveBuildingMarker() {
+  const marker = activeBuildingMarker;
+  activeBuildingMarker = null;
+  updateBuildingMarkerIcon(marker);
+}
+
+function queueMarkerVisibilityCheck(marker) {
+  const pendingCheck = markerVisibilityChecks.get(marker) || Promise.resolve();
+  const nextCheck = pendingCheck
+    .catch(() => {})
+    .then(() => ensureMarkerVisibleAbovePanel(marker));
+
+  markerVisibilityChecks.set(marker, nextCheck);
+  return nextCheck;
+}
+
+function waitForMapMove(map, timeout = PANEL_MARKER_PAN_TIMEOUT) {
+  return new Promise(resolve => {
+    let settled = false;
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      map.off('moveend', finish);
+      window.clearTimeout(timeoutId);
+      resolve();
+    };
+
+    map.once('moveend', finish);
+    const timeoutId = window.setTimeout(finish, timeout);
+  });
+}
+
+function getPanelCoverage(panel, mapContainer) {
+  const panelRect = panel.getBoundingClientRect();
+  const mapRect = mapContainer.getBoundingClientRect();
+  const overlapsMap = panelRect.left < mapRect.right
+    && panelRect.right > mapRect.left
+    && panelRect.top < mapRect.bottom
+    && panelRect.bottom > mapRect.top;
+
+  if (!overlapsMap) {
+    return null;
+  }
+
+  const isBottomPanel = panelRect.bottom >= window.innerHeight - 2
+    && panelRect.top > mapRect.top
+    && panelRect.width > mapRect.width * 0.6;
+
+  const isNarrowSidePanel = window.innerWidth >= 768
+    && window.innerWidth < 1024
+    && panelRect.right >= window.innerWidth - 2
+    && panelRect.left < mapRect.right
+    && panelRect.width < mapRect.width;
+
+  if (!isBottomPanel && !isNarrowSidePanel) {
+    return null;
+  }
+
+  return {
+    height: panel.offsetHeight || panelRect.height || window.innerHeight * 0.6,
+    leftInMap: panelRect.left - mapRect.left,
+    mode: isBottomPanel ? 'bottom' : 'side'
+  };
+}
+
+function getMarkerTargetPoint(panel, mapContainer) {
+  const mapRect = mapContainer.getBoundingClientRect();
+  const mapWidth = mapContainer.offsetWidth || mapRect.width;
+  const mapHeight = mapContainer.offsetHeight || mapRect.height;
+
+  if (!panel) {
+    return L.point(mapWidth / 2, mapHeight / 2);
+  }
+
+  if (window.innerWidth < 768) {
+    const panelHeight = panel.offsetHeight || window.innerHeight * 0.6;
+    const panelTopInMap = window.innerHeight - panelHeight - mapRect.top;
+    const desiredY = panelTopInMap - getPanelMarkerGap();
+
+    return L.point(mapWidth / 2, Math.max(TARGET_HEIGHT, desiredY));
+  }
+
+  if (window.innerWidth < 1024) {
+    const panelWidth = panel.offsetWidth || 420;
+    const panelLeftInMap = window.innerWidth - panelWidth - mapRect.left;
+    const desiredX = (panelLeftInMap - getPanelMarkerGap()) / 2;
+
+    return L.point(Math.max(TARGET_HEIGHT, desiredX), mapHeight / 2);
+  }
+
+  return L.point(mapWidth / 2, mapHeight / 2);
+}
+
+function getMarkerFocusLatLng(marker, targetZoom) {
+  const map = marker._map;
+  const mapContainer = map.getContainer();
+  const panel = document.getElementById('slide-panel');
+  const targetPoint = getMarkerTargetPoint(panel, mapContainer);
+  const mapSize = map.getSize();
+  const markerPoint = map.project(marker.getLatLng(), targetZoom);
+  const centerPoint = markerPoint.add(mapSize.divideBy(2)).subtract(targetPoint);
+
+  return map.unproject(centerPoint, targetZoom);
+}
+
+async function ensureMarkerVisibleAbovePanel(marker, maxAttempts = 6) {
   const slidePanel = document.getElementById('slide-panel');
 
-  if (!slidePanel || !marker._map || window.innerWidth >= 768) {
+  if (!slidePanel || !marker._map || !slidePanel.classList.contains('open')) {
     return;
   }
 
   const map = marker._map;
-  const mapTop = map.getContainer().getBoundingClientRect().top;
-  const panelHeight = slidePanel.offsetHeight || window.innerHeight * 0.6;
-  const panelTopInMap = window.innerHeight - panelHeight - mapTop;
-  const markerPoint = map.latLngToContainerPoint(marker.getLatLng());
-  const desiredY = panelTopInMap - MOBILE_PANEL_MARKER_GAP;
-  const offsetY = markerPoint.y - desiredY;
+  const mapContainer = map.getContainer();
 
-  if (offsetY > 0) {
-    map.panBy([0, -offsetY], { animate: true });
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    await new Promise(resolve => requestAnimationFrame(resolve));
+
+    const panelCoverage = getPanelCoverage(slidePanel, mapContainer);
+    if (!panelCoverage) {
+      return;
+    }
+
+    const markerPoint = map.latLngToContainerPoint(marker.getLatLng());
+
+    if (panelCoverage.mode === 'side') {
+      const desiredX = panelCoverage.leftInMap - getPanelMarkerGap();
+      const offsetX = markerPoint.x - desiredX;
+
+      if (offsetX <= 2) {
+        return;
+      }
+
+      map.panBy([offsetX, 0], {
+        animate: true,
+        duration: PANEL_MARKER_PAN_DURATION,
+        easeLinearity: 0.15
+      });
+      await waitForMapMove(map);
+      continue;
+    }
+
+    const mapTop = mapContainer.getBoundingClientRect().top;
+    const panelHeight = panelCoverage.height;
+    const panelTopInMap = window.innerHeight - panelHeight - mapTop;
+    const desiredY = panelTopInMap - getPanelMarkerGap();
+    const offsetY = markerPoint.y - desiredY;
+
+    if (offsetY <= 2) {
+      return;
+    }
+
+    map.panBy([0, offsetY], {
+      animate: true,
+      duration: PANEL_MARKER_PAN_DURATION,
+      easeLinearity: 0.15
+    });
+    await waitForMapMove(map);
   }
 }
 
@@ -229,6 +533,7 @@ function closePanel() {
     return;
   }
 
+  clearActiveBuildingMarker();
   panel.classList.remove('open');
   panel.style.transition = '';
   panel.style.transform = '';

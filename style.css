@@ -27,6 +27,49 @@ body, html {
     height: 100vh; /* full viewport height */
 }
 
+.leaflet-marker-icon.building-marker {
+    transition: filter 0.25s ease;
+}
+
+.leaflet-marker-icon.building-marker--active {
+    filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.28)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+}
+
+.geolocation-toggle {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    z-index: 1001;
+    border: 1px solid #d7d7d7;
+    border-radius: 999px;
+    background: #fff;
+    color: #1f2937;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.geolocation-toggle.is-active {
+    background: #1f5f3c;
+    color: #fff;
+    border-color: #1f5f3c;
+}
+
+.geolocation-toggle:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+@media (max-width: 767px) {
+    .geolocation-toggle {
+        top: auto;
+        bottom: 20px;
+        right: 20px;
+    }
+}
+
 /* Base panel styles */
 #slide-panel {
   position: fixed;
