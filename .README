@@ -1,0 +1,50 @@
+
+// ARCHITEKTURA STRONY
+
+osadafabryczna/
+│
+├── style.css
+├── functions.php
+├── index.php
+├── front-page.php        ← Map homepage
+├── single-building.php   ← Individual building
+├── archive-building.php  ← All buildings list
+├── header.php
+├── footer.php
+│
+├── assets/
+│   ├── css/
+│   ├── js/
+│   └── dist/             ← Vite production build goes here
+│
+└── inc/
+    └── post-types.php    ← CPT registration
+
+// PRODUKCJA
+
+    // Potem jak zrobie juz strone na Vite w terminalu buduje distro:
+
+    npm run build 
+
+    // w functions.php wpisuje (tylko eventualnie zmieniam nazwy plików w zaleznosci jakie tam są):
+
+    function osadafabryczna_scripts() {
+
+    $dist_path = get_template_directory_uri() . '/assets/dist/assets/';
+
+    wp_enqueue_script(
+        'osada-map',
+        $dist_path . 'main.js',
+        [],
+        null,
+        true
+    );
+
+    wp_enqueue_style(
+        'osada-style',
+        $dist_path . 'style.css',
+        [],
+        null
+    );
+}
+add_action('wp_enqueue_scripts', 'osadafabryczna_scripts'); 
