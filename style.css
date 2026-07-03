@@ -39,18 +39,9 @@ main {
 }
 
 .geolocation-toggle {
-    position: absolute;
-    left: 20px;
-    right: auto;
-    top: auto;
-    bottom: 20px;
-    z-index: 1001;
     border: 1px solid #d7d7d7;
-    border-radius: 999px;
     background: #fff;
     color: #1f2937;
-    padding: 10px 14px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     cursor: pointer;
     font-size: 14px;
     transition: background-color 0.2s ease, color 0.2s ease;
@@ -69,11 +60,54 @@ main {
 
 @media (max-width: 767px) {
     .geolocation-toggle {
-        top: 20px;
-        bottom: auto;
-        left: auto;
-        right: 20px;
+        font-size: 12px;
     }
+}
+
+.leaflet-control-zoom.map-control-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+}
+
+.leaflet-control-zoom.map-control-menu a,
+.leaflet-control-zoom.map-control-menu .map-control-button {
+    width: 42px;
+    min-height: 42px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-bottom: 1px solid #d8d8d8;
+    border-radius: 0;
+    background: #fff;
+    color: #1f2937;
+    box-shadow: none;
+    font: 700 18px/1 Arial, sans-serif;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.leaflet-control-zoom.map-control-menu .map-control-button {
+    width: auto;
+    min-width: 112px;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+.leaflet-control-zoom.map-control-menu .geolocation-toggle {
+    position: static;
+}
+
+.leaflet-control-zoom.map-control-menu .map-overlay-toggle {
+    border-bottom: 0;
 }
 
 /* Base panel styles */
@@ -91,7 +125,7 @@ main {
 @media (max-width: 767px) {
 
   #slide-panel {
-    bottom: 0;
+    bottom: 78px;
     left: 0;
     width: 100%;
     height: clamp(260px, 46vh, 360px);
@@ -101,7 +135,7 @@ main {
     border-top-left-radius: 18px;
     border-top-right-radius: 18px;
 
-    transform: translateY(100%);
+    transform: translateY(calc(100% + 78px));
   }
 
   #slide-panel.open {
@@ -125,6 +159,42 @@ main {
 
   #slide-panel {
     padding-top: 8px; /* reduce spacing so handle feels attached */
+  }
+
+  .leaflet-top.leaflet-left {
+    top: auto;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .leaflet-control-zoom.map-control-menu {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    max-width: calc(100vw - 24px);
+    margin: 0;
+    border-radius: 16px;
+  }
+
+  .leaflet-control-zoom.map-control-menu a,
+  .leaflet-control-zoom.map-control-menu .map-control-button {
+    width: auto;
+    min-width: 44px;
+    min-height: 48px;
+    border-right: 1px solid #d8d8d8;
+    border-bottom: 0;
+  }
+
+  .leaflet-control-zoom.map-control-menu .map-control-button {
+    min-width: 92px;
+    max-width: 112px;
+    padding: 7px 9px;
+    white-space: normal;
+  }
+
+  .leaflet-control-zoom.map-control-menu .map-overlay-toggle {
+    border-right: 0;
   }
 
 }
@@ -265,6 +335,44 @@ Map container
 #map {
     width: 100%;
     height: calc(100vh - 60px); /* subtract header height */
+}
+
+body.home,
+body.front-page {
+    overflow: hidden;
+}
+
+body.home main,
+body.front-page main {
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+body.home #map,
+body.front-page #map {
+    height: 100vh;
+    height: 100dvh;
+}
+
+body.home .site-header,
+body.front-page .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: transparent;
+    border-bottom-color: transparent;
+}
+
+body.home .site-footer,
+body.front-page .site-footer {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: transparent;
+    border-top-color: transparent;
+    z-index: 1000;
 }
 
 .overlay-corner-handle {

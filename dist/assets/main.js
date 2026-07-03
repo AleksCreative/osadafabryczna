@@ -1,8 +1,8 @@
 // Map center and overlay bounds
 const MAP_CENTER = [52.05698, 20.44018];
 const IMAGE_BOUNDS = [
-  [52.06504, 20.45329], // northeast
-  [52.04668, 20.41437]  // southwest
+  [52.081628, 20.502934], // northeast
+  [52.033532, 20.382671]  // southwest
 ];
 const TARGET_HEIGHT = 100; // fixed marker height
 const ZOOM_STEP_FACTOR = 1.2; // scale factor per zoom level
@@ -33,11 +33,13 @@ const markers = [];
 // Initialize map
 const map = L.map('map', {
   center: MAP_CENTER,
-  zoom: 16,
-  minZoom: 15,
+  zoom: 15,
+  minZoom: 14,
   maxZoom: 18,
-  zoomSnap: 0.25,
-  zoomDelta: 0.25,
+  maxBounds: IMAGE_BOUNDS,
+  maxBoundsViscosity: 1,
+  zoomSnap: 0.15,
+  zoomDelta: 0.15,
   wheelPxPerZoomLevel: 80
 });
 
@@ -47,7 +49,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 // Add overlay image
-const overlayUrl = 'wp-content/themes/osadafabryczna/dist/assets/mapa.jpg';
+const overlayUrl = 'wp-content/themes/osadafabryczna/dist/assets/mapa.png';
 const overlay = L.imageOverlay(
   overlayUrl,
   IMAGE_BOUNDS,
@@ -57,7 +59,9 @@ const overlay = L.imageOverlay(
 ).addTo(map);
 
 // Fit map to overlay
-map.fitBounds(IMAGE_BOUNDS);
+map.fitBounds(IMAGE_BOUNDS, { animate: false });
+map.setMaxBounds(IMAGE_BOUNDS);
+map.setMinZoom(map.getBoundsZoom(IMAGE_BOUNDS, false));
 
 
 
@@ -251,6 +255,61 @@ if (geolocationToggle) {
 
 updateGeolocationButtonState(false, isGeolocationSupported());
 
+let overlayVisible = true;
+const overlayToggle = document.createElement('button');
+
+function updateOverlayToggleState() {
+  overlayToggle.textContent = overlayVisible ? 'ukryj mapę' : 'pokaż mapę';
+  overlayToggle.setAttribute('aria-pressed', String(overlayVisible));
+}
+
+function setupMapControlMenu() {
+  const zoomControl = map.getContainer().querySelector('.leaflet-control-zoom');
+
+  if (!zoomControl) {
+    return;
+  }
+
+  zoomControl.classList.add('map-control-menu');
+
+  if (geolocationToggle) {
+    geolocationToggle.classList.add('map-control-button');
+    zoomControl.appendChild(geolocationToggle);
+  }
+
+  overlayToggle.type = 'button';
+  overlayToggle.className = 'map-control-button map-overlay-toggle';
+  overlayToggle.setAttribute('aria-label', 'Przełącz widoczność mapy historycznej');
+  updateOverlayToggleState();
+
+  if (typeof L.DomEvent?.disableClickPropagation === 'function') {
+    L.DomEvent.disableClickPropagation(overlayToggle);
+  }
+
+  overlayToggle.addEventListener('pointerdown', event => {
+    event.stopPropagation();
+  });
+
+  overlayToggle.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    overlayVisible = !overlayVisible;
+
+    if (overlayVisible) {
+      overlay.addTo(map);
+    } else {
+      overlay.remove();
+    }
+
+    updateOverlayToggleState();
+  });
+
+  zoomControl.appendChild(overlayToggle);
+}
+
+setupMapControlMenu();
+
 // Fetch buildings and add markers
 async function addMarkers() {
   try {
@@ -417,6 +476,13 @@ function getPanelMarkerGap() {
   return (MOBILE_PANEL_MARKER_GAP + EXTRA_PANEL_MARGIN) * PANEL_MARKER_GAP_SCALE;
 }
 
+function getPanelTopInMap(panel, mapContainer) {
+  const panelRect = panel.getBoundingClientRect();
+  const mapRect = mapContainer.getBoundingClientRect();
+
+  return panelRect.top - mapRect.top;
+}
+
 function createBuildingMarkerIcon(marker) {
   const isActive = marker === activeBuildingMarker;
   const map = marker._map;
@@ -536,8 +602,7 @@ function getMarkerTargetPoint(panel, mapContainer) {
   }
 
   if (window.innerWidth < 768) {
-    const panelHeight = panel.offsetHeight || window.innerHeight * 0.6;
-    const panelTopInMap = window.innerHeight - panelHeight - mapRect.top;
+    const panelTopInMap = getPanelTopInMap(panel, mapContainer);
     const desiredY = panelTopInMap - getPanelMarkerGap();
 
     return L.point(mapWidth / 2, Math.max(TARGET_HEIGHT, desiredY));
@@ -603,9 +668,7 @@ async function ensureMarkerVisibleAbovePanel(marker, maxAttempts = 6) {
       continue;
     }
 
-    const mapTop = mapContainer.getBoundingClientRect().top;
-    const panelHeight = panelCoverage.height;
-    const panelTopInMap = window.innerHeight - panelHeight - mapTop;
+    const panelTopInMap = getPanelTopInMap(slidePanel, mapContainer);
     const desiredY = panelTopInMap - getPanelMarkerGap();
     const offsetY = markerPoint.y - desiredY;
 
