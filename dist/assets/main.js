@@ -14,6 +14,9 @@ const PANEL_MARKER_PAN_DURATION = 0.75;
 const PANEL_MARKER_PAN_TIMEOUT = 950;
 const PANEL_MARKER_FLY_DURATION = 1.05;
 const PANEL_MARKER_FLY_TIMEOUT = 1300;
+const USER_MARKER_Z_INDEX_OFFSET = 10000;
+const USER_MARKER_MOVE_DURATION = 700;
+const USER_MARKER_SNAP_DISTANCE_METERS = 120;
 const urlParams = new URLSearchParams(window.location.search);
 let activeBuildingMarker = null;
 
@@ -61,13 +64,16 @@ map.fitBounds(IMAGE_BOUNDS);
 // Locate user
 let geolocationEnabled = false;
 const geolocationToggle = document.getElementById('geolocation-toggle');
+let geolocationWatchId = null;
 const userMarker = L.marker([0,0], { 
   icon: L.icon({ 
-    iconUrl: '/wp-content/themes/osadafabryczna/dist/assets/user-location.png', 
+    iconUrl: 'wp-content/themes/osadafabryczna/dist/assets/user-location.png',
     iconSize: [30,30], 
-    iconAnchor: [15,15] 
-  }) 
+    iconAnchor: [15,15]
+  }),
+  zIndexOffset: USER_MARKER_Z_INDEX_OFFSET
 });
+let userMarkerAnimationFrame = null;
 
 function updateGeolocationButtonState(isEnabled, isSupported = true) {
   if (!geolocationToggle) {
@@ -76,6 +82,7 @@ function updateGeolocationButtonState(isEnabled, isSupported = true) {
 
   geolocationToggle.classList.toggle('is-active', isEnabled);
   geolocationToggle.setAttribute('aria-pressed', String(isEnabled));
+  geolocationToggle.title = isSupported ? '' : 'Geolocation is not supported in this browser.';
   geolocationToggle.disabled = !isSupported;
 
   const label = geolocationToggle.querySelector('.geolocation-toggle__label');
@@ -84,29 +91,136 @@ function updateGeolocationButtonState(isEnabled, isSupported = true) {
   }
 }
 
-function setGeolocationEnabled(enabled) {
-  if (!('geolocation' in navigator)) {
+function isGeolocationSupported() {
+  return 'geolocation' in navigator;
+}
+
+function handleUserLocation(latlng) {
+  if (!map.hasLayer(userMarker)) {
+    userMarker.setLatLng(latlng);
+    userMarker.addTo(map);
+  }
+
+  if (typeof userMarker.setZIndexOffset === 'function') {
+    userMarker.setZIndexOffset(USER_MARKER_Z_INDEX_OFFSET);
+  }
+
+  moveUserMarkerTo(latlng);
+}
+
+function handleGeolocationError(error) {
+  const message = error?.message || 'Nie udalo sie pobrac lokalizacji.';
+  console.warn('Geolocation error:', message);
+
+  if (geolocationEnabled) {
+    setGeolocationEnabled(false);
+  }
+}
+
+function startGeolocation() {
+  if (!isGeolocationSupported()) {
     updateGeolocationButtonState(false, false);
+    console.warn('Geolocation is not supported in this browser.');
     return;
   }
 
-  geolocationEnabled = enabled;
+  geolocationEnabled = true;
 
-  if (enabled) {
-    if (!map.hasLayer(userMarker)) {
-      userMarker.addTo(map);
-    }
-
-    map.locate({ setView: false, watch: true, maxZoom: 18 });
-    updateGeolocationButtonState(true, true);
-  } else {
-    if (map.hasLayer(userMarker)) {
-      userMarker.remove();
-    }
-
-    map.stopLocate?.();
-    updateGeolocationButtonState(false, true);
+  if (geolocationWatchId !== null) {
+    navigator.geolocation.clearWatch(geolocationWatchId);
   }
+
+  geolocationWatchId = navigator.geolocation.watchPosition(
+    position => {
+      handleUserLocation(L.latLng(position.coords.latitude, position.coords.longitude));
+    },
+    handleGeolocationError,
+    {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 15000
+    }
+  );
+
+  updateGeolocationButtonState(true, true);
+}
+
+function stopGeolocation() {
+  geolocationEnabled = false;
+
+  if (geolocationWatchId !== null && 'geolocation' in navigator) {
+    navigator.geolocation.clearWatch(geolocationWatchId);
+    geolocationWatchId = null;
+  }
+
+  if (userMarkerAnimationFrame) {
+    cancelAnimationFrame(userMarkerAnimationFrame);
+    userMarkerAnimationFrame = null;
+  }
+
+  if (map.hasLayer(userMarker)) {
+    userMarker.remove();
+  }
+
+  updateGeolocationButtonState(false, isGeolocationSupported());
+}
+
+function setGeolocationEnabled(enabled) {
+  if (enabled) {
+    startGeolocation();
+  } else {
+    stopGeolocation();
+  }
+}
+
+function easeInOutCubic(progress) {
+  return progress < 0.5
+    ? 4 * progress * progress * progress
+    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+}
+
+function moveUserMarkerTo(latlng) {
+  if (!map.hasLayer(userMarker)) {
+    userMarker.setLatLng(latlng);
+    return;
+  }
+
+  const currentLatLng = userMarker.getLatLng();
+  const distance = currentLatLng.distanceTo(latlng);
+
+  if (!currentLatLng.lat || distance > USER_MARKER_SNAP_DISTANCE_METERS) {
+    if (userMarkerAnimationFrame) {
+      cancelAnimationFrame(userMarkerAnimationFrame);
+      userMarkerAnimationFrame = null;
+    }
+
+    userMarker.setLatLng(latlng);
+    return;
+  }
+
+  if (userMarkerAnimationFrame) {
+    cancelAnimationFrame(userMarkerAnimationFrame);
+  }
+
+  const startLatLng = userMarker.getLatLng();
+  const startTime = performance.now();
+
+  const animate = currentTime => {
+    const progress = Math.min((currentTime - startTime) / USER_MARKER_MOVE_DURATION, 1);
+    const easedProgress = easeInOutCubic(progress);
+    const lat = startLatLng.lat + (latlng.lat - startLatLng.lat) * easedProgress;
+    const lng = startLatLng.lng + (latlng.lng - startLatLng.lng) * easedProgress;
+
+    userMarker.setLatLng([lat, lng]);
+
+    if (progress < 1) {
+      userMarkerAnimationFrame = requestAnimationFrame(animate);
+    } else {
+      userMarkerAnimationFrame = null;
+    }
+  };
+
+  userMarkerAnimationFrame = requestAnimationFrame(animate);
 }
 
 map.on('locationfound', e => {
@@ -114,24 +228,28 @@ map.on('locationfound', e => {
     return;
   }
 
-  userMarker.setLatLng(e.latlng);
+  handleUserLocation(e.latlng);
 });
 
 map.on('locationerror', err => {
-  console.warn('Geolocation error:', err.message);
-
-  if (geolocationEnabled) {
-    setGeolocationEnabled(false);
-  }
+  handleGeolocationError(err);
 });
 
 if (geolocationToggle) {
+  if (typeof L.DomEvent?.disableClickPropagation === 'function') {
+    L.DomEvent.disableClickPropagation(geolocationToggle);
+  }
+
+  geolocationToggle.addEventListener('pointerdown', event => {
+    event.stopPropagation();
+  });
+
   geolocationToggle.addEventListener('click', () => {
     setGeolocationEnabled(!geolocationEnabled);
   });
 }
 
-updateGeolocationButtonState(false, 'geolocation' in navigator);
+updateGeolocationButtonState(false, isGeolocationSupported());
 
 // Fetch buildings and add markers
 async function addMarkers() {

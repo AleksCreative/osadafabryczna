@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 1.0
+Version: 1.1
 */
 
 /* ---------------------------
@@ -20,6 +20,9 @@ body, html {
     font-family: Arial, sans-serif;
 }
 
+main {
+    position: relative;
+}
 
 /* Map container fills viewport */
 #map {
@@ -36,9 +39,11 @@ body, html {
 }
 
 .geolocation-toggle {
-    position: fixed;
-    top: 90px;
-    right: 20px;
+    position: absolute;
+    left: 20px;
+    right: auto;
+    top: auto;
+    bottom: 20px;
     z-index: 1001;
     border: 1px solid #d7d7d7;
     border-radius: 999px;
@@ -64,8 +69,9 @@ body, html {
 
 @media (max-width: 767px) {
     .geolocation-toggle {
-        top: auto;
-        bottom: 20px;
+        top: 20px;
+        bottom: auto;
+        left: auto;
         right: 20px;
     }
 }

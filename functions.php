@@ -49,6 +49,11 @@ function osadafabryczna_enqueue_assets() {
 }
 add_action('wp_enqueue_scripts', 'osadafabryczna_enqueue_assets');
 
+function osadafabryczna_allow_geolocation_policy() {
+    header('Permissions-Policy: geolocation=(self)');
+}
+add_action('send_headers', 'osadafabryczna_allow_geolocation_policy');
+
 function osadafabryczna_register_menus() {
     register_nav_menus(array(
         'primary' => __('Primary Menu', 'osadafabryczna'),
