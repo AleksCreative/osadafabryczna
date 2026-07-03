@@ -44,8 +44,9 @@ const map = L.map('map', {
 });
 
 // Add OpenStreetMap tiles
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
+const osmTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors',
+  opacity: 0
 }).addTo(map);
 
 // Add overlay image
@@ -69,10 +70,10 @@ map.setMinZoom(map.getBoundsZoom(IMAGE_BOUNDS, false));
 let geolocationEnabled = false;
 const geolocationToggle = document.getElementById('geolocation-toggle');
 let geolocationWatchId = null;
-const userMarker = L.marker([0,0], { 
-  icon: L.icon({ 
+const userMarker = L.marker([0,0], {
+  icon: L.icon({
     iconUrl: 'wp-content/themes/osadafabryczna/dist/assets/user-location.png',
-    iconSize: [30,30], 
+    iconSize: [30,30],
     iconAnchor: [15,15]
   }),
   zIndexOffset: USER_MARKER_Z_INDEX_OFFSET
@@ -263,6 +264,22 @@ function updateOverlayToggleState() {
   overlayToggle.setAttribute('aria-pressed', String(overlayVisible));
 }
 
+function updateMapLayerVisibility() {
+  if (overlayVisible) {
+    if (!map.hasLayer(overlay)) {
+      overlay.addTo(map);
+    }
+
+    osmTiles.setOpacity(0);
+  } else {
+    if (map.hasLayer(overlay)) {
+      overlay.remove();
+    }
+
+    osmTiles.setOpacity(1);
+  }
+}
+
 function setupMapControlMenu() {
   const zoomControl = map.getContainer().querySelector('.leaflet-control-zoom');
 
@@ -295,13 +312,7 @@ function setupMapControlMenu() {
     event.stopPropagation();
 
     overlayVisible = !overlayVisible;
-
-    if (overlayVisible) {
-      overlay.addTo(map);
-    } else {
-      overlay.remove();
-    }
-
+    updateMapLayerVisibility();
     updateOverlayToggleState();
   });
 
