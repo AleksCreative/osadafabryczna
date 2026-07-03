@@ -582,7 +582,7 @@ function getPanelCoverage(panel, mapContainer) {
     return null;
   }
 
-  const isBottomPanel = panelRect.bottom >= window.innerHeight - 2
+  const isBottomPanel = window.innerWidth < 768
     && panelRect.top > mapRect.top
     && panelRect.width > mapRect.width * 0.6;
 
@@ -716,6 +716,7 @@ function openPanel(budynek) {
   panel.style.transition = '';
   panel.style.transform = '';
   panel.classList.add('open');
+  document.body.classList.add('map-panel-open');
 }
 
 function closePanel() {
@@ -727,6 +728,7 @@ function closePanel() {
 
   clearActiveBuildingMarker();
   panel.classList.remove('open');
+  document.body.classList.remove('map-panel-open');
   panel.style.transition = '';
   panel.style.transform = '';
 }

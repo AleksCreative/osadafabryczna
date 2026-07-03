@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 1.2
+Version: 1.3
 */
 
 /* ---------------------------
@@ -146,7 +146,7 @@ main {
 @media (max-width: 767px) {
 
   #slide-panel {
-    bottom: 78px;
+    bottom: 0;
     left: 0;
     width: 100%;
     height: clamp(260px, 46vh, 360px);
@@ -156,7 +156,7 @@ main {
     border-top-left-radius: 18px;
     border-top-right-radius: 18px;
 
-    transform: translateY(calc(100% + 78px));
+    transform: translateY(100%);
   }
 
   #slide-panel.open {
@@ -184,9 +184,16 @@ main {
 
   .leaflet-top.leaflet-left {
     top: auto;
-    bottom: 12px;
+    bottom: 52px;
     left: 50%;
     transform: translateX(-50%);
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+
+  body.map-panel-open .leaflet-top.leaflet-left {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
   }
 
   .leaflet-control-zoom.map-control-menu {
@@ -386,6 +393,11 @@ body.front-page .site-header {
     border-bottom-color: transparent;
 }
 
+body.admin-bar.home .site-header,
+body.admin-bar.front-page .site-header {
+    top: 32px;
+}
+
 body.home .site-footer,
 body.front-page .site-footer {
     position: fixed;
@@ -401,6 +413,18 @@ body.front-page .site-footer {
     body.home .leaflet-top.leaflet-left,
     body.front-page .leaflet-top.leaflet-left {
         top: 76px;
+    }
+
+    body.admin-bar.home .leaflet-top.leaflet-left,
+    body.admin-bar.front-page .leaflet-top.leaflet-left {
+        top: 108px;
+    }
+}
+
+@media (max-width: 782px) {
+    body.admin-bar.home .site-header,
+    body.admin-bar.front-page .site-header {
+        top: 46px;
     }
 }
 
