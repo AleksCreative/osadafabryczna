@@ -381,13 +381,11 @@ if (window.innerWidth < 768) {
         easeLinearity: 0.15
       });
 
-      const flyToDone = waitForMapMove(map, PANEL_MARKER_FLY_TIMEOUT);
-      waitForPanelOpen(panel)
-        .then(() => flyToDone)
-        .then(() => queueMarkerVisibilityCheck(marker));
-      window.setTimeout(() => {
-        flyToDone.then(() => queueMarkerVisibilityCheck(marker));
-      }, 900);
+      waitForPanelOpen(panel).then(() => {
+        if (typeof marker.bringToFront === 'function') {
+          marker.bringToFront();
+        }
+      });
 
     } else {
       // --- DESKTOP ---
@@ -488,8 +486,17 @@ function getPanelMarkerGap() {
 }
 
 function getPanelTopInMap(panel, mapContainer) {
-  const panelRect = panel.getBoundingClientRect();
   const mapRect = mapContainer.getBoundingClientRect();
+
+  if (window.innerWidth < 768) {
+    const panelStyle = window.getComputedStyle(panel);
+    const panelBottom = parseFloat(panelStyle.bottom) || 0;
+    const panelHeight = panel.offsetHeight || panel.getBoundingClientRect().height;
+
+    return window.innerHeight - panelBottom - panelHeight - mapRect.top;
+  }
+
+  const panelRect = panel.getBoundingClientRect();
 
   return panelRect.top - mapRect.top;
 }
