@@ -36,31 +36,50 @@ main {
     transition: transform 0.2s ease-out;
 }
 
+.marker-cluster {
+    background: transparent;
+}
+
+.marker-cluster div {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px;
+    min-height: 42px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    line-height: 1.1;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+}
+
 .marker-cluster-small {
-    background-color: rgba(31, 95, 60, 0.25);
+    background-color: rgba(31, 95, 60, 0.16);
 }
 
 .marker-cluster-small div {
-    background-color: rgba(31, 95, 60, 0.9);
-    color: #fff;
+    background-color: rgba(31, 95, 60, 0.92);
 }
 
 .marker-cluster-medium {
-    background-color: rgba(31, 95, 60, 0.32);
+    background-color: rgba(31, 95, 60, 0.2);
 }
 
 .marker-cluster-medium div {
-    background-color: rgba(31, 95, 60, 0.94);
-    color: #fff;
+    background-color: rgba(31, 95, 60, 0.96);
 }
 
 .marker-cluster-large {
-    background-color: rgba(31, 95, 60, 0.4);
+    background-color: rgba(31, 95, 60, 0.26);
 }
 
 .marker-cluster-large div {
     background-color: rgba(31, 95, 60, 1);
-    color: #fff;
 }
 
 .leaflet-marker-icon.building-marker {

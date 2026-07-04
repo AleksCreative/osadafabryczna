@@ -4,7 +4,9 @@ const IMAGE_BOUNDS = [
   [52.081628, 20.502934], // northeast
   [52.033532, 20.382671]  // southwest
 ];
-const TARGET_HEIGHT = 100; // fixed marker height
+const TARGET_HEIGHT = 100; // base marker height
+const TARGET_WIDTH = 160; // maximum marker width before zoom scaling
+const MARKER_PADDING = 8; // small padding around each icon
 const ZOOM_STEP_FACTOR = 1.2; // scale factor per zoom level
 const MOBILE_PANEL_MARKER_GAP = 72;
 const EXTRA_PANEL_MARGIN = 8;
@@ -359,15 +361,18 @@ async function addMarkers() {
       img.src = marker_icon;
 
  img.onload = () => {
-  // Scale width proportionally to fixed height
-  const scale = TARGET_HEIGHT / img.height;
-  const iconWidth = img.width * scale;
+  // Scale the icon to fit within the target box while preserving its aspect ratio.
+  const scale = Math.min(TARGET_HEIGHT / img.height, TARGET_WIDTH / img.width);
+  const iconHeight = Math.max(24, img.height * scale);
+  const iconWidth = Math.max(24, img.width * scale);
+  const paddedHeight = iconHeight + MARKER_PADDING * 2;
+  const paddedWidth = iconWidth + MARKER_PADDING * 2;
 
   const icon = L.icon({
     iconUrl: marker_icon,
-    iconSize: [iconWidth, TARGET_HEIGHT],
-    iconAnchor: [iconWidth / 2, TARGET_HEIGHT],
-    popupAnchor: [0, -TARGET_HEIGHT - 5],
+    iconSize: [paddedWidth, paddedHeight],
+    iconAnchor: [paddedWidth / 2, paddedHeight],
+    popupAnchor: [0, -paddedHeight - 5],
     className: 'building-marker'
   });
 
@@ -526,12 +531,14 @@ function createBuildingMarkerIcon(marker) {
   const activeScale = isActive ? ACTIVE_MARKER_SCALE : 1;
   const newHeight = marker.options.baseHeight * zoomScale * activeScale;
   const newWidth = marker.options.baseWidth * zoomScale * activeScale;
+  const paddedHeight = newHeight + MARKER_PADDING * 2;
+  const paddedWidth = newWidth + MARKER_PADDING * 2;
 
   return L.icon({
     iconUrl: marker.options.iconUrl,
-    iconSize: [newWidth, newHeight],
-    iconAnchor: [newWidth / 2, newHeight],
-    popupAnchor: [0, -newHeight - 5],
+    iconSize: [paddedWidth, paddedHeight],
+    iconAnchor: [paddedWidth / 2, paddedHeight],
+    popupAnchor: [0, -paddedHeight - 5],
     className: isActive ? 'building-marker building-marker--active' : 'building-marker'
   });
 }
