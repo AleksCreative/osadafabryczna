@@ -4,9 +4,14 @@ const IMAGE_BOUNDS = [
   [52.081628, 20.502934], // northeast
   [52.033532, 20.382671]  // southwest
 ];
-const TARGET_HEIGHT = 100; // base marker height
-const TARGET_WIDTH = 160; // maximum marker width before zoom scaling
-const MARKER_PADDING = 8; // small padding around each icon
+const TARGET_HEIGHT = 130; // default max height for vertical-style icons
+const TARGET_WIDTH = 130; // default max width for horizontal/square-style icons
+const SQUARE_MAX_SIZE = 80;
+const HORIZONTAL_MAX_WIDTH = 86;
+const HORIZONTAL_MAX_HEIGHT = 130;
+const VERTICAL_MAX_WIDTH = 130;
+const VERTICAL_MAX_HEIGHT = 86;
+const MARKER_PADDING = 6; // small padding around each icon
 const ZOOM_STEP_FACTOR = 1.2; // scale factor per zoom level
 const MOBILE_PANEL_MARKER_GAP = 72;
 const EXTRA_PANEL_MARGIN = 8;
@@ -362,9 +367,19 @@ async function addMarkers() {
 
  img.onload = () => {
   // Scale the icon to fit within the target box while preserving its aspect ratio.
-  const scale = Math.min(TARGET_HEIGHT / img.height, TARGET_WIDTH / img.width);
-  const iconHeight = Math.max(24, img.height * scale);
+  const aspectRatio = img.width / img.height;
+  let scale = Math.min(TARGET_HEIGHT / img.height, TARGET_WIDTH / img.width);
+
+  if (aspectRatio >= 1.2) {
+    scale = Math.min(HORIZONTAL_MAX_HEIGHT / img.height, HORIZONTAL_MAX_WIDTH / img.width);
+  } else if (aspectRatio <= 0.8) {
+    scale = Math.min(VERTICAL_MAX_HEIGHT / img.height, VERTICAL_MAX_WIDTH / img.width);
+  } else {
+    scale = Math.min(SQUARE_MAX_SIZE / img.width, SQUARE_MAX_SIZE / img.height);
+  }
+
   const iconWidth = Math.max(24, img.width * scale);
+  const iconHeight = Math.max(24, img.height * scale);
   const paddedHeight = iconHeight + MARKER_PADDING * 2;
   const paddedWidth = iconWidth + MARKER_PADDING * 2;
 
@@ -431,7 +446,7 @@ if (window.innerWidth < 768) {
   });
 
   // Store marker info for zoom scaling
-  marker.options.baseHeight = TARGET_HEIGHT;
+  marker.options.baseHeight = iconHeight;
   marker.options.baseWidth = iconWidth;
   marker.options.baseZoom = map.getZoom();
   marker.options.iconUrl = marker_icon;
