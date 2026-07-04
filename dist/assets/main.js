@@ -4,13 +4,13 @@ const IMAGE_BOUNDS = [
   [52.081628, 20.502934], // northeast
   [52.033532, 20.382671]  // southwest
 ];
-const TARGET_HEIGHT = 130; // default max height for vertical-style icons
-const TARGET_WIDTH = 130; // default max width for horizontal/square-style icons
+const TARGET_HEIGHT = 140; // default max height for vertical-style icons
+const TARGET_WIDTH = 140; // default max width for horizontal/square-style icons
 const SQUARE_MAX_SIZE = 80;
-const HORIZONTAL_MAX_WIDTH = 86;
-const HORIZONTAL_MAX_HEIGHT = 130;
-const VERTICAL_MAX_WIDTH = 130;
-const VERTICAL_MAX_HEIGHT = 86;
+const HORIZONTAL_MAX_WIDTH = 90;
+const HORIZONTAL_MAX_HEIGHT = 140;
+const VERTICAL_MAX_WIDTH = 140;
+const VERTICAL_MAX_HEIGHT = 90;
 const MARKER_PADDING = 6; // small padding around each icon
 const ZOOM_STEP_FACTOR = 1.2; // scale factor per zoom level
 const MOBILE_PANEL_MARKER_GAP = 72;
