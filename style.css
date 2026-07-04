@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 1.4
+Version: 1.5
 */
 
 /* ---------------------------
@@ -29,6 +29,38 @@ main {
     width: 100%;
     height: 100vh; /* full viewport height */
     background: #f1eee5 url('dist/assets/bg-tile.jpg') repeat;
+}
+
+.leaflet-cluster-anim .leaflet-marker-icon,
+.leaflet-cluster-anim .leaflet-marker-shadow {
+    transition: transform 0.2s ease-out;
+}
+
+.marker-cluster-small {
+    background-color: rgba(31, 95, 60, 0.25);
+}
+
+.marker-cluster-small div {
+    background-color: rgba(31, 95, 60, 0.9);
+    color: #fff;
+}
+
+.marker-cluster-medium {
+    background-color: rgba(31, 95, 60, 0.32);
+}
+
+.marker-cluster-medium div {
+    background-color: rgba(31, 95, 60, 0.94);
+    color: #fff;
+}
+
+.marker-cluster-large {
+    background-color: rgba(31, 95, 60, 0.4);
+}
+
+.marker-cluster-large div {
+    background-color: rgba(31, 95, 60, 1);
+    color: #fff;
 }
 
 .leaflet-marker-icon.building-marker {

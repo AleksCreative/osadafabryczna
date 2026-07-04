@@ -64,7 +64,19 @@ map.fitBounds(IMAGE_BOUNDS, { animate: false });
 map.setMaxBounds(IMAGE_BOUNDS);
 map.setMinZoom(map.getBoundsZoom(IMAGE_BOUNDS, false));
 
+const markerClusterGroup = typeof L.markerClusterGroup === 'function'
+  ? L.markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+      disableClusteringAtZoom: 17,
+      removeOutsideVisibleBounds: true,
+      maxClusterRadius: 60
+    })
+  : null;
 
+if (markerClusterGroup) {
+  map.addLayer(markerClusterGroup);
+}
 
 // Locate user
 let geolocationEnabled = false;
@@ -359,7 +371,12 @@ async function addMarkers() {
     className: 'building-marker'
   });
 
-  const marker = L.marker([lat, lng], { icon }).addTo(map);
+  const marker = L.marker([lat, lng], { icon });
+  if (markerClusterGroup) {
+    markerClusterGroup.addLayer(marker);
+  } else {
+    marker.addTo(map);
+  }
 
   // --- Marker click: mobile slide-up panel + desktop side panel ---
   marker.on('click', () => {

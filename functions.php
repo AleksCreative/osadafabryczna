@@ -37,11 +37,32 @@ function osadafabryczna_enqueue_assets() {
             true
         );
 
+        // Marker clustering for dense maps
+        wp_enqueue_style(
+            'leaflet-markercluster-css',
+            'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css',
+            [],
+            '1.5.3'
+        );
+        wp_enqueue_style(
+            'leaflet-markercluster-default-css',
+            'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css',
+            [],
+            '1.5.3'
+        );
+        wp_enqueue_script(
+            'leaflet-markercluster-js',
+            'https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js',
+            ['leaflet-js'],
+            '1.5.3',
+            true
+        );
+
         // Map JS
         wp_enqueue_script(
             'osadafabryczna-main-js',
             get_template_directory_uri() . '/dist/assets/main.js',
-            ['leaflet-js'],
+            ['leaflet-js', 'leaflet-markercluster-js'],
             filemtime(get_template_directory() . '/dist/assets/main.js'),
             true
         );
