@@ -20,6 +20,16 @@ body, html {
     font-family: Arial, sans-serif;
 }
 
+body {
+    position: relative;
+    min-height: 100%;
+    background-color: #f3efe6;
+    background-image: url('dist/assets/bg-tile.jpg');
+    background-repeat: repeat;
+    background-size: 220px 220px;
+    background-attachment: fixed;
+}
+
 main {
     position: relative;
 }

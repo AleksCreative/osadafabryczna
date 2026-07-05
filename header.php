@@ -6,7 +6,6 @@
   <?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>
-
 <header class="site-header">
   <div class="header-inner">
     
