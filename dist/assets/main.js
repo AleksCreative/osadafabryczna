@@ -21,11 +21,15 @@ const PANEL_MARKER_PAN_DURATION = 0.75;
 const PANEL_MARKER_PAN_TIMEOUT = 950;
 const PANEL_MARKER_FLY_DURATION = 1.05;
 const PANEL_MARKER_FLY_TIMEOUT = 1300;
+const DESKTOP_POPUP_MARKER_GAP = 16;
+const DESKTOP_POPUP_MARKER_TARGET_Y_RATIO = 0.72;
 const USER_MARKER_Z_INDEX_OFFSET = 10000;
 const USER_MARKER_MOVE_DURATION = 700;
 const USER_MARKER_SNAP_DISTANCE_METERS = 120;
 const urlParams = new URLSearchParams(window.location.search);
 let activeBuildingMarker = null;
+let activePanelMarker = null;
+let spiderfiedCluster = null;
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -90,12 +94,20 @@ const markerClusterGroup = typeof L.markerClusterGroup === 'function'
       spiderfyOnMaxZoom: true,
       disableClusteringAtZoom: 16,
       removeOutsideVisibleBounds: true,
-      maxClusterRadius: 60
+      maxClusterRadius: 400
     })
   : null;
 
 if (markerClusterGroup) {
   map.addLayer(markerClusterGroup);
+
+  markerClusterGroup.on('spiderfied', event => {
+    spiderfiedCluster = event.cluster || null;
+  });
+
+  markerClusterGroup.on('unspiderfied', () => {
+    spiderfiedCluster = null;
+  });
 }
 
 // Locate user
@@ -417,7 +429,7 @@ async function addMarkers() {
     marker.addTo(map);
   }
 
-  // --- Marker click: mobile slide-up panel + desktop side panel ---
+  // --- Marker click: mobile slide-up panel + desktop popup ---
   marker.on('click', () => {
     setActiveBuildingMarker(marker);
 
@@ -425,11 +437,16 @@ async function addMarkers() {
       marker.bringToFront();
     }
   const targetZoom = Math.max(map.getZoom(), 17);
+  const isSpiderfiedMarker = isMarkerInSpiderfiedCluster(marker);
 
 if (window.innerWidth < 768) {
       // --- MOBILE ---
-      openPanel(budynek);
+      openPanel(budynek, marker);
       const panel = document.getElementById('slide-panel');
+      if (isSpiderfiedMarker) {
+        return;
+      }
+
       const targetCenter = getMarkerFocusLatLng(marker, targetZoom);
       map.flyTo(targetCenter, targetZoom, {
         animate: true,
@@ -445,8 +462,12 @@ if (window.innerWidth < 768) {
 
     } else {
       // --- DESKTOP ---
-      openPanel(budynek);
+      openPanel(budynek, marker);
       const panel = document.getElementById('slide-panel');
+      if (isSpiderfiedMarker) {
+        return;
+      }
+
       const targetCenter = getMarkerFocusLatLng(marker, targetZoom);
       map.flyTo(targetCenter, targetZoom, {
         animate: true,
@@ -489,6 +510,14 @@ map.on('zoomend', () => {
   });
 });
 
+map.on('move zoom resize zoomend', () => {
+  updateDesktopPanelPosition();
+});
+
+window.addEventListener('resize', () => {
+  updateDesktopPanelPosition();
+});
+
 // Initialize everything
 
   addMarkers();
@@ -496,7 +525,53 @@ map.on('zoomend', () => {
 
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const infoPanel = document.getElementById('info-panel');
+  const infoPanelToggle = document.getElementById('info-panel-toggle');
+  const infoPanelClose = document.getElementById('info-panel-close');
 
+  if (!infoPanel || !infoPanelToggle || !infoPanelClose) {
+    return;
+  }
+
+  function openInfoPanel() {
+    infoPanel.classList.add('is-open');
+    infoPanelToggle.classList.add('is-hidden');
+    infoPanel.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeInfoPanel() {
+    infoPanel.classList.remove('is-open');
+    infoPanelToggle.classList.remove('is-hidden');
+    infoPanel.setAttribute('aria-hidden', 'true');
+  }
+
+  if (window.innerWidth >= 768) {
+    openInfoPanel();
+  } else {
+    openInfoPanel();
+  }
+
+  infoPanelToggle.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    openInfoPanel();
+  });
+
+  infoPanelClose.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeInfoPanel();
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth < 768) {
+      closeInfoPanel();
+    } else if (!infoPanel.classList.contains('is-open')) {
+      openInfoPanel();
+    }
+  });
+});
 
 function waitForPanelOpen(panel, timeout = 800) {
   return new Promise(resolve => {
@@ -582,6 +657,22 @@ function updateBuildingMarkerIcon(marker) {
     return;
   }
 
+  if (isMarkerInSpiderfiedCluster(marker)) {
+    const markerElement = typeof marker.getElement === 'function'
+      ? marker.getElement()
+      : marker._icon;
+
+    if (markerElement) {
+      markerElement.classList.toggle('building-marker--active', marker === activeBuildingMarker);
+    }
+
+    if (marker === activeBuildingMarker && typeof marker.bringToFront === 'function') {
+      marker.bringToFront();
+    }
+
+    return;
+  }
+
   marker.setIcon(createBuildingMarkerIcon(marker));
 
   if (marker === activeBuildingMarker && typeof marker.bringToFront === 'function') {
@@ -604,6 +695,14 @@ function clearActiveBuildingMarker() {
   const marker = activeBuildingMarker;
   activeBuildingMarker = null;
   updateBuildingMarkerIcon(marker);
+}
+
+function isMarkerInSpiderfiedCluster(marker) {
+  if (!marker || !spiderfiedCluster || typeof spiderfiedCluster.getAllChildMarkers !== 'function') {
+    return false;
+  }
+
+  return spiderfiedCluster.getAllChildMarkers().includes(marker);
 }
 
 function queueMarkerVisibilityCheck(marker) {
@@ -651,20 +750,14 @@ function getPanelCoverage(panel, mapContainer) {
     && panelRect.top > mapRect.top
     && panelRect.width > mapRect.width * 0.6;
 
-  const isNarrowSidePanel = window.innerWidth >= 768
-    && window.innerWidth < 1024
-    && panelRect.right >= window.innerWidth - 2
-    && panelRect.left < mapRect.right
-    && panelRect.width < mapRect.width;
-
-  if (!isBottomPanel && !isNarrowSidePanel) {
+  if (!isBottomPanel) {
     return null;
   }
 
   return {
     height: panel.offsetHeight || panelRect.height || window.innerHeight * 0.6,
     leftInMap: panelRect.left - mapRect.left,
-    mode: isBottomPanel ? 'bottom' : 'side'
+    mode: 'bottom'
   };
 }
 
@@ -684,15 +777,7 @@ function getMarkerTargetPoint(panel, mapContainer) {
     return L.point(mapWidth / 2, Math.max(TARGET_HEIGHT, desiredY));
   }
 
-  if (window.innerWidth < 1024) {
-    const panelWidth = panel.offsetWidth || 420;
-    const panelLeftInMap = window.innerWidth - panelWidth - mapRect.left;
-    const desiredX = (panelLeftInMap - getPanelMarkerGap()) / 2;
-
-    return L.point(Math.max(TARGET_HEIGHT, desiredX), mapHeight / 2);
-  }
-
-  return L.point(mapWidth / 2, mapHeight / 2);
+  return L.point(mapWidth / 2, mapHeight * DESKTOP_POPUP_MARKER_TARGET_Y_RATIO);
 }
 
 function getMarkerFocusLatLng(marker, targetZoom) {
@@ -727,23 +812,6 @@ async function ensureMarkerVisibleAbovePanel(marker, maxAttempts = 6) {
 
     const markerPoint = map.latLngToContainerPoint(marker.getLatLng());
 
-    if (panelCoverage.mode === 'side') {
-      const desiredX = panelCoverage.leftInMap - getPanelMarkerGap();
-      const offsetX = markerPoint.x - desiredX;
-
-      if (offsetX <= 2) {
-        return;
-      }
-
-      map.panBy([offsetX, 0], {
-        animate: true,
-        duration: PANEL_MARKER_PAN_DURATION,
-        easeLinearity: 0.15
-      });
-      await waitForMapMove(map);
-      continue;
-    }
-
     const panelTopInMap = getPanelTopInMap(slidePanel, mapContainer);
     const desiredY = panelTopInMap - getPanelMarkerGap();
     const offsetY = markerPoint.y - desiredY;
@@ -761,8 +829,49 @@ async function ensureMarkerVisibleAbovePanel(marker, maxAttempts = 6) {
   }
 }
 
+function isDesktopPanelMode() {
+  return window.innerWidth >= 768;
+}
+
+function resetPanelDesktopPosition(panel) {
+  panel.style.removeProperty('--panel-left');
+  panel.style.removeProperty('--panel-top');
+}
+
+function updateDesktopPanelPosition() {
+  const panel = document.getElementById('slide-panel');
+
+  if (!panel || !panel.classList.contains('open') || !isDesktopPanelMode()) {
+    return;
+  }
+
+  const marker = activePanelMarker;
+  const markerElement = marker && typeof marker.getElement === 'function'
+    ? marker.getElement()
+    : null;
+
+  if (!markerElement) {
+    return;
+  }
+
+  const markerRect = markerElement.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+  const panelWidth = panel.offsetWidth || panelRect.width || 380;
+  const panelHeight = panel.offsetHeight || panelRect.height || 240;
+  const viewportPadding = 16;
+  const minLeft = viewportPadding + panelWidth / 2;
+  const maxLeft = window.innerWidth - viewportPadding - panelWidth / 2;
+  const centeredLeft = markerRect.left + markerRect.width / 2;
+  const left = Math.min(Math.max(centeredLeft, minLeft), maxLeft);
+  const minTop = viewportPadding + panelHeight + DESKTOP_POPUP_MARKER_GAP;
+  const top = Math.max(minTop, markerRect.top - DESKTOP_POPUP_MARKER_GAP);
+
+  panel.style.setProperty('--panel-left', `${left}px`);
+  panel.style.setProperty('--panel-top', `${top}px`);
+}
+
 // PANEL LOGIC
-function openPanel(budynek) {
+function openPanel(budynek, marker = null) {
   const panel = document.getElementById('slide-panel');
   const title = budynek.title.rendered;
   const content = document.getElementById('panel-content');
@@ -778,10 +887,13 @@ function openPanel(budynek) {
     <a class="map-building-link" href="${budynek.link}" target="_blank" rel="noopener noreferrer">Czytaj więcej →</a>
   `;
 
+  activePanelMarker = marker;
   panel.style.transition = '';
   panel.style.transform = '';
+  resetPanelDesktopPosition(panel);
   panel.classList.add('open');
   document.body.classList.add('map-panel-open');
+  updateDesktopPanelPosition();
 }
 
 function closePanel() {
@@ -792,10 +904,12 @@ function closePanel() {
   }
 
   clearActiveBuildingMarker();
+  activePanelMarker = null;
   panel.classList.remove('open');
   document.body.classList.remove('map-panel-open');
   panel.style.transition = '';
   panel.style.transform = '';
+  resetPanelDesktopPosition(panel);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

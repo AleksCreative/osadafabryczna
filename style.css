@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 1.8
+Version: 1.9
 */
 
 /* ---------------------------
@@ -292,18 +292,46 @@ main {
 @media (min-width: 768px) {
 
   #slide-panel {
-    top: 0;
-    right: 0;
-    width: 420px;
-    height: 100vh;
-
-    border-radius: 0;
-
-    transform: translateX(100%);
+    top: var(--panel-top, 50%);
+    left: var(--panel-left, 50%);
+    right: auto;
+    width: min(380px, calc(100vw - 32px));
+    max-height: min(430px, calc(100vh - 32px));
+    height: auto;
+    padding: 28px 30px 30px;
+    border-radius: 8px;
+    overflow: visible;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, calc(-100% - 18px)) scale(0.96);
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
 
   #slide-panel.open {
-    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, calc(-100% - 18px)) scale(1);
+  }
+
+  #slide-panel::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -13px;
+    width: 26px;
+    height: 26px;
+    background: #fff;
+    box-shadow: 5px 5px 12px rgba(0,0,0,0.08);
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .panel-handle {
+    display: none;
+  }
+
+  #panel-content {
+    max-height: calc(min(430px, calc(100vh - 32px)) - 58px);
+    overflow-y: auto;
   }
 
 }
@@ -326,9 +354,260 @@ main {
   touch-action: manipulation;
 }
 
+.info-panel {
+  --info-panel-background: #FBEFE0;
+  --info-panel-edge-width: 40px;
+  --info-panel-edge-height: 400px;
+  --info-panel-edge-overlap: 30px;
+  --info-panel-edge-image: url('dist/assets/panel-edge.png');
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(420px, 33vw);
+  max-width: 420px;
+  height: 100vh;
+  padding: 28px 30px 30px;
+  background: var(--info-panel-background);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.16);
+  z-index: 1100;
+  overflow: visible;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+.info-panel-edge {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+  background-image: var(--info-panel-edge-image);
+  background-repeat: repeat-y;
+  background-position: center top;
+  background-size: var(--info-panel-edge-width) var(--info-panel-edge-height);
+}
+
+.info-panel.is-open {
+  transform: translateX(0);
+}
+
+.info-panel-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 20;
+  touch-action: manipulation;
+}
+
+.info-panel-content {
+  position: relative;
+  z-index: 1;
+  height: calc(100% - 60px);
+  max-height: calc(100% - 60px);
+  overflow-y: auto;
+  margin-top: 25px;
+  padding-right: 16px;
+  scrollbar-gutter: stable;
+}
+
+.info-panel-content > * + * {
+  margin-top: 1rem;
+}
+
+.info-panel-toggle {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  padding: 16px 8px;
+  border: 0;
+  border-top-left-radius: 16px;
+  border-bottom-left-radius: 16px;
+  background: #1f5f3c;
+  color: #fff;
+  box-shadow: -6px 0 18px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transform: translateY(-50%);
+  z-index: 1150;
+}
+
+.info-panel-toggle span {
+  display: block;
+  font-size: 18px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.info-panel-toggle.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.admin-bar .info-panel {
+  top: 32px;
+  height: calc(100vh - 32px);
+}
+
+body.admin-bar .info-panel.is-open {
+  top: 32px;
+}
+
+body.admin-bar .info-panel-toggle {
+  top: calc(50% + 16px);
+}
+
+@media (max-width: 782px) {
+  body.admin-bar .info-panel {
+    top: 46px;
+    height: calc(100vh - 46px);
+  }
+
+  body.admin-bar .info-panel.is-open {
+    top: 46px;
+  }
+
+  body.admin-bar .info-panel-toggle {
+    top: calc(50% + 23px);
+  }
+}
+
 @media (max-width: 767px) {
   #panel-content {
     padding-top: 18px;
+  }
+
+  .info-panel {
+    top: 10vh;
+    left: 10%;
+    right: 10%;
+    bottom: 10vh;
+    width: auto;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    padding: 24px 20px 24px;
+    border-radius: 0;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
+    transform: translate(0, 0) scale(0.96);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .info-panel-edge {
+    display: block;
+  }
+
+  .info-panel-edge--left,
+  .info-panel-edge--right {
+    top: 0;
+    bottom: 0;
+    width: var(--info-panel-edge-width);
+  }
+
+  .info-panel-edge--left {
+    left: calc(-1 * var(--info-panel-edge-overlap));
+  }
+
+  .info-panel-edge--right {
+    right: calc(-1 * var(--info-panel-edge-overlap));
+    transform: scaleX(-1);
+  }
+
+  .info-panel-edge--top,
+  .info-panel-edge--bottom {
+    width: var(--info-panel-edge-width);
+    height: 80vw;
+    transform-origin: 0 0;
+  }
+
+  .info-panel-edge--top {
+    top: calc(var(--info-panel-edge-width) - 66px);
+    left: 100%;
+    transform: rotate(-270deg);
+  }
+
+  .info-panel-edge--bottom {
+    top: calc(100% - var(--info-panel-edge-width) + var(--info-panel-edge-overlap));
+    left: 0%;
+    transform: rotate(270deg);
+    margin-top: 38px;
+  }
+
+  .info-panel.is-open {
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .info-panel-close {
+    top: 10px;
+    right: 10px;
+  }
+
+  .info-panel-content {
+    height: calc(100% - 46px);
+    max-height: calc(100% - 46px);    
+    padding-right: 16px;
+    padding-left: 16px;
+    padding-bottom: 36px;
+  }
+
+  .info-panel-toggle {
+    display: flex;
+    top: 50%;
+    right: 0;
+    bottom: auto;
+    min-height: 140px;
+    padding: 16px 8px;
+    border-top-left-radius: 16px;
+    border-bottom-left-radius: 16px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    transform: translateY(-50%);
+  }
+
+  .info-panel-toggle span {
+    writing-mode: vertical-rl;
+    font-size: 18px;
+  }
+
+  .info-panel-toggle.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 767px) {
+  body.admin-bar .info-panel,
+  body.admin-bar .info-panel.is-open {
+    top: calc(46px + 10vh);
+    bottom: 10vh;
+    height: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .info-panel-edge--left {
+    top: 0;
+    bottom: 0;
+    left: calc(-1 * var(--info-panel-edge-overlap));
+    display: block;
+    width: var(--info-panel-edge-width);
   }
 }
 
@@ -470,9 +749,11 @@ body.front-page .site-footer {
     z-index: 1000;
 }
 
-body.map-panel-open.home .site-footer,
-body.map-panel-open.front-page .site-footer {
-    background: #fff;
+@media (max-width: 767px) {
+    body.map-panel-open.home .site-footer,
+    body.map-panel-open.front-page .site-footer {
+        background: #fff;
+    }
 }
 
 @media (min-width: 768px) {
