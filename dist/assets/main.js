@@ -1,8 +1,8 @@
 // Map center and overlay bounds
 const MAP_CENTER = [52.05698, 20.44018];
 const IMAGE_BOUNDS = [
-  [52.081628, 20.502934], // northeast
-  [52.033532, 20.382671]  // southwest
+  [52.085027, 20.543456], // northeast
+  [52.029078, 20.345237]  // southwest
 ];
 const TARGET_HEIGHT = 140; // default max height for vertical-style icons
 const TARGET_WIDTH = 140; // default max width for horizontal/square-style icons
@@ -50,14 +50,25 @@ const map = L.map('map', {
   wheelPxPerZoomLevel: 80
 });
 
-// Add OpenStreetMap tiles
+// Add OpenStreetMap tiles (kept mostly invisible so the image overlay remains the main visual)
 const osmTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors',
   opacity: 0
 }).addTo(map);
 
+// Create a dedicated pane for street labels so they render above the image overlay
+const labelsPane = map.createPane('labelsPane');
+labelsPane.style.zIndex = 450;
+labelsPane.style.pointerEvents = 'none';
+
+const streetLabelTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+  pane: 'labelsPane',
+  opacity: 0.95
+}).addTo(map);
+
 // Add overlay image
-const overlayUrl = 'wp-content/themes/osadafabryczna/dist/assets/mapa.png';
+const overlayUrl = 'wp-content/themes/osadafabryczna/dist/assets/mapa2a.jpg';
 const overlay = L.imageOverlay(
   overlayUrl,
   IMAGE_BOUNDS,
@@ -289,12 +300,18 @@ function updateMapLayerVisibility() {
       overlay.addTo(map);
     }
 
+    if (!map.hasLayer(streetLabelTiles)) {
+      streetLabelTiles.addTo(map);
+    }
+
+    streetLabelTiles.setOpacity(0.95);
     osmTiles.setOpacity(0);
   } else {
     if (map.hasLayer(overlay)) {
       overlay.remove();
     }
 
+    streetLabelTiles.setOpacity(0);
     osmTiles.setOpacity(1);
   }
 }
