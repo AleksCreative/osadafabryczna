@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 1.9
+Version: 2.0
 */
 
 /* ---------------------------
@@ -33,6 +33,13 @@ body {
 main {
     position: relative;
 }
+
+/*Typography*/
+h1, h2, h3, h4, h5, h6, p {
+    margin-bottom: 1rem;
+}
+
+
 
 /* Map container fills viewport */
 #map {
@@ -194,14 +201,35 @@ main {
 
 /* Base panel styles */
 #slide-panel {
+  --slide-panel-background: #FBEFE0;
+  --slide-panel-desktop-width: min(380px, calc(100vw - 32px));
+  --slide-panel-edge-width: 40px;
+  --slide-panel-edge-height: 400px;
+  --slide-panel-edge-overlap: 30px;
+  --slide-panel-edge-image: url('dist/assets/panel-edge.png');
   position: fixed;
-  background: #fff;
+  background: var(--slide-panel-background);
   padding: 30px;
   box-shadow: 0 0 25px rgba(0,0,0,0.15);
   z-index: 1000;
-  overflow-y: auto;
+  overflow: visible;
   transition: transform 0.35s ease;
   will-change: transform;
+}
+
+.slide-panel-edge {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+  background-image: var(--slide-panel-edge-image);
+  background-repeat: repeat-y;
+  background-position: center top;
+  background-size: var(--slide-panel-edge-width) var(--slide-panel-edge-height);
+}
+
+#slide-panel > :not(.slide-panel-edge) {
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 767px) {
@@ -214,8 +242,8 @@ main {
     padding-left: 22px;
     padding-right: 22px;
 
-    border-top-left-radius: 18px;
-    border-top-right-radius: 18px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 
     transform: translateY(calc(100% + 44px));
   }
@@ -241,6 +269,21 @@ main {
 
   #slide-panel {
     padding-top: 8px; /* reduce spacing so handle feels attached */
+  }
+
+  .slide-panel-edge--top {
+    top: calc(var(--slide-panel-edge-width) - 66px);
+    left: 100%;
+    display: block;
+    width: var(--slide-panel-edge-width);
+    height: 100vw;
+    transform: rotate(-270deg);
+    transform-origin: 0 0;
+  }
+
+  #panel-content {
+    max-height: calc(100% - 42px);
+    overflow-y: auto;
   }
 
   .leaflet-top.leaflet-left {
@@ -295,11 +338,11 @@ main {
     top: var(--panel-top, 50%);
     left: var(--panel-left, 50%);
     right: auto;
-    width: min(380px, calc(100vw - 32px));
+    width: var(--slide-panel-desktop-width);
     max-height: min(430px, calc(100vh - 32px));
     height: auto;
     padding: 28px 30px 30px;
-    border-radius: 8px;
+    border-radius: 0;
     overflow: visible;
     opacity: 0;
     pointer-events: none;
@@ -320,9 +363,49 @@ main {
     bottom: -13px;
     width: 26px;
     height: 26px;
-    background: #fff;
+    background: var(--slide-panel-background);
     box-shadow: 5px 5px 12px rgba(0,0,0,0.08);
     transform: translateX(-50%) rotate(45deg);
+  }
+
+  .slide-panel-edge {
+    display: block;
+  }
+
+  .slide-panel-edge--left,
+  .slide-panel-edge--right {
+    top: 0;
+    bottom: 0;
+    width: var(--slide-panel-edge-width);
+  }
+
+  .slide-panel-edge--left {
+    left: calc(-1 * var(--slide-panel-edge-overlap));
+  }
+
+  .slide-panel-edge--right {
+    right: calc(-1 * var(--slide-panel-edge-overlap));
+    transform: scaleX(-1);
+  }
+
+  .slide-panel-edge--top,
+  .slide-panel-edge--bottom {
+    width: var(--slide-panel-edge-width);
+    height: var(--slide-panel-desktop-width);
+    transform-origin: 0 0;
+  }
+
+  .slide-panel-edge--top {
+    top: calc(var(--slide-panel-edge-width) - 66px);
+    left: 100%;
+    transform: rotate(-270deg);
+  }
+
+  .slide-panel-edge--bottom {
+    top: calc(100% - var(--slide-panel-edge-width) + var(--slide-panel-edge-overlap));
+    left: 0%;
+    transform: rotate(270deg);
+    margin-top: 38px;
   }
 
   .panel-handle {
@@ -752,7 +835,7 @@ body.front-page .site-footer {
 @media (max-width: 767px) {
     body.map-panel-open.home .site-footer,
     body.map-panel-open.front-page .site-footer {
-        background: #fff;
+        background: #fbefe0;
     }
 }
 

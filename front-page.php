@@ -12,6 +12,10 @@ get_header();
     <!-- Existing map popup panel remains unchanged -->
     <div id="slide-panel" class="slide-panel">
         <div class="panel-handle"></div>
+        <span class="slide-panel-edge slide-panel-edge--left" aria-hidden="true"></span>
+        <span class="slide-panel-edge slide-panel-edge--right" aria-hidden="true"></span>
+        <span class="slide-panel-edge slide-panel-edge--top" aria-hidden="true"></span>
+        <span class="slide-panel-edge slide-panel-edge--bottom" aria-hidden="true"></span>
         <button id="panel-close" class="panel-close" aria-label="Zamknij panel">×</button>
         <div id="panel-content"></div>
     </div>
