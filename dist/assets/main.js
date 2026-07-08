@@ -38,15 +38,16 @@ if (!mapElement || typeof L === 'undefined') {
 const markers = [];
 
 // Initialize map
+const initialZoom = 14.5;
 const map = L.map('map', {
   center: MAP_CENTER,
-  zoom: 15,
+  zoom: initialZoom,
   minZoom: 14,
-  maxZoom: 18,
+  maxZoom: 17,
   maxBounds: IMAGE_BOUNDS,
   maxBoundsViscosity: 1,
-  zoomSnap: 0.15,
-  zoomDelta: 0.15,
+  zoomSnap: 0.10,
+  zoomDelta: 0.10,
   wheelPxPerZoomLevel: 80
 });
 
@@ -73,20 +74,21 @@ const overlay = L.imageOverlay(
   overlayUrl,
   IMAGE_BOUNDS,
   {
-    opacity: 0.8
+    opacity: 1
   }
 ).addTo(map);
 
-// Fit map to overlay
-map.fitBounds(IMAGE_BOUNDS, { animate: false });
+// Set initial view without forcing the map to fit the entire overlay bounds,
+// so the configured initial zoom level is respected.
+map.setView(MAP_CENTER, initialZoom);
 map.setMaxBounds(IMAGE_BOUNDS);
-map.setMinZoom(map.getBoundsZoom(IMAGE_BOUNDS, false));
+map.setMinZoom(Math.max(14, map.getBoundsZoom(IMAGE_BOUNDS, false)));
 
 const markerClusterGroup = typeof L.markerClusterGroup === 'function'
   ? L.markerClusterGroup({
       showCoverageOnHover: false,
       spiderfyOnMaxZoom: true,
-      disableClusteringAtZoom: 17,
+      disableClusteringAtZoom: 16,
       removeOutsideVisibleBounds: true,
       maxClusterRadius: 60
     })
