@@ -430,12 +430,12 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 140px;
+  min-height: 100px;
   padding: 16px 8px;
   border: 0;
   border-top-left-radius: 16px;
   border-bottom-left-radius: 16px;
-  background: #1f5f3c;
+  background: #3c5f1f;
   color: #fff;
   box-shadow: -6px 0 18px rgba(0, 0, 0, 0.18);
   cursor: pointer;
@@ -572,7 +572,7 @@ body.admin-bar .info-panel-toggle {
     top: 50%;
     right: 0;
     bottom: auto;
-    min-height: 140px;
+    min-height: 100px;
     padding: 16px 8px;
     border-top-left-radius: 16px;
     border-bottom-left-radius: 16px;
