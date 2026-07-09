@@ -24,13 +24,17 @@
     <nav id="primary-menu" class="main-nav" aria-hidden="true">
       <?php
         wp_nav_menu([
-          'theme_location' => 'primary',
+          'theme_location' => function_exists('osadafabryczna_get_current_language') && 'en' === osadafabryczna_get_current_language() ? 'primary_en' : 'primary',
           'container' => false,
           'menu_class' => 'menu',
           'fallback_cb' => false
         ]);
       ?>
     </nav>
+
+    <?php if (function_exists('osadafabryczna_language_switcher')) : ?>
+      <?php osadafabryczna_language_switcher(); ?>
+    <?php endif; ?>
 
     <!-- Menu toggle -->
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-menu" aria-label="Otwórz menu">

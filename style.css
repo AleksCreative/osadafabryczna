@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 2.07
+Version: 2.1
 */
 
 /* ---------------------------
@@ -556,7 +556,7 @@ body.admin-bar .info-panel.is-open {
 }
 
 body.admin-bar .info-panel-toggle {
-  top: calc(50% + 16px);
+  top: calc(30% + 16px);
 }
 
 @media (max-width: 782px) {
@@ -744,6 +744,7 @@ Header
 
 .site-logo,
 .main-nav,
+.language-switcher,
 .menu-toggle {
     pointer-events: auto;
 }
@@ -809,11 +810,52 @@ Header
     z-index: 1220;
 }
 
+.language-switcher {
+    position: fixed;
+    top: var(--site-menu-offset);
+    right: calc(var(--site-menu-offset) + 54px);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+    z-index: 1220;
+    pointer-events: auto;
+}
+
+.language-switcher a {
+    min-width: 40px;
+    min-height: 44px;
+    display: grid;
+    place-items: center;
+    padding: 0 10px;
+    color: #333;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.language-switcher a + a {
+    border-left: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.language-switcher a.is-active {
+    background: #3c5f1f;
+    color: #fff;
+}
+
 body.admin-bar .main-nav {
     top: calc(32px + var(--site-menu-offset) + 48px);
 }
 
 body.admin-bar .menu-toggle {
+    top: calc(32px + var(--site-menu-offset));
+}
+
+body.admin-bar .language-switcher {
     top: calc(32px + var(--site-menu-offset));
 }
 
@@ -825,6 +867,11 @@ body.admin-bar .menu-toggle {
     body.home.info-panel-open .menu-toggle,
     body.front-page.info-panel-open .menu-toggle {
         right: var(--site-menu-panel-offset);
+    }
+
+    body.home.info-panel-open .language-switcher,
+    body.front-page.info-panel-open .language-switcher {
+        right: calc(var(--site-menu-panel-offset) + 54px);
     }
 
     body.home.info-panel-open .main-nav,
@@ -843,6 +890,10 @@ body.admin-bar .menu-toggle {
     }
 
     body.admin-bar .menu-toggle {
+        top: calc(46px + var(--site-menu-offset));
+    }
+
+    body.admin-bar .language-switcher {
         top: calc(46px + var(--site-menu-offset));
     }
 }

@@ -26,6 +26,9 @@ const DESKTOP_POPUP_MARKER_TARGET_Y_RATIO = 0.78;
 const USER_MARKER_Z_INDEX_OFFSET = 10000;
 const USER_MARKER_MOVE_DURATION = 700;
 const USER_MARKER_SNAP_DISTANCE_METERS = 120;
+const MAP_CONFIG = window.OsadaFabrycznaMap || {};
+const MAP_LABELS = MAP_CONFIG.labels || {};
+const MAP_ASSETS = MAP_CONFIG.assets || {};
 const urlParams = new URLSearchParams(window.location.search);
 let activeBuildingMarker = null;
 let activePanelMarker = null;
@@ -78,7 +81,7 @@ const streetLabelTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_on
 }).addTo(map);
 
 // Add overlay image
-const overlayUrl = 'wp-content/themes/osadafabryczna/dist/assets/mapa2a.jpg';
+const overlayUrl = MAP_ASSETS.mapOverlay || '/wp-content/themes/osadafabryczna/dist/assets/mapa2a.jpg';
 const overlay = L.imageOverlay(
   overlayUrl,
   IMAGE_BOUNDS,
@@ -121,7 +124,7 @@ const geolocationToggle = document.getElementById('geolocation-toggle');
 let geolocationWatchId = null;
 const userMarker = L.marker([0,0], {
   icon: L.icon({
-    iconUrl: 'wp-content/themes/osadafabryczna/dist/assets/user-location.png',
+    iconUrl: MAP_ASSETS.userLocation || '/wp-content/themes/osadafabryczna/dist/assets/user-location.png',
     iconSize: [30,30],
     iconAnchor: [15,15]
   }),
@@ -136,12 +139,14 @@ function updateGeolocationButtonState(isEnabled, isSupported = true) {
 
   geolocationToggle.classList.toggle('is-active', isEnabled);
   geolocationToggle.setAttribute('aria-pressed', String(isEnabled));
-  geolocationToggle.title = isSupported ? '' : 'Geolocation is not supported in this browser.';
+  geolocationToggle.title = isSupported ? '' : (MAP_LABELS.geolocationUnsupported || 'Geolocation is not supported in this browser.');
   geolocationToggle.disabled = !isSupported;
 
   const label = geolocationToggle.querySelector('.geolocation-toggle__label');
   if (label) {
-    label.textContent = isEnabled ? 'Lokalizacja: włączona' : 'Włącz lokalizację';
+    label.textContent = isEnabled
+      ? (MAP_LABELS.locationEnabled || 'Lokalizacja: włączona')
+      : (MAP_LABELS.enableLocation || 'Włącz lokalizację');
   }
 }
 
@@ -309,7 +314,7 @@ let overlayVisible = true;
 const overlayToggle = document.createElement('button');
 
 function updateOverlayToggleState() {
-  overlayToggle.textContent = overlayVisible ? 'Zmień mapę' : 'Zmień mapę';
+  overlayToggle.textContent = MAP_LABELS.changeMap || 'Zmień mapę';
   overlayToggle.setAttribute('aria-pressed', String(overlayVisible));
 }
 
@@ -358,7 +363,7 @@ function setupMapControlMenu() {
 
   overlayToggle.type = 'button';
   overlayToggle.className = 'map-control-button map-overlay-toggle';
-  overlayToggle.setAttribute('aria-label', 'Przełącz widoczność mapy historycznej');
+  overlayToggle.setAttribute('aria-label', MAP_LABELS.changeMapAria || 'Zmień mapę');
   updateOverlayToggleState();
 
   overlayToggle.addEventListener('pointerdown', event => {
@@ -387,7 +392,7 @@ setupMapControlMenu();
 // Fetch buildings and add markers
 async function addMarkers() {
   try {
-    const response = await fetch('/wp-json/wp/v2/budynek?acf_format=standard&_embed');
+    const response = await fetch(MAP_CONFIG.restUrl || '/wp-json/wp/v2/budynek?acf_format=standard&_embed');
     const budynki = await response.json();
 
     budynki.forEach(budynek => {
@@ -918,7 +923,7 @@ function openPanel(budynek, marker = null) {
     <h2 class="map-building-title">${title}</h2>
     <h3 class="map-building-subtitle">${budynek.acf.subtitle || ''}</h3>
     <p class="map-building-paragraph">${budynek.acf.short_description || ''}</p>
-    <a class="map-building-link" href="${budynek.link}" target="_blank" rel="noopener noreferrer">Czytaj więcej →</a>
+    <a class="map-building-link" href="${budynek.link}" target="_blank" rel="noopener noreferrer">${MAP_LABELS.readMore || 'Czytaj więcej'} →</a>
   `;
 
   activePanelMarker = marker;

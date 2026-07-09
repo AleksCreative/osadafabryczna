@@ -1,5 +1,10 @@
 <?php
 get_header();
+$osada_language = function_exists('osadafabryczna_get_current_language') ? osadafabryczna_get_current_language() : 'pl';
+$osada_back_url = 'en' === $osada_language && function_exists('osadafabryczna_get_english_front_page_url')
+    ? osadafabryczna_get_english_front_page_url()
+    : home_url('/');
+$osada_back_label = 'en' === $osada_language ? 'Back to map' : 'Powrót do mapy';
 
 // Start the loop
 if ( have_posts() ) :
@@ -42,7 +47,7 @@ if ( have_posts() ) :
                 </div> -->
 
                 <footer class="building-footer">
-                    <a href="<?php echo esc_url(home_url('/')); ?>" class="back-to-map">← Powrót do mapy</a>
+                    <a href="<?php echo esc_url($osada_back_url); ?>" class="back-to-map">← <?php echo esc_html($osada_back_label); ?></a>
                 </footer>
             </article>
         </main>
