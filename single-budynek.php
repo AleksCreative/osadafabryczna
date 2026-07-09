@@ -50,4 +50,4 @@ if ( have_posts() ) :
     <?php endwhile;
 endif;
 
-get_footer();
+get_footer('budynek');

@@ -5,6 +5,12 @@ get_header();
 <main>
     <!-- Map container -->
     <div id="map"></div>
+    <img
+        class="map-compass"
+        src="<?php echo esc_url(get_template_directory_uri() . '/dist/assets/roza-wiatrow.png'); ?>"
+        alt=""
+        aria-hidden="true"
+    >
     <button id="geolocation-toggle" class="geolocation-toggle" type="button" aria-pressed="false">
         <span class="geolocation-toggle__label">Włącz lokalizację</span>
     </button>

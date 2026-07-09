@@ -111,3 +111,16 @@ function osadafabryczna_register_menus() {
 add_action('after_setup_theme', 'osadafabryczna_register_menus');
 
 add_theme_support('menus');
+
+function osadafabryczna_register_sidebars() {
+    register_sidebar(array(
+        'name'          => __('Building Footer', 'osadafabryczna'),
+        'id'            => 'budynek_footer',
+        'description'   => __('Footer content shown on single building pages.', 'osadafabryczna'),
+        'before_widget' => '<section id="%1$s" class="widget %2$s">',
+        'after_widget'  => '</section>',
+        'before_title'  => '<h2 class="widget-title">',
+        'after_title'   => '</h2>',
+    ));
+}
+add_action('widgets_init', 'osadafabryczna_register_sidebars');

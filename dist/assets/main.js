@@ -309,7 +309,7 @@ let overlayVisible = true;
 const overlayToggle = document.createElement('button');
 
 function updateOverlayToggleState() {
-  overlayToggle.textContent = overlayVisible ? 'ukryj mapę' : 'pokaż mapę';
+  overlayToggle.textContent = overlayVisible ? 'Zmień mapę' : 'Zmień mapę';
   overlayToggle.setAttribute('aria-pressed', String(overlayVisible));
 }
 

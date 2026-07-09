@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 2.04
+Version: 2.05
 */
 
 /* ---------------------------
@@ -869,6 +869,16 @@ Map container
     height: calc(100vh - 60px); /* subtract header height */
 }
 
+.map-compass {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 130px;
+    height: auto;
+    pointer-events: none;
+    z-index: 900;
+}
+
 body.home,
 body.front-page {
     overflow: hidden;
@@ -913,6 +923,11 @@ body.front-page .site-footer {
 }
 
 @media (max-width: 767px) {
+    .map-compass {
+        right: 16px;
+        bottom: calc(var(--mobile-map-action-bar-height) + 18px);
+    }
+
     body.map-panel-open.home .site-footer,
     body.map-panel-open.front-page .site-footer {
         background: #fbefe0;
@@ -1017,13 +1032,39 @@ Footer
     color: #333;
 }
 
+.site-footer--budynek {
+    background: #fff;
+}
+
+.footer-inner--budynek {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.footer-inner--budynek .widget {
+    margin: 0;
+}
+
 /* ---------------------------
 Single Building Page
 --------------------------- */
+body.single-budynek .site-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: transparent;
+    border-bottom-color: transparent;
+}
+
+body.admin-bar.single-budynek .site-header {
+    top: 32px;
+}
+
 .building-single {
     max-width: 900px;
     margin: 0 auto;
-    padding: 1rem;
+    padding: calc(var(--site-header-height, 72px) + 1rem) 1rem 1rem;
     font-family: Arial, sans-serif;
     line-height: 1.6;
 }
@@ -1077,10 +1118,16 @@ Single Building Page
 /* Responsive */
 @media screen and (max-width: 600px) {
     .building-single {
-        padding: 0.5rem;
+        padding: calc(var(--site-header-height, 64px) + 0.5rem) 0.5rem 0.5rem;
     }
 
     .building-header h1 {
         font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 782px) {
+    body.admin-bar.single-budynek .site-header {
+        top: 46px;
     }
 }
