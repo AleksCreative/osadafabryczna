@@ -11,13 +11,17 @@
     
     <!-- Logo -->
     <div class="site-logo">
-      <a href="<?php echo esc_url(home_url('/')); ?>">
-        <?php bloginfo('name'); ?>
-      </a>
+      <?php if (has_custom_logo()) : ?>
+        <?php the_custom_logo(); ?>
+      <?php else : ?>
+        <a href="<?php echo esc_url(home_url('/')); ?>">
+          <?php bloginfo('name'); ?>
+        </a>
+      <?php endif; ?>
     </div>
 
     <!-- Primary Navigation -->
-    <nav class="main-nav">
+    <nav id="primary-menu" class="main-nav" aria-hidden="true">
       <?php
         wp_nav_menu([
           'theme_location' => 'primary',
@@ -28,8 +32,8 @@
       ?>
     </nav>
 
-    <!-- Mobile menu toggle -->
-    <button class="menu-toggle" aria-expanded="false" aria-controls="primary-menu">
+    <!-- Menu toggle -->
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-menu" aria-label="Otwórz menu">
       &#9776;
     </button>
   </div>

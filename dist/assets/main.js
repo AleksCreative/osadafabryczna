@@ -13,7 +13,7 @@ const VERTICAL_MAX_WIDTH = 140;
 const VERTICAL_MAX_HEIGHT = 90;
 const MARKER_PADDING = 6; // small padding around each icon
 const ZOOM_STEP_FACTOR = 1.2; // scale factor per zoom level
-const MOBILE_PANEL_MARKER_GAP = 72;
+const MOBILE_PANEL_MARKER_GAP = 84;
 const EXTRA_PANEL_MARGIN = 8;
 const PANEL_MARKER_GAP_SCALE = 0.6;
 const ACTIVE_MARKER_SCALE = 1.12;
@@ -21,8 +21,8 @@ const PANEL_MARKER_PAN_DURATION = 0.75;
 const PANEL_MARKER_PAN_TIMEOUT = 950;
 const PANEL_MARKER_FLY_DURATION = 1.05;
 const PANEL_MARKER_FLY_TIMEOUT = 1300;
-const DESKTOP_POPUP_MARKER_GAP = 16;
-const DESKTOP_POPUP_MARKER_TARGET_Y_RATIO = 0.72;
+const DESKTOP_POPUP_MARKER_GAP = 24;
+const DESKTOP_POPUP_MARKER_TARGET_Y_RATIO = 0.78;
 const USER_MARKER_Z_INDEX_OFFSET = 10000;
 const USER_MARKER_MOVE_DURATION = 700;
 const USER_MARKER_SNAP_DISTANCE_METERS = 120;
@@ -42,10 +42,11 @@ if (!mapElement || typeof L === 'undefined') {
 const markers = [];
 
 // Initialize map
-const initialZoom = 14.5;
+const initialZoom = 16;
 const map = L.map('map', {
   center: MAP_CENTER,
   zoom: initialZoom,
+  zoomControl: false,
   minZoom: 14,
   maxZoom: 17,
   maxBounds: IMAGE_BOUNDS,
@@ -54,6 +55,10 @@ const map = L.map('map', {
   zoomDelta: 0.10,
   wheelPxPerZoomLevel: 80
 });
+
+L.control.zoom({
+  position: 'topleft'
+}).addTo(map);
 
 // Add OpenStreetMap tiles (kept mostly invisible so the image overlay remains the main visual)
 const osmTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -331,27 +336,30 @@ function updateMapLayerVisibility() {
 }
 
 function setupMapControlMenu() {
-  const zoomControl = map.getContainer().querySelector('.leaflet-control-zoom');
+  const mapControlMenu = L.control({
+    position: 'bottomleft'
+  });
 
-  if (!zoomControl) {
-    return;
-  }
+  mapControlMenu.onAdd = function () {
+    const container = L.DomUtil.create('div', 'map-control-menu');
 
-  zoomControl.classList.add('map-control-menu');
+    if (typeof L.DomEvent?.disableClickPropagation === 'function') {
+      L.DomEvent.disableClickPropagation(container);
+    }
+
+    if (typeof L.DomEvent?.disableScrollPropagation === 'function') {
+      L.DomEvent.disableScrollPropagation(container);
+    }
 
   if (geolocationToggle) {
     geolocationToggle.classList.add('map-control-button');
-    zoomControl.appendChild(geolocationToggle);
+    container.appendChild(geolocationToggle);
   }
 
   overlayToggle.type = 'button';
   overlayToggle.className = 'map-control-button map-overlay-toggle';
   overlayToggle.setAttribute('aria-label', 'Przełącz widoczność mapy historycznej');
   updateOverlayToggleState();
-
-  if (typeof L.DomEvent?.disableClickPropagation === 'function') {
-    L.DomEvent.disableClickPropagation(overlayToggle);
-  }
 
   overlayToggle.addEventListener('pointerdown', event => {
     event.stopPropagation();
@@ -366,7 +374,12 @@ function setupMapControlMenu() {
     updateOverlayToggleState();
   });
 
-  zoomControl.appendChild(overlayToggle);
+    container.appendChild(overlayToggle);
+
+    return container;
+  };
+
+  mapControlMenu.addTo(map);
 }
 
 setupMapControlMenu();
@@ -536,12 +549,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function openInfoPanel() {
     infoPanel.classList.add('is-open');
+    document.body.classList.add('info-panel-open');
     infoPanelToggle.classList.add('is-hidden');
     infoPanel.setAttribute('aria-hidden', 'false');
   }
 
   function closeInfoPanel() {
     infoPanel.classList.remove('is-open');
+    document.body.classList.remove('info-panel-open');
     infoPanelToggle.classList.remove('is-hidden');
     infoPanel.setAttribute('aria-hidden', 'true');
   }
@@ -608,6 +623,23 @@ function waitForPanelOpen(panel, timeout = 800) {
       }
     });
   });
+}
+
+function closeInfoPanelIfOpen() {
+  const infoPanel = document.getElementById('info-panel');
+  const infoPanelToggle = document.getElementById('info-panel-toggle');
+
+  if (!infoPanel || !infoPanel.classList.contains('is-open')) {
+    return;
+  }
+
+  infoPanel.classList.remove('is-open');
+  document.body.classList.remove('info-panel-open');
+  infoPanel.setAttribute('aria-hidden', 'true');
+
+  if (infoPanelToggle) {
+    infoPanelToggle.classList.remove('is-hidden');
+  }
 }
 
 const markerVisibilityChecks = new WeakMap();
@@ -872,6 +904,8 @@ function updateDesktopPanelPosition() {
 
 // PANEL LOGIC
 function openPanel(budynek, marker = null) {
+  closeInfoPanelIfOpen();
+
   const panel = document.getElementById('slide-panel');
   const title = budynek.title.rendered;
   const content = document.getElementById('panel-content');

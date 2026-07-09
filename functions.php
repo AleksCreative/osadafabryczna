@@ -99,6 +99,13 @@ function osadafabryczna_register_menus() {
         'primary' => __('Primary Menu', 'osadafabryczna'),
         'footer'  => __('Footer Menu', 'osadafabryczna'),
     ));
+
+    add_theme_support('custom-logo', array(
+        'height'      => 80,
+        'width'       => 240,
+        'flex-height' => true,
+        'flex-width'  => true,
+    ));
 }
 
 add_action('after_setup_theme', 'osadafabryczna_register_menus');
