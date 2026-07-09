@@ -124,3 +124,21 @@ function osadafabryczna_register_sidebars() {
     ));
 }
 add_action('widgets_init', 'osadafabryczna_register_sidebars');
+
+function osadafabryczna_allow_budynek_in_nav_menus($args, $post_type) {
+    if ('budynek' === $post_type) {
+        $args['show_in_nav_menus'] = true;
+    }
+
+    return $args;
+}
+add_filter('register_post_type_args', 'osadafabryczna_allow_budynek_in_nav_menus', 10, 2);
+
+function osadafabryczna_update_budynek_nav_menu_support() {
+    $post_type = get_post_type_object('budynek');
+
+    if ($post_type) {
+        $post_type->show_in_nav_menus = true;
+    }
+}
+add_action('init', 'osadafabryczna_update_budynek_nav_menu_support', 99);
