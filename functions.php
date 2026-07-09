@@ -2,12 +2,18 @@
 
 
 function osadafabryczna_enqueue_assets() {
+    wp_enqueue_style(
+        'osadafabryczna-google-fonts',
+        'https://fonts.googleapis.com/css2?family=Faculty+Glyphic&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap',
+        [],
+        null
+    );
 
     // Theme CSS (always)
     wp_enqueue_style(
         'theme-style',
         get_stylesheet_directory_uri() . '/style.css',
-        [],
+        ['osadafabryczna-google-fonts'],
         filemtime(get_stylesheet_directory() . '/style.css')
     );
 
@@ -69,6 +75,19 @@ function osadafabryczna_enqueue_assets() {
     }
 }
 add_action('wp_enqueue_scripts', 'osadafabryczna_enqueue_assets');
+
+function osadafabryczna_google_fonts_resource_hints($urls, $relation_type) {
+    if ('preconnect' === $relation_type) {
+        $urls[] = 'https://fonts.googleapis.com';
+        $urls[] = [
+            'href' => 'https://fonts.gstatic.com',
+            'crossorigin' => 'anonymous',
+        ];
+    }
+
+    return $urls;
+}
+add_filter('wp_resource_hints', 'osadafabryczna_google_fonts_resource_hints', 10, 2);
 
 function osadafabryczna_allow_geolocation_policy() {
     header('Permissions-Policy: geolocation=(self)');

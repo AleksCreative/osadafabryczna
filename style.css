@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 2.01
+Version: 2.02
 */
 
 /* ---------------------------
@@ -17,8 +17,10 @@ Basic Reset
 
 body, html {
     height: 100%;
-    font-family: Arial, sans-serif;
-}
+    font-family: "Poppins", Arial, sans-serif;
+    font-weight: 300;
+  font-style: normal;
+  font-size: 15px;}
 
 body {
     position: relative;
@@ -37,6 +39,18 @@ main {
 /*Typography*/
 h1, h2, h3, h4, h5, h6, p {
     margin-bottom: 1rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Faculty Glyphic", "Poppins", Arial, sans-serif;
+    color: #544C45;
+}
+
+a {
+    color: #544C45;
+    text-decoration: underline;
+    font-weight: 600;
+    transition: color 0.2s ease;
 }
 
 
