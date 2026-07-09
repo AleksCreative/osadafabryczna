@@ -40,11 +40,11 @@ if ( have_posts() ) :
                     <div class="building-image">
                         <img src="<?php echo esc_url($marker_icon); ?>" alt="<?php the_title_attribute(); ?>">
                     </div>
-                <?php endif; ?>
+                <?php endif; ?>-->
 
                 <div class="building-content">
                     <?php the_content(); ?>
-                </div> -->
+                </div> 
 
                 <footer class="building-footer">
                     <a href="<?php echo esc_url($osada_back_url); ?>" class="back-to-map">← <?php echo esc_html($osada_back_label); ?></a>
