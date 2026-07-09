@@ -1,5 +1,5 @@
 // Map center and overlay bounds
-const MAP_CENTER = [52.05698, 20.44018];
+const MAP_CENTER = [52.056891, 20.435654];
 const IMAGE_BOUNDS = [
   [52.085027, 20.543456], // northeast
   [52.029078, 20.345237]  // southwest

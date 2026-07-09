@@ -1099,6 +1099,10 @@ Footer
 /* ---------------------------
 Single Building Page
 --------------------------- */
+html {
+    scroll-behavior: smooth;
+}
+
 body.single-budynek .site-header {
     position: fixed;
     top: 0;
@@ -1112,73 +1116,173 @@ body.admin-bar.single-budynek .site-header {
     top: 32px;
 }
 
-.building-single {
-    max-width: 900px;
+.building-page {
+    max-width: 1180px;
     margin: 0 auto;
-    padding: calc(var(--site-header-height, 72px) + 1rem) 1rem 1rem;
-    font-family: Arial, sans-serif;
+    padding: calc(var(--site-header-height, 72px) + 32px) 24px 64px;
     line-height: 1.6;
 }
 
-.building-header h1 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+.building-page-header {
+    max-width: 760px;
+    margin-bottom: 32px;
+}
+
+.building-page-header h1 {
+    margin: 0;
     color: #222;
+    font-size: clamp(2rem, 5vw, 4rem);
+    line-height: 1.05;
 }
 
-.building-short {
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 1rem;
-}
-
-.building-image {
-    text-align: center;
-    margin-bottom: 1rem;
-}
-
-.building-image img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+.building-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 56px;
+    align-items: start;
 }
 
 .building-content {
+    color: #222;
     font-size: 1rem;
+}
+
+.building-content > *:first-child {
+    margin-top: 0;
+}
+
+.building-content > *:last-child {
+    margin-bottom: 0;
+}
+
+.building-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.building-content [id],
+.building-content h2[id],
+.building-content h3[id],
+.building-content h4[id] {
+    scroll-margin-top: calc(var(--site-header-height, 72px) + 32px);
+}
+
+.building-toc {
+    position: sticky;
+    top: calc(var(--site-header-height, 72px) + 24px);
+    padding: 18px 0 18px 20px;
+    border-left: 1px solid #ddd;
     color: #333;
-    margin-bottom: 2rem;
+}
+
+.building-toc-title {
+    margin: 0 0 12px;
+    color: #555;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.building-toc-nav {
+    display: grid;
+    gap: 8px;
+}
+
+.building-toc-nav a {
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.3;
+    text-decoration: none;
+}
+
+.building-toc-nav a:hover,
+.building-toc-nav a:focus {
+    color: #000;
+    text-decoration: underline;
 }
 
 .building-footer {
-    text-align: center;
-    margin-top: 2rem;
+    max-width: 1180px;
+    margin: 40px auto 0;
 }
 
 .building-footer a.back-to-map {
-    text-decoration: underline;
     color: #544C45;
     font-weight: 500;
-    transition: color 0.2s;
+    text-decoration: underline;
 }
 
-.building-footer a.back-to-map:hover {
+.building-footer a.back-to-map:hover,
+.building-footer a.back-to-map:focus {
     color: #3c342d;
-}
-
-/* Responsive */
-@media screen and (max-width: 600px) {
-    .building-single {
-        padding: calc(var(--site-header-height, 64px) + 0.5rem) 0.5rem 0.5rem;
-    }
-
-    .building-header h1 {
-        font-size: 1.5rem;
-    }
 }
 
 @media (max-width: 782px) {
     body.admin-bar.single-budynek .site-header {
         top: 46px;
+    }
+}
+
+@media (max-width: 900px) {
+    .building-page {
+        padding-right: 0;
+        padding-left: 0;
+    }
+
+    .building-page-header,
+    .building-content {
+        padding-right: 20px;
+        padding-left: 20px;
+    }
+
+    .building-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .building-toc {
+        order: -1;
+        position: sticky;
+        top: var(--site-header-height, 64px);
+        width: 100%;
+        padding: 10px 20px;
+        border-top: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
+        border-left: 0;
+        background: rgba(255, 255, 255, 0.96);
+        z-index: 900;
+    }
+
+    body.admin-bar.single-budynek .building-toc {
+        top: calc(46px + var(--site-header-height, 64px));
+    }
+
+    .building-toc-title {
+        margin-bottom: 8px;
+        font-size: 0.75rem;
+    }
+
+    .building-toc-nav {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-gutter: stable;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .building-toc-nav a {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        font-size: 0.9rem;
+    }
+
+    .building-content [id],
+    .building-content h2[id],
+    .building-content h3[id],
+    .building-content h4[id] {
+        scroll-margin-top: calc(var(--site-header-height, 64px) + 96px);
     }
 }
