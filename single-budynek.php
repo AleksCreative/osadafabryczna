@@ -26,12 +26,12 @@ if ( have_posts() ) :
             <article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
                 <header class="building-header">
                     <h1><?php the_title(); ?></h1>
-                    <?php if ($short_desc) : ?>
+                    <!--<?php if ($short_desc) : ?>
                         <p class="building-short"><?php echo esc_html($short_desc); ?></p>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
                 </header>
 
-                <?php if ($marker_icon) : ?>
+               <!-- <?php if ($marker_icon) : ?>
                     <div class="building-image">
                         <img src="<?php echo esc_url($marker_icon); ?>" alt="<?php the_title_attribute(); ?>">
                     </div>
@@ -39,7 +39,7 @@ if ( have_posts() ) :
 
                 <div class="building-content">
                     <?php the_content(); ?>
-                </div>
+                </div> -->
 
                 <footer class="building-footer">
                     <a href="<?php echo esc_url(home_url('/')); ?>" class="back-to-map">← Powrót do mapy</a>
