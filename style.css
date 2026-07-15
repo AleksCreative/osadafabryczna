@@ -38,6 +38,20 @@ main {
     position: relative;
 }
 
+.site-fallback {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px;
+}
+
+.site-fallback-article + .site-fallback-article {
+    margin-top: 48px;
+}
+
+.site-fallback-title a {
+    color: inherit;
+}
+
 /* Typography */
 h1, h2, h3, h4, h5, h6, p {
     margin-bottom: 1rem;

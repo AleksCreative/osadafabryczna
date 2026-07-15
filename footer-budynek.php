@@ -3,7 +3,7 @@
         <?php if (is_active_sidebar('budynek_footer')) : ?>
             <?php dynamic_sidebar('budynek_footer'); ?>
         <?php else : ?>
-            <p>© 2026 Osada Fabryczna</p>
+            <p>© <?php echo esc_html(wp_date('Y')); ?> <?php echo esc_html(get_bloginfo('name')); ?></p>
         <?php endif; ?>
     </div>
 </footer>
