@@ -560,9 +560,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function closeInfoPanel() {
+    const panelHadFocus = infoPanel.contains(document.activeElement);
+
     infoPanel.classList.remove('is-open');
     document.body.classList.remove('info-panel-open');
     infoPanelToggle.classList.remove('is-hidden');
+    if (panelHadFocus) {
+      infoPanelToggle.focus({ preventScroll: true });
+    }
     infoPanel.setAttribute('aria-hidden', 'true');
   }
 
@@ -638,13 +643,19 @@ function closeInfoPanelIfOpen() {
     return;
   }
 
+  const panelHadFocus = infoPanel.contains(document.activeElement);
+
   infoPanel.classList.remove('is-open');
   document.body.classList.remove('info-panel-open');
-  infoPanel.setAttribute('aria-hidden', 'true');
 
   if (infoPanelToggle) {
     infoPanelToggle.classList.remove('is-hidden');
+    if (panelHadFocus) {
+      infoPanelToggle.focus({ preventScroll: true });
+    }
   }
+
+  infoPanel.setAttribute('aria-hidden', 'true');
 }
 
 const markerVisibilityChecks = new WeakMap();

@@ -139,6 +139,7 @@ function osadafabryczna_enqueue_assets() {
                         'acf_format' => 'standard',
                         '_embed'      => '1',
                         'language'    => $language,
+                        'per_page'    => '50',
                     ),
                     rest_url('wp/v2/budynek')
                 )),
