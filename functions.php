@@ -88,6 +88,16 @@ function osadafabryczna_enqueue_assets() {
         true
     );
 
+    if (is_singular('budynek')) {
+        wp_enqueue_script(
+            'osadafabryczna-building-carousel-js',
+            get_template_directory_uri() . '/dist/assets/building-carousel.js',
+            [],
+            filemtime(get_template_directory() . '/dist/assets/building-carousel.js'),
+            true
+        );
+    }
+
     if ( osadafabryczna_is_map_page() ) {
         // Leaflet CSS
         wp_enqueue_style(

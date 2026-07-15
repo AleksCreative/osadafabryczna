@@ -875,8 +875,6 @@ function renderBuildingPanelContent(content, budynek) {
 
   link.className = 'map-building-link';
   link.textContent = `${MAP_LABELS.readMore || 'Czytaj więcej'} →`;
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
 
   link.href = getSafeUrl(budynek.link) || window.location.origin;
 
