@@ -1,10 +1,27 @@
 <?php
 get_header();
+
+$osada_language = function_exists('osadafabryczna_get_current_language') ? osadafabryczna_get_current_language() : 'pl';
+$osada_archive_labels = 'en' === $osada_language
+    ? array(
+        'title'       => 'Buildings',
+        'read_more'   => 'View details',
+        'previous'    => 'Previous',
+        'next'        => 'Next',
+        'no_results'  => 'No buildings to display.',
+    )
+    : array(
+        'title'       => post_type_archive_title('', false),
+        'read_more'   => 'Zobacz szczegóły',
+        'previous'    => 'Poprzednia',
+        'next'        => 'Następna',
+        'no_results'  => 'Brak budynków do wyświetlenia.',
+    );
 ?>
 
 <main class="buildings-archive">
     <section class="archive-header">
-        <h1><?php post_type_archive_title(); ?></h1>
+        <h1><?php echo esc_html($osada_archive_labels['title']); ?></h1>
         <?php
         $desc = get_the_archive_description();
         if ( $desc ) :
@@ -32,7 +49,7 @@ get_header();
                     </div>
 
                     <a class="building-card-link" href="<?php the_permalink(); ?>">
-                        Zobacz szczegóły
+                        <?php echo esc_html($osada_archive_labels['read_more']); ?>
                     </a>
                 </article>
             <?php endwhile; ?>
@@ -43,14 +60,14 @@ get_header();
             the_posts_pagination(
                 [
                     'mid_size'  => 1,
-                    'prev_text' => 'Poprzednia',
-                    'next_text' => 'Następna',
+                    'prev_text' => esc_html($osada_archive_labels['previous']),
+                    'next_text' => esc_html($osada_archive_labels['next']),
                 ]
             );
             ?>
         </nav>
     <?php else : ?>
-        <p>Brak budynków do wyświetlenia.</p>
+        <p><?php echo esc_html($osada_archive_labels['no_results']); ?></p>
     <?php endif; ?>
 </main>
 

@@ -168,7 +168,9 @@ function osadafabryczna_google_fonts_resource_hints($urls, $relation_type) {
 add_filter('wp_resource_hints', 'osadafabryczna_google_fonts_resource_hints', 10, 2);
 
 function osadafabryczna_allow_geolocation_policy() {
-    header('Permissions-Policy: geolocation=(self)');
+    if (osadafabryczna_is_map_page()) {
+        header('Permissions-Policy: geolocation=(self)');
+    }
 }
 add_action('send_headers', 'osadafabryczna_allow_geolocation_policy');
 

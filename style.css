@@ -69,6 +69,11 @@ a {
     transition: color 0.2s ease;
 }
 
+:focus-visible {
+    outline: 3px solid #3c5f1f;
+    outline-offset: 3px;
+}
+
 
 
 .leaflet-cluster-anim .leaflet-marker-icon,
@@ -972,27 +977,12 @@ body.admin-bar.front-page .site-header {
     top: 32px;
 }
 
-body.home .site-footer,
-body.front-page .site-footer {
-    position: fixed;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background: transparent;
-    border-top-color: transparent;
-    z-index: 1000;
-}
-
 @media (max-width: 767px) {
     .map-compass {
         right: 16px;
         bottom: calc(var(--mobile-map-action-bar-height) + 18px);
     }
 
-    body.map-panel-open.home .site-footer,
-    body.map-panel-open.front-page .site-footer {
-        background: #fbefe0;
-    }
 }
 
 @media (min-width: 768px) {
