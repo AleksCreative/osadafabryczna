@@ -1,50 +1,34 @@
+# Osada Fabryczna – motyw WordPress
 
-// ARCHITEKTURA STRONY
+Motyw obsługuje mapę Osady Fabrycznej oraz strony pojedynczych zabytków.
 
-osadafabryczna/
-│
-├── style.css
-├── functions.php
-├── index.php
-├── front-page.php        ← Map homepage
-├── single-building.php   ← Individual building
-├── archive-building.php  ← All buildings list
-├── header.php
-├── footer.php
-│
-├── assets/
-│   ├── css/
-│   ├── js/
-│   └── dist/             ← Vite production build goes here
-│
-└── inc/
-    └── post-types.php    ← CPT registration
+## Najważniejsze pliki
 
-// PRODUKCJA
+- `front-page.php` – strona główna z mapą i panelem `INFO`.
+- `page-eng.php` – angielska wersja strony mapy (`/eng/`).
+- `single-budynek.php` – szablon pojedynczego budynku.
+- `archive-budynek.php` – archiwum budynków.
+- `header.php` – logo, menu i przełącznik języka.
+- `footer.php` – wspólne wywołanie `wp_footer()`.
+- `footer-budynek.php` – stopka stron budynków.
+- `functions.php` – assety, menu, języki, adresy angielskie i konfiguracja REST mapy.
+- `style.css` – style motywu.
+- `dist/assets/main.js` – interakcje mapy, markerów, geolokalizacji i paneli.
+- `dist/assets/site-menu.js` – obecna obsługa menu mobilnego.
 
-    // Potem jak zrobie juz strone na Vite w terminalu buduje distro:
+## Dane budynków
 
-    npm run build 
+Typ wpisu `budynek` jest rejestrowany przez wtyczkę `osada-core`.
+Pola ACF dostarczają dane dla mapy, m.in. współrzędne, ikonę markera,
+podtytuł i opis popupu. Mapa pobiera do 50 budynków przez WordPress REST API.
 
-    // w functions.php wpisuje (tylko eventualnie zmieniam nazwy plików w zaleznosci jakie tam są):
+## Języki
 
-    function osadafabryczna_scripts() {
+Wersje polska i angielska są osobnymi wpisami/stronami połączonymi metadanymi
+`_osada_language` oraz `_osada_translation_id`. Motyw rejestruje oddzielne
+lokalizacje menu `primary` i `primary_en`.
 
-    $dist_path = get_template_directory_uri() . '/assets/dist/assets/';
+## Assety mapy
 
-    wp_enqueue_script(
-        'osada-map',
-        $dist_path . 'main.js',
-        [],
-        null,
-        true
-    );
-
-    wp_enqueue_style(
-        'osada-style',
-        $dist_path . 'style.css',
-        [],
-        null
-    );
-}
-add_action('wp_enqueue_scripts', 'osadafabryczna_scripts'); 
+Wykorzystywane assety znajdują się w `dist/assets/`. Ich adresy są przekazywane
+do `main.js` przez `OsadaFabrycznaMap` w `functions.php`.

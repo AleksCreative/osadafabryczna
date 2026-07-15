@@ -27,6 +27,7 @@ const USER_MARKER_SNAP_DISTANCE_METERS = 120;
 const MAP_CONFIG = window.OsadaFabrycznaMap || {};
 const MAP_LABELS = MAP_CONFIG.labels || {};
 const MAP_ASSETS = MAP_CONFIG.assets || {};
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let activeBuildingMarker = null;
 let activePanelMarker = null;
 let spiderfiedCluster = null;
@@ -237,6 +238,11 @@ function easeInOutCubic(progress) {
 
 function moveUserMarkerTo(latlng) {
   if (!map.hasLayer(userMarker)) {
+    userMarker.setLatLng(latlng);
+    return;
+  }
+
+  if (prefersReducedMotion) {
     userMarker.setLatLng(latlng);
     return;
   }
@@ -455,7 +461,7 @@ async function addMarkers() {
 
     const targetCenter = getMarkerFocusLatLng(marker, targetZoom);
     map.flyTo(targetCenter, targetZoom, {
-      animate: true,
+      animate: !prefersReducedMotion,
       duration: PANEL_MARKER_FLY_DURATION,
       easeLinearity: 0.15
     });
