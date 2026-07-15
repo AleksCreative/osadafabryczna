@@ -173,6 +173,17 @@ function osadafabryczna_allow_geolocation_policy() {
 add_action('send_headers', 'osadafabryczna_allow_geolocation_policy');
 
 function osadafabryczna_register_menus() {
+    add_theme_support('title-tag');
+    add_theme_support('post-thumbnails');
+    add_theme_support('responsive-embeds');
+    add_theme_support('html5', array(
+        'comment-form',
+        'comment-list',
+        'gallery',
+        'caption',
+        'search-form',
+    ));
+
     register_nav_menus(array(
         'primary' => __('Primary Menu', 'osadafabryczna'),
         'primary_en' => __('Primary Menu English', 'osadafabryczna'),
@@ -189,8 +200,6 @@ function osadafabryczna_register_menus() {
 }
 
 add_action('after_setup_theme', 'osadafabryczna_register_menus');
-
-add_theme_support('menus');
 
 function osadafabryczna_register_sidebars() {
     register_sidebar(array(
