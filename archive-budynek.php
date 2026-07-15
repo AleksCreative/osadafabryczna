@@ -33,10 +33,18 @@ $osada_archive_labels = 'en' === $osada_language
     <?php if ( have_posts() ) : ?>
         <div class="buildings-grid">
             <?php while ( have_posts() ) : the_post(); ?>
+                <?php
+                $osada_subtitle = function_exists('get_field') ? get_field('subtitle') : '';
+                $osada_marker_icon = function_exists('get_field') ? get_field('marker_icon') : '';
+
+                if (is_array($osada_marker_icon)) {
+                    $osada_marker_icon = $osada_marker_icon['url'] ?? '';
+                }
+                ?>
                 <article id="post-<?php the_ID(); ?>" <?php post_class( 'building-card' ); ?>>
-                    <?php if ( has_post_thumbnail() ) : ?>
-                        <a href="<?php the_permalink(); ?>" class="building-card-image">
-                            <?php the_post_thumbnail( 'large' ); ?>
+                    <?php if ($osada_marker_icon) : ?>
+                        <a href="<?php the_permalink(); ?>" class="building-card-icon" aria-hidden="true" tabindex="-1">
+                            <img src="<?php echo esc_url($osada_marker_icon); ?>" alt="">
                         </a>
                     <?php endif; ?>
 
@@ -44,9 +52,9 @@ $osada_archive_labels = 'en' === $osada_language
                         <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
                     </h2>
 
-                    <div class="building-card-excerpt">
-                        <?php the_excerpt(); ?>
-                    </div>
+                    <?php if ($osada_subtitle) : ?>
+                        <h3 class="building-card-subtitle"><?php echo esc_html(wp_strip_all_tags($osada_subtitle)); ?></h3>
+                    <?php endif; ?>
 
                     <a class="building-card-link" href="<?php the_permalink(); ?>">
                         <?php echo esc_html($osada_archive_labels['read_more']); ?>
