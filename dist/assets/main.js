@@ -29,7 +29,6 @@ const USER_MARKER_SNAP_DISTANCE_METERS = 120;
 const MAP_CONFIG = window.OsadaFabrycznaMap || {};
 const MAP_LABELS = MAP_CONFIG.labels || {};
 const MAP_ASSETS = MAP_CONFIG.assets || {};
-const urlParams = new URLSearchParams(window.location.search);
 let activeBuildingMarker = null;
 let activePanelMarker = null;
 let spiderfiedCluster = null;
@@ -282,18 +281,6 @@ function moveUserMarkerTo(latlng) {
   userMarkerAnimationFrame = requestAnimationFrame(animate);
 }
 
-map.on('locationfound', e => {
-  if (!geolocationEnabled) {
-    return;
-  }
-
-  handleUserLocation(e.latlng);
-});
-
-map.on('locationerror', err => {
-  handleGeolocationError(err);
-});
-
 if (geolocationToggle) {
   if (typeof L.DomEvent?.disableClickPropagation === 'function') {
     L.DomEvent.disableClickPropagation(geolocationToggle);
@@ -393,6 +380,11 @@ setupMapControlMenu();
 async function addMarkers() {
   try {
     const response = await fetch(MAP_CONFIG.restUrl || '/wp-json/wp/v2/budynek?acf_format=standard&_embed');
+
+    if (!response.ok) {
+      throw new Error(`Building data request failed with status ${response.status}.`);
+    }
+
     const budynki = await response.json();
 
     budynki.forEach(budynek => {
@@ -918,24 +910,91 @@ function updateDesktopPanelPosition() {
   panel.style.setProperty('--panel-top', `${top}px`);
 }
 
+function getSafeUrl(url) {
+  try {
+    const parsedUrl = new URL(url, window.location.origin);
+    return ['http:', 'https:'].includes(parsedUrl.protocol) ? parsedUrl.href : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function appendSafeRichText(container, html) {
+  const allowedTags = new Set(['P', 'H3', 'H4', 'H5', 'H6', 'STRONG', 'B', 'EM', 'I', 'BR', 'UL', 'OL', 'LI', 'A']);
+  const documentFragment = document.createDocumentFragment();
+  const parsedDocument = new DOMParser().parseFromString(html || '', 'text/html');
+
+  function copyNode(node, parent) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      parent.appendChild(document.createTextNode(node.textContent));
+      return;
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return;
+    }
+
+    if (!allowedTags.has(node.tagName)) {
+      node.childNodes.forEach(childNode => copyNode(childNode, parent));
+      return;
+    }
+
+    const element = document.createElement(node.tagName.toLowerCase());
+
+    if (node.tagName === 'A') {
+      const safeUrl = getSafeUrl(node.getAttribute('href') || '');
+
+      if (safeUrl) {
+        element.href = safeUrl;
+      }
+    }
+
+    node.childNodes.forEach(childNode => copyNode(childNode, element));
+    parent.appendChild(element);
+  }
+
+  parsedDocument.body.childNodes.forEach(node => copyNode(node, documentFragment));
+  container.replaceChildren(documentFragment);
+}
+
+function renderBuildingPanelContent(content, budynek) {
+  const buildingData = budynek.acf || {};
+  const title = document.createElement('h2');
+  const subtitle = document.createElement('h3');
+  const description = document.createElement('div');
+  const link = document.createElement('a');
+
+  title.className = 'map-building-title';
+  title.textContent = budynek.title?.rendered || '';
+
+  subtitle.className = 'map-building-subtitle';
+  subtitle.textContent = buildingData.subtitle || '';
+
+  description.className = 'map-building-paragraph';
+  appendSafeRichText(description, buildingData.short_description);
+
+  link.className = 'map-building-link';
+  link.textContent = `${MAP_LABELS.readMore || 'Czytaj więcej'} →`;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+
+  link.href = getSafeUrl(budynek.link) || window.location.origin;
+
+  content.replaceChildren(title, subtitle, description, link);
+}
+
 // PANEL LOGIC
 function openPanel(budynek, marker = null) {
   closeInfoPanelIfOpen();
 
   const panel = document.getElementById('slide-panel');
-  const title = budynek.title.rendered;
   const content = document.getElementById('panel-content');
 
   if (!panel || !content) {
     return;
   }
 
-  content.innerHTML = `
-    <h2 class="map-building-title">${title}</h2>
-    <h3 class="map-building-subtitle">${budynek.acf.subtitle || ''}</h3>
-    <p class="map-building-paragraph">${budynek.acf.short_description || ''}</p>
-    <a class="map-building-link" href="${budynek.link}" target="_blank" rel="noopener noreferrer">${MAP_LABELS.readMore || 'Czytaj więcej'} →</a>
-  `;
+  renderBuildingPanelContent(content, budynek);
 
   activePanelMarker = marker;
   panel.style.transition = '';
