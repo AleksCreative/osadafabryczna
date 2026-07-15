@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 2.1
+Version: 2.2
 */
 
 /* ---------------------------
@@ -726,7 +726,6 @@ Header
 :root {
     --site-header-height: 72px;
     --site-menu-offset: 16px;
-    --site-menu-panel-offset: calc(min(420px, 33vw) + 54px);
 }
 
 .site-header {
@@ -746,7 +745,8 @@ Header
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 24px;
+    transition: padding-right 0.3s ease;
 }
 
 .site-logo a {
@@ -758,6 +758,7 @@ Header
 
 .site-logo,
 .main-nav,
+.header-actions,
 .language-switcher,
 .menu-toggle {
     pointer-events: auto;
@@ -770,64 +771,90 @@ Header
 }
 
 .main-nav {
-    position: fixed;
-    top: calc(var(--site-menu-offset) + 48px);
-    right: var(--site-menu-offset);
-    display: none;
-    min-width: 220px;
-    max-width: calc(100vw - 32px);
-    padding: 12px 0;
-    background: #fff;
-    border: 1px solid #FBEFE0;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
-    z-index: 1210;
+    margin-left: auto;
 }
 
 .main-nav .menu {
     list-style: none;
     display: flex;
-    flex-direction: column;
-    gap: 0;
+    align-items: center;
+    gap: 18px;
     margin: 0;
     padding: 0;
 }
 
-.main-nav .menu li a {
+.main-nav .menu > li {
+    position: relative;
+}
+
+.main-nav .menu a {
     display: block;
-    padding: 0.65rem 1rem;
+    padding: 0.5rem 0;
     text-decoration: none;
     color: #333;
     font-weight: 500;
+    font-size: 1.2rem;
     transition: color 0.2s;
 }
 
-.main-nav .menu li a:hover {
+.main-nav .menu a:hover {
     color: #423931;
 }
 
+.main-nav .sub-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 50%;
+    display: none;
+    width: max-content;
+    min-width: 220px;
+    max-width: min(320px, calc(100vw - 32px));
+    margin: 0;
+    padding: 10px 0;
+    list-style: none;
+    border: 1px solid #f5dfd1;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    transform: translateX(-50%);
+}
+
+.main-nav .menu-item-has-children::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: -12px;
+    left: -12px;
+    height: 12px;
+}
+
+.main-nav .menu-item-has-children:hover > .sub-menu,
+.main-nav .menu-item-has-children:focus-within > .sub-menu {
+    display: block;
+}
+
+.main-nav .sub-menu a {
+    padding: 0.65rem 1rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .menu-toggle {
-    position: fixed;
-    top: var(--site-menu-offset);
-    right: var(--site-menu-offset);
+    display: none;
     width: 44px;
     height: 44px;
-    display: grid;
-    place-items: center;
-    background: none;
     border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: 50%;
     background: #FBEFE0;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
     font-size: 1.5rem;
     line-height: 1;
     cursor: pointer;
-    z-index: 1220;
 }
 
 .language-switcher {
-    position: fixed;
-    top: var(--site-menu-offset);
-    right: calc(var(--site-menu-offset) + 54px);
     min-height: 44px;
     display: flex;
     align-items: center;
@@ -835,9 +862,6 @@ Header
     border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: 999px;
     background: #fff;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
-    z-index: 1220;
-    pointer-events: auto;
 }
 
 .language-switcher a {
@@ -861,54 +885,16 @@ Header
     color: #fff;
 }
 
-body.admin-bar .main-nav {
-    top: calc(32px + var(--site-menu-offset) + 48px);
-}
-
-body.admin-bar .menu-toggle {
-    top: calc(32px + var(--site-menu-offset));
-}
-
-body.admin-bar .language-switcher {
-    top: calc(32px + var(--site-menu-offset));
-}
-
-.main-nav.active {
-    display: block;
-}
-
-@media (min-width: 768px) {
-    body.home.info-panel-open .menu-toggle,
-    body.front-page.info-panel-open .menu-toggle {
-        right: var(--site-menu-panel-offset);
-    }
-
-    body.home.info-panel-open .language-switcher,
-    body.front-page.info-panel-open .language-switcher {
-        right: calc(var(--site-menu-panel-offset) + 54px);
-    }
-
-    body.home.info-panel-open .main-nav,
-    body.front-page.info-panel-open .main-nav {
-        right: var(--site-menu-panel-offset);
-    }
-}
-
 @media (max-width: 782px) {
     body.admin-bar .leaflet-top.leaflet-left {
         top: calc(46px + var(--site-header-height, 72px));
     }
+}
 
-    body.admin-bar .main-nav {
-        top: calc(46px + var(--site-menu-offset) + 48px);
-    }
-
-    body.admin-bar .menu-toggle {
-        top: calc(46px + var(--site-menu-offset));
-    }
-
-    body.admin-bar .language-switcher {
-        top: calc(46px + var(--site-menu-offset));
+@media (min-width: 768px) {
+    body.home.info-panel-open .header-inner,
+    body.front-page.info-panel-open .header-inner {
+        padding-right: calc(min(420px, 33vw) + 24px);
     }
 }
 
@@ -922,7 +908,73 @@ body.admin-bar .language-switcher {
     }
 
     .main-nav {
+        position: fixed;
+        top: calc(var(--site-menu-offset) + 48px);
+        right: var(--site-menu-offset);
+        display: none;
         width: min(260px, calc(100vw - 32px));
+        margin-left: 0;
+        padding: 12px 0;
+        border: 1px solid #f5dfd1;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+        z-index: 1210;
+    }
+
+    .main-nav.active {
+        display: block;
+    }
+
+    .main-nav .menu {
+        display: block;
+    }
+
+    .main-nav .menu a {
+        padding: 0.65rem 1rem;
+        font-size: 1rem;
+    }
+
+    .main-nav .sub-menu {
+        position: static;
+        display: block;
+        width: auto;
+        min-width: 0;
+        max-width: none;
+        padding: 0 0 0 16px;
+        border: 0;
+        box-shadow: none;
+        transform: none;
+    }
+
+    .main-nav .sub-menu a {
+        padding-left: 1rem;
+    }
+
+    .menu-toggle {
+        position: fixed;
+        top: var(--site-menu-offset);
+        right: var(--site-menu-offset);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+        z-index: 1220;
+    }
+
+    .language-switcher {
+        position: fixed;
+        top: var(--site-menu-offset);
+        right: calc(var(--site-menu-offset) + 54px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+        z-index: 1220;
+    }
+
+    body.admin-bar .main-nav {
+        top: calc(46px + var(--site-menu-offset) + 48px);
+    }
+
+    body.admin-bar .menu-toggle,
+    body.admin-bar .language-switcher {
+        top: calc(46px + var(--site-menu-offset));
     }
 }
 
@@ -970,6 +1022,11 @@ body.front-page .site-header {
     right: 0;
     background: transparent;
     border-bottom-color: transparent;
+}
+
+body.home .main-nav .menu > li > a,
+body.front-page .main-nav .menu > li > a {
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.95), 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
 body.admin-bar.home .site-header,
@@ -1067,7 +1124,7 @@ body.admin-bar.single-budynek .site-header {
 .building-page {
     max-width: 1180px;
     margin: 0 auto;
-    padding: calc(var(--site-header-height, 72px) + 32px) 24px 64px;
+    padding: calc(var(--site-header-height, 72px) + 56px) 24px 64px;
     line-height: 1.6;
 }
 
@@ -1174,8 +1231,19 @@ body.admin-bar.single-budynek .site-header {
 
 @media (max-width: 900px) {
     .building-page {
+        padding-top: var(--site-header-height, 64px);
         padding-right: 0;
         padding-left: 0;
+    }
+
+    body.single-budynek .site-header {
+        background: #fff;
+        border-bottom-color: #ddd;
+    }
+
+    .building-page-article {
+        display: flex;
+        flex-direction: column;
     }
 
     .building-page-header,
@@ -1184,19 +1252,25 @@ body.admin-bar.single-budynek .site-header {
         padding-left: 20px;
     }
 
+    .building-page-header {
+        order: 2;
+    }
+
     .building-layout {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
+        display: contents;
+    }
+
+    .building-content {
+        order: 3;
     }
 
     .building-toc {
-        order: -1;
+        order: 1;
         position: sticky;
         top: var(--site-header-height, 64px);
         width: 100%;
         padding: 10px 20px;
-        border-top: 1px solid #ddd;
+        border-top: 0;
         border-bottom: 1px solid #ddd;
         border-left: 0;
         background: rgba(255, 255, 255, 0.96);
