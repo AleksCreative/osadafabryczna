@@ -17,8 +17,6 @@ const MOBILE_PANEL_MARKER_GAP = 84;
 const EXTRA_PANEL_MARGIN = 8;
 const PANEL_MARKER_GAP_SCALE = 0.6;
 const ACTIVE_MARKER_SCALE = 1.12;
-const PANEL_MARKER_PAN_DURATION = 0.75;
-const PANEL_MARKER_PAN_TIMEOUT = 950;
 const PANEL_MARKER_FLY_DURATION = 1.05;
 const PANEL_MARKER_FLY_TIMEOUT = 1300;
 const DESKTOP_POPUP_MARKER_GAP = 24;
@@ -446,52 +444,30 @@ async function addMarkers() {
     if (typeof marker.bringToFront === 'function') {
       marker.bringToFront();
     }
-  const targetZoom = Math.max(map.getZoom(), 17);
-  const isSpiderfiedMarker = isMarkerInSpiderfiedCluster(marker);
+    const targetZoom = Math.max(map.getZoom(), 17);
+    const isSpiderfiedMarker = isMarkerInSpiderfiedCluster(marker);
 
-if (window.innerWidth < 768) {
-      // --- MOBILE ---
-      openPanel(budynek, marker);
+    openPanel(budynek, marker);
+
+    if (isSpiderfiedMarker) {
+      return;
+    }
+
+    const targetCenter = getMarkerFocusLatLng(marker, targetZoom);
+    map.flyTo(targetCenter, targetZoom, {
+      animate: true,
+      duration: PANEL_MARKER_FLY_DURATION,
+      easeLinearity: 0.15
+    });
+
+    if (window.innerWidth < 768) {
       const panel = document.getElementById('slide-panel');
-      if (isSpiderfiedMarker) {
-        return;
-      }
-
-      const targetCenter = getMarkerFocusLatLng(marker, targetZoom);
-      map.flyTo(targetCenter, targetZoom, {
-        animate: true,
-        duration: PANEL_MARKER_FLY_DURATION,
-        easeLinearity: 0.15
-      });
 
       waitForPanelOpen(panel).then(() => {
         if (typeof marker.bringToFront === 'function') {
           marker.bringToFront();
         }
       });
-
-    } else {
-      // --- DESKTOP ---
-      openPanel(budynek, marker);
-      const panel = document.getElementById('slide-panel');
-      if (isSpiderfiedMarker) {
-        return;
-      }
-
-      const targetCenter = getMarkerFocusLatLng(marker, targetZoom);
-      map.flyTo(targetCenter, targetZoom, {
-        animate: true,
-        duration: PANEL_MARKER_FLY_DURATION,
-        easeLinearity: 0.15
-      });
-
-      const flyToDone = waitForMapMove(map, PANEL_MARKER_FLY_TIMEOUT);
-      waitForPanelOpen(panel)
-        .then(() => flyToDone)
-        .then(() => queueMarkerVisibilityCheck(marker));
-      window.setTimeout(() => {
-        flyToDone.then(() => queueMarkerVisibilityCheck(marker));
-      }, 900);
     }
   });
 
@@ -650,8 +626,6 @@ function closeInfoPanelIfOpen() {
   infoPanel.setAttribute('aria-hidden', 'true');
 }
 
-const markerVisibilityChecks = new WeakMap();
-
 function getPanelMarkerGap() {
   return (MOBILE_PANEL_MARKER_GAP + EXTRA_PANEL_MARGIN) * PANEL_MARKER_GAP_SCALE;
 }
@@ -745,62 +719,6 @@ function isMarkerInSpiderfiedCluster(marker) {
   return spiderfiedCluster.getAllChildMarkers().includes(marker);
 }
 
-function queueMarkerVisibilityCheck(marker) {
-  const pendingCheck = markerVisibilityChecks.get(marker) || Promise.resolve();
-  const nextCheck = pendingCheck
-    .catch(() => {})
-    .then(() => ensureMarkerVisibleAbovePanel(marker));
-
-  markerVisibilityChecks.set(marker, nextCheck);
-  return nextCheck;
-}
-
-function waitForMapMove(map, timeout = PANEL_MARKER_PAN_TIMEOUT) {
-  return new Promise(resolve => {
-    let settled = false;
-    const finish = () => {
-      if (settled) {
-        return;
-      }
-
-      settled = true;
-      map.off('moveend', finish);
-      window.clearTimeout(timeoutId);
-      resolve();
-    };
-
-    map.once('moveend', finish);
-    const timeoutId = window.setTimeout(finish, timeout);
-  });
-}
-
-function getPanelCoverage(panel, mapContainer) {
-  const panelRect = panel.getBoundingClientRect();
-  const mapRect = mapContainer.getBoundingClientRect();
-  const overlapsMap = panelRect.left < mapRect.right
-    && panelRect.right > mapRect.left
-    && panelRect.top < mapRect.bottom
-    && panelRect.bottom > mapRect.top;
-
-  if (!overlapsMap) {
-    return null;
-  }
-
-  const isBottomPanel = window.innerWidth < 768
-    && panelRect.top > mapRect.top
-    && panelRect.width > mapRect.width * 0.6;
-
-  if (!isBottomPanel) {
-    return null;
-  }
-
-  return {
-    height: panel.offsetHeight || panelRect.height || window.innerHeight * 0.6,
-    leftInMap: panelRect.left - mapRect.left,
-    mode: 'bottom'
-  };
-}
-
 function getMarkerTargetPoint(panel, mapContainer) {
   const mapRect = mapContainer.getBoundingClientRect();
   const mapWidth = mapContainer.offsetWidth || mapRect.width;
@@ -830,43 +748,6 @@ function getMarkerFocusLatLng(marker, targetZoom) {
   const centerPoint = markerPoint.add(mapSize.divideBy(2)).subtract(targetPoint);
 
   return map.unproject(centerPoint, targetZoom);
-}
-
-async function ensureMarkerVisibleAbovePanel(marker, maxAttempts = 6) {
-  const slidePanel = document.getElementById('slide-panel');
-
-  if (!slidePanel || !marker._map || !slidePanel.classList.contains('open')) {
-    return;
-  }
-
-  const map = marker._map;
-  const mapContainer = map.getContainer();
-
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    await new Promise(resolve => requestAnimationFrame(resolve));
-
-    const panelCoverage = getPanelCoverage(slidePanel, mapContainer);
-    if (!panelCoverage) {
-      return;
-    }
-
-    const markerPoint = map.latLngToContainerPoint(marker.getLatLng());
-
-    const panelTopInMap = getPanelTopInMap(slidePanel, mapContainer);
-    const desiredY = panelTopInMap - getPanelMarkerGap();
-    const offsetY = markerPoint.y - desiredY;
-
-    if (offsetY <= 2) {
-      return;
-    }
-
-    map.panBy([0, offsetY], {
-      animate: true,
-      duration: PANEL_MARKER_PAN_DURATION,
-      easeLinearity: 0.15
-    });
-    await waitForMapMove(map);
-  }
 }
 
 function isDesktopPanelMode() {
