@@ -455,6 +455,14 @@ function osadafabryczna_get_language_url($language) {
         }
     }
 
+    if (is_post_type_archive('budynek')) {
+        if ('en' === $language) {
+            return home_url('/eng/budynki/');
+        }
+
+        return get_post_type_archive_link('budynek');
+    }
+
     if ('en' === $language) {
         return osadafabryczna_get_english_front_page_url();
     }

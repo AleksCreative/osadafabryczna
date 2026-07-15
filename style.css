@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 2.21
+Version: 2.3
 */
 
 /* ---------------------------
@@ -837,6 +837,7 @@ Header
 }
 
 .header-inner {
+    position: relative;
     width: 100%;
     display: flex;
     align-items: center;
@@ -855,6 +856,8 @@ Header
 .main-nav,
 .header-actions,
 .language-switcher,
+.search-toggle,
+.site-search,
 .menu-toggle {
     pointer-events: auto;
 }
@@ -965,6 +968,68 @@ Header
     gap: 10px;
 }
 
+.search-toggle {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+}
+
+.search-toggle span {
+    display: block;
+    font-size: 2rem;    
+    transform: rotate(-20deg);
+}
+
+.site-search {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    display: none;
+    width: min(420px, calc(100vw - 32px));
+    padding: 12px;
+    border: 1px solid #f5dfd1;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    z-index: 1220;
+}
+
+.site-search.is-open {
+    display: block;
+}
+
+.search-form {
+    display: flex;
+    gap: 8px;
+}
+
+.search-form__field {
+    min-width: 0;
+    flex: 1 1 auto;
+    padding: 10px 12px;
+    border: 1px solid rgba(84, 76, 69, 0.35);
+    border-radius: 4px;
+    color: #333;
+    font: inherit;
+}
+
+.search-form__submit {
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 4px;
+    background: #3c5f1f;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 .menu-toggle {
     display: none;
     width: 44px;
@@ -1018,6 +1083,11 @@ Header
     body.home.info-panel-open .header-inner,
     body.front-page.info-panel-open .header-inner {
         padding-right: calc(min(420px, 33vw) + 24px);
+    }
+
+    body.home.info-panel-open .site-search,
+    body.front-page.info-panel-open .site-search {
+        right: calc(min(420px, 33vw) + 24px);
     }
 }
 
@@ -1101,10 +1171,18 @@ Header
         z-index: 1220;
     }
 
-    .language-switcher {
+    .search-toggle {
         position: fixed;
         top: var(--site-menu-offset);
         right: calc(var(--site-menu-offset) + 54px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+        z-index: 1220;
+    }
+
+    .language-switcher {
+        position: fixed;
+        top: var(--site-menu-offset);
+        right: calc(var(--site-menu-offset) + 108px);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
         z-index: 1220;
     }
@@ -1114,8 +1192,19 @@ Header
     }
 
     body.admin-bar .menu-toggle,
+    body.admin-bar .search-toggle,
     body.admin-bar .language-switcher {
         top: calc(46px + var(--site-menu-offset));
+    }
+
+    .site-search {
+        position: fixed;
+        top: calc(var(--site-menu-offset) + 54px);
+        right: var(--site-menu-offset);
+    }
+
+    body.admin-bar .site-search {
+        top: calc(46px + var(--site-menu-offset) + 54px);
     }
 }
 
@@ -1167,7 +1256,13 @@ body.front-page .site-header {
 
 body.home .main-nav .menu > li > a,
 body.front-page .main-nav .menu > li > a {
-    text-shadow: 0 0 4px rgba(255, 255, 255, 0.95), 0 0 10px rgba(255, 255, 255, 0.8);
+    text-shadow:
+        -1px -1px 2px rgba(255, 255, 255, 0.95),
+        1px -1px 2px rgba(255, 255, 255, 0.95),
+        -1px 1px 2px rgba(255, 255, 255, 0.95),
+        1px 1px 2px rgba(255, 255, 255, 0.95),
+        0 0 8px rgba(255, 255, 255, 0.95),
+        0 0 16px rgba(255, 255, 255, 0.8);
 }
 
 body.admin-bar.home .site-header,

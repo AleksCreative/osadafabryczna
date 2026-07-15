@@ -7,6 +7,10 @@
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
+<?php
+$osada_header_language = function_exists('osadafabryczna_get_current_language') ? osadafabryczna_get_current_language() : 'pl';
+$osada_search_label = 'en' === $osada_header_language ? 'Search' : 'Szukaj';
+?>
 <header class="site-header">
   <div class="header-inner">
     
@@ -34,6 +38,10 @@
     </nav>
 
     <div class="header-actions">
+    <button class="search-toggle" type="button" aria-expanded="false" aria-controls="site-search" aria-label="<?php echo esc_attr($osada_search_label); ?>">
+      <span aria-hidden="true">⌕</span>
+    </button>
+
     <?php if (function_exists('osadafabryczna_language_switcher')) : ?>
       <?php osadafabryczna_language_switcher(); ?>
     <?php endif; ?>
@@ -42,6 +50,10 @@
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-menu" aria-label="Otwórz menu">
       &#9776;
     </button>
+    </div>
+
+    <div id="site-search" class="site-search" aria-hidden="true">
+      <?php get_search_form(); ?>
     </div>
   </div>
 </header>

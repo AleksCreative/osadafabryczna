@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
   const toggleBtn = document.querySelector('.menu-toggle');
   const nav = document.querySelector('.main-nav');
+  const searchToggle = document.querySelector('.search-toggle');
+  const searchPanel = document.querySelector('.site-search');
+  const searchInput = document.querySelector('.search-form__field');
   const mobileQuery = window.matchMedia('(max-width: 767px)');
 
   if (!toggleBtn || !nav) return;
@@ -35,6 +38,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!shouldOpen) {
       closeAllSubmenus();
+    }
+  }
+
+  function setSearchOpen(isOpen) {
+    if (!searchToggle || !searchPanel) return;
+
+    searchPanel.classList.toggle('is-open', isOpen);
+    searchToggle.setAttribute('aria-expanded', String(isOpen));
+    searchPanel.setAttribute('aria-hidden', String(!isOpen));
+
+    if (isOpen) {
+      setMenuOpen(false);
+
+      if (searchInput) {
+        searchInput.focus();
+      }
     }
   }
 
@@ -73,8 +92,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
   toggleBtn.addEventListener('click', function (event) {
     event.stopPropagation();
+    setSearchOpen(false);
     setMenuOpen(!nav.classList.contains('active'));
   });
+
+  if (searchToggle && searchPanel) {
+    searchToggle.addEventListener('click', function (event) {
+      event.stopPropagation();
+      setSearchOpen(!searchPanel.classList.contains('is-open'));
+    });
+  }
 
   nav.querySelectorAll('a').forEach(function (link) {
     link.addEventListener('click', function () {
@@ -92,6 +119,10 @@ document.addEventListener('DOMContentLoaded', function () {
         setMenuOpen(false);
       }
     }
+
+    if (searchToggle && searchPanel && !searchPanel.contains(event.target) && !searchToggle.contains(event.target)) {
+      setSearchOpen(false);
+    }
   });
 
   document.addEventListener('keydown', function (event) {
@@ -103,11 +134,18 @@ document.addEventListener('DOMContentLoaded', function () {
       setMenuOpen(false);
       toggleBtn.focus();
     }
+
+    if (searchPanel && searchPanel.classList.contains('is-open')) {
+      setSearchOpen(false);
+      searchToggle.focus();
+    }
   });
 
   mobileQuery.addEventListener('change', function () {
     setMenuOpen(false);
+    setSearchOpen(false);
   });
 
   setMenuOpen(false);
+  setSearchOpen(false);
 });

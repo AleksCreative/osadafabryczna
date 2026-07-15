@@ -521,6 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const infoPanel = document.getElementById('info-panel');
   const infoPanelToggle = document.getElementById('info-panel-toggle');
   const infoPanelClose = document.getElementById('info-panel-close');
+  const infoPanelSeenKey = 'osada-info-panel-seen';
 
   if (!infoPanel || !infoPanelToggle || !infoPanelClose) {
     return;
@@ -545,10 +546,24 @@ document.addEventListener('DOMContentLoaded', () => {
     infoPanel.setAttribute('aria-hidden', 'true');
   }
 
-  if (window.innerWidth >= 768) {
-    openInfoPanel();
+  let hasSeenInfoPanel = false;
+
+  try {
+    hasSeenInfoPanel = window.localStorage.getItem(infoPanelSeenKey) === 'true';
+  } catch (error) {
+    hasSeenInfoPanel = false;
+  }
+
+  if (hasSeenInfoPanel) {
+    closeInfoPanel();
   } else {
     openInfoPanel();
+
+    try {
+      window.localStorage.setItem(infoPanelSeenKey, 'true');
+    } catch (error) {
+      // The panel will open again if browser storage is unavailable.
+    }
   }
 
   infoPanelToggle.addEventListener('click', event => {
@@ -564,10 +579,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('resize', () => {
-    if (window.innerWidth < 768) {
+    if (window.innerWidth < 768 && infoPanel.classList.contains('is-open')) {
       closeInfoPanel();
-    } else if (!infoPanel.classList.contains('is-open')) {
-      openInfoPanel();
     }
   });
 });
