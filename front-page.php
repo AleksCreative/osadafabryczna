@@ -41,6 +41,9 @@ $osada_building_close = 'en' === $osada_language ? 'Close panel' : 'Zamknij pane
         <div id="info-panel-content" class="info-panel-content">
             <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); the_content(); endwhile; endif; ?>
         </div>
+        <footer class="info-panel-footer">
+            <p>© <?php echo esc_html(wp_date('Y')); ?> <?php echo esc_html(get_bloginfo('name')); ?></p>
+        </footer>
     </aside>
 
     <button id="info-panel-toggle" class="info-panel-toggle" type="button" aria-label="<?php echo esc_attr($osada_info_open); ?>">
