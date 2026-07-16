@@ -1,34 +1,82 @@
-# Osada Fabryczna – motyw WordPress
+# Osada Fabryczna — motyw WordPress
 
-Motyw obsługuje mapę Osady Fabrycznej oraz strony pojedynczych zabytków.
+Motyw obsługuje interaktywną mapę Osady Fabrycznej, archiwum budynków,
+dwujęzyczność oraz rozbudowane strony pojedynczych zabytków.
 
 ## Najważniejsze pliki
 
-- `front-page.php` – strona główna z mapą i panelem `INFO`.
-- `page-eng.php` – angielska wersja strony mapy (`/eng/`).
-- `single-budynek.php` – szablon pojedynczego budynku.
-- `archive-budynek.php` – archiwum budynków.
-- `header.php` – logo, menu i przełącznik języka.
-- `footer.php` – wspólne wywołanie `wp_footer()`.
-- `footer-budynek.php` – stopka stron budynków.
-- `functions.php` – assety, menu, języki, adresy angielskie i konfiguracja REST mapy.
-- `style.css` – style motywu.
-- `dist/assets/main.js` – interakcje mapy, markerów, geolokalizacji i paneli.
-- `dist/assets/site-menu.js` – obecna obsługa menu mobilnego.
+- `front-page.php` — polska strona główna z mapą i panelem INFO.
+- `page-eng.php` — angielska strona mapy pod adresem `/eng/`.
+- `single-budynek.php` — szablon pojedynczego budynku, zasilany przez ACF.
+- `archive-budynek.php` — archiwum budynków.
+- `search.php` i `searchform.php` — wyniki oraz formularz wyszukiwania.
+- `header.php` — logo, menu, wyszukiwarka i przełącznik języka.
+- `footer.php` — wspólne wywołanie `wp_footer()`.
+- `footer-budynek.php` — stopka stron budynków.
+- `functions.php` — assety, menu, języki, reguły adresów i REST API mapy.
+- `style.css` — style motywu.
+- `dist/assets/main.js` — mapa, markery, geolokalizacja i panele.
+- `dist/assets/site-menu.js` — menu główne i wyszukiwarka.
+- `dist/assets/building-carousel.js` — karuzele oraz lightbox zdjęć.
 
-## Dane budynków
+## Budynki i ACF
 
-Typ wpisu `budynek` jest rejestrowany przez wtyczkę `osada-core`.
-Pola ACF dostarczają dane dla mapy, m.in. współrzędne, ikonę markera,
-podtytuł i opis popupu. Mapa pobiera do 50 budynków przez WordPress REST API.
+Typ wpisu `budynek` rejestruje wtyczka `osada-core`. Pola mapy obejmują m.in.
+współrzędne, `marker_icon`, `subtitle` oraz opis popupu.
+Mapa pobiera maksymalnie 50 budynków przez WordPress REST API.
+
+Strona pojedynczego budynku używa poniższych pól ACF. Wszystkie są opcjonalne —
+pusta sekcja nie wyświetli się ani w spisie treści.
+
+| Sekcja | Pole ACF | Typ / subpola |
+| --- | --- | --- |
+| Ilustracja główna | `hero_illustration` | obraz, zwracany jako ID |
+| W skrócie | `quick_facts` | repeater: `fact_type` (select), `fact_content` (textarea) |
+| Historia | `history` | WYSIWYG |
+| Ciekawostka | `did_you_know` | WYSIWYG |
+| Podróż w czasie | `time_travel` | repeater: `image` (ID), `title`, `caption` |
+| Architektura | `architecture` | WYSIWYG |
+| Spójrz uważniej | `take_a_closer_look` | WYSIWYG |
+| Galeria | `gallery` | Gallery, zwracana jako ID |
+| W pobliżu | `nearby_buildings` | repeater: `building` (Post Object/ID), `distance`, `walking_time` |
+| Źródła | `sources` | repeater: `source_text`, `source_url` |
+
+W polach WYSIWYG obraz ustawiony jako **Align left** albo **Align right** jest
+opływany tekstem na desktopie. Na telefonie przechodzi nad tekst na pełną szerokość.
+
+## Ikony stron budynków
+
+Własne ikony PNG należy dodawać do `dist/assets/icons/` pod nazwami:
+
+- `fact-date.png`
+- `fact-style.png`
+- `fact-address.png`
+- `fact-original-use.png`
+- `fact-current-use.png`
+- `fact-visiting.png`
+- `did-you-know.png`
+- `take-a-closer-look.png`
+
+Ikony są elementami stałego wyglądu i są podłączane automatycznie przez szablon.
 
 ## Języki
 
-Wersje polska i angielska są osobnymi wpisami/stronami połączonymi metadanymi
-`_osada_language` oraz `_osada_translation_id`. Motyw rejestruje oddzielne
-lokalizacje menu `primary` i `primary_en`.
+Wersje polska i angielska są osobnymi wpisami połączonymi metadanymi
+`_osada_language` i `_osada_translation_id`. Motyw ma osobne lokalizacje menu
+`primary` oraz `primary_en`.
+
+Angielskie budynki i archiwum są dostępne pod `/eng/budynek/{slug}/`
+oraz `/eng/budynki/`. Przy sparowanym tłumaczeniu przełącznik języka prowadzi
+do odpowiednika aktualnie oglądanej strony.
+
+## Wyszukiwanie
+
+Wyszukiwanie korzysta z natywnego mechanizmu WordPressa i obejmuje strony oraz
+budynki. Wyniki są filtrowane według aktualnego języka; przełącznik PL/EN na stronie
+wyników zachowuje wyszukiwaną frazę.
 
 ## Assety mapy
 
-Wykorzystywane assety znajdują się w `dist/assets/`. Ich adresy są przekazywane
-do `main.js` przez `OsadaFabrycznaMap` w `functions.php`.
+Assety mapy znajdują się w `dist/assets/`. Ich adresy są przekazywane do
+`main.js` przez `OsadaFabrycznaMap` w `functions.php`.
+Marker lokalizacji użytkownika używa pliku `user-location.gif`.

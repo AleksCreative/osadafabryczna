@@ -123,8 +123,9 @@ let geolocationWatchId = null;
 const userMarker = L.marker([0,0], {
   icon: L.icon({
     iconUrl: MAP_ASSETS.userLocation || '/wp-content/themes/osadafabryczna/dist/assets/user-location.gif',
-    iconSize: [37.5, 37.5],
-    iconAnchor: [18.75, 18.75]
+    iconSize: [50, 50],
+    iconAnchor: [25, 25],
+    className: 'user-location-marker'
   }),
   zIndexOffset: USER_MARKER_Z_INDEX_OFFSET
 });
