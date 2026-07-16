@@ -147,6 +147,19 @@ function osadafabryczna_enqueue_assets() {
         array(
             'serviceWorkerUrl' => home_url('/sw.js'),
             'scope'            => home_url('/'),
+            'labels'           => 'en' === osadafabryczna_get_current_language()
+                ? array(
+                    'install'      => 'Add to home screen',
+                    'dialogTitle'  => 'Add Osada Fabryczna',
+                    'dialogText'   => 'In Safari, tap Share and then choose “Add to Home Screen”.',
+                    'close'        => 'Close',
+                )
+                : array(
+                    'install'      => 'Dodaj do ekranu głównego',
+                    'dialogTitle'  => 'Dodaj Osadę Fabryczną',
+                    'dialogText'   => 'W Safari stuknij Udostępnij, a następnie wybierz „Do ekranu początkowego”.',
+                    'close'        => 'Zamknij',
+                ),
         )
     );
 
