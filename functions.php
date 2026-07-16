@@ -14,6 +14,7 @@ function osadafabryczna_add_pwa_metadata() {
     ?>
     <link rel="manifest" href="<?php echo esc_url($manifest_url); ?>">
     <meta name="theme-color" content="#f3efe6">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="apple-touch-icon" href="<?php echo esc_url($icon_url); ?>">
@@ -37,6 +38,12 @@ function osadafabryczna_serve_pwa_service_worker($wp) {
     header('Content-Type: application/javascript; charset=UTF-8');
     header('Service-Worker-Allowed: /');
     header('Cache-Control: no-cache, no-store, must-revalidate');
+    echo 'const OSADA_PWA_CONFIG = ' . wp_json_encode(
+        array(
+            'offlineUrl' => get_theme_file_uri('/offline.html'),
+            'themeUrl'   => trailingslashit(get_theme_file_uri()),
+        )
+    ) . ";\n\n";
     readfile($service_worker);
     exit;
 }
