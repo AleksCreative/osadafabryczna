@@ -8,6 +8,40 @@ function osadafabryczna_is_map_page() {
     return is_front_page() || osadafabryczna_is_english_front_page();
 }
 
+function osadafabryczna_add_pwa_metadata() {
+    $manifest_url = get_theme_file_uri('/manifest.webmanifest');
+    $icon_url = get_theme_file_uri('/dist/assets/pwa-icon-192.png');
+    ?>
+    <link rel="manifest" href="<?php echo esc_url($manifest_url); ?>">
+    <meta name="theme-color" content="#f3efe6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="<?php echo esc_url($icon_url); ?>">
+    <?php
+}
+add_action('wp_head', 'osadafabryczna_add_pwa_metadata', 1);
+
+function osadafabryczna_serve_pwa_service_worker($wp) {
+    if ('sw.js' !== trim($wp->request, '/')) {
+        return;
+    }
+
+    $service_worker = get_theme_file_path('/dist/assets/service-worker.js');
+
+    if (!is_readable($service_worker)) {
+        status_header(404);
+        exit;
+    }
+
+    status_header(200);
+    header('Content-Type: application/javascript; charset=UTF-8');
+    header('Service-Worker-Allowed: /');
+    header('Cache-Control: no-cache, no-store, must-revalidate');
+    readfile($service_worker);
+    exit;
+}
+add_action('parse_request', 'osadafabryczna_serve_pwa_service_worker', 0);
+
 function osadafabryczna_is_english_budynek_archive() {
     return is_post_type_archive('budynek') && 'en' === get_query_var('osada_language_archive');
 }
@@ -90,6 +124,23 @@ function osadafabryczna_enqueue_assets() {
         [],
         filemtime(get_template_directory() . '/dist/assets/site-menu.js'),
         true
+    );
+
+    wp_enqueue_script(
+        'osadafabryczna-pwa-register-js',
+        get_template_directory_uri() . '/dist/assets/pwa-register.js',
+        [],
+        filemtime(get_template_directory() . '/dist/assets/pwa-register.js'),
+        true
+    );
+
+    wp_localize_script(
+        'osadafabryczna-pwa-register-js',
+        'OsadaFabrycznaPwa',
+        array(
+            'serviceWorkerUrl' => home_url('/sw.js'),
+            'scope'            => home_url('/'),
+        )
     );
 
     if (is_singular('budynek')) {
