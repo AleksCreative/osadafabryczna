@@ -4,6 +4,9 @@ $osada_search_placeholder = 'en' === $osada_search_language ? 'Search the websit
 $osada_search_submit = 'en' === $osada_search_language ? 'Search' : 'Szukaj';
 ?>
 <form role="search" method="get" class="search-form" action="<?php echo esc_url(home_url('/')); ?>">
+    <?php if ('en' === $osada_search_language) : ?>
+        <input type="hidden" name="osada_search_language" value="en">
+    <?php endif; ?>
     <label class="screen-reader-text" for="site-search-field"><?php echo esc_html($osada_search_placeholder); ?></label>
     <input
         id="site-search-field"

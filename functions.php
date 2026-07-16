@@ -28,6 +28,10 @@ function osadafabryczna_get_post_language($post_id = null) {
 }
 
 function osadafabryczna_get_current_language() {
+    if (is_search() && 'en' === get_query_var('osada_search_language')) {
+        return 'en';
+    }
+
     if (is_singular()) {
         return osadafabryczna_get_post_language();
     }
@@ -325,6 +329,7 @@ add_action('init', 'osadafabryczna_add_language_rewrites');
 
 function osadafabryczna_add_language_query_vars($query_vars) {
     $query_vars[] = 'osada_language_archive';
+    $query_vars[] = 'osada_search_language';
 
     return $query_vars;
 }
@@ -372,6 +377,42 @@ function osadafabryczna_filter_budynek_archive_query($query) {
     $query->set('meta_query', $meta_query);
 }
 add_action('pre_get_posts', 'osadafabryczna_filter_budynek_archive_query');
+
+function osadafabryczna_filter_search_query($query) {
+    if (is_admin() || !$query->is_main_query() || !$query->is_search()) {
+        return;
+    }
+
+    $language = 'en' === $query->get('osada_search_language') ? 'en' : 'pl';
+    $query->set('post_type', array('page', 'budynek'));
+
+    $meta_query = $query->get('meta_query');
+    $meta_query = is_array($meta_query) ? $meta_query : array();
+
+    if ('en' === $language) {
+        $meta_query[] = array(
+            'key'     => '_osada_language',
+            'value'   => 'en',
+            'compare' => '=',
+        );
+    } else {
+        $meta_query[] = array(
+            'relation' => 'OR',
+            array(
+                'key'     => '_osada_language',
+                'value'   => 'pl',
+                'compare' => '=',
+            ),
+            array(
+                'key'     => '_osada_language',
+                'compare' => 'NOT EXISTS',
+            ),
+        );
+    }
+
+    $query->set('meta_query', $meta_query);
+}
+add_action('pre_get_posts', 'osadafabryczna_filter_search_query');
 
 function osadafabryczna_filter_budynek_rest_query($args, $request) {
     $language = sanitize_key($request->get_param('language'));
@@ -451,6 +492,16 @@ function osadafabryczna_get_english_front_page_url() {
 }
 
 function osadafabryczna_get_language_url($language) {
+    if (is_search()) {
+        $search_args = array('s' => get_search_query(false));
+
+        if ('en' === $language) {
+            $search_args['osada_search_language'] = 'en';
+        }
+
+        return add_query_arg($search_args, home_url('/'));
+    }
+
     if (is_singular()) {
         $post_id = get_queried_object_id();
         $current_language = osadafabryczna_get_post_language($post_id);
