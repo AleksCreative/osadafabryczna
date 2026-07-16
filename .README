@@ -7,6 +7,7 @@ dwujęzyczność oraz rozbudowane strony pojedynczych zabytków.
 
 - `front-page.php` — polska strona główna z mapą i panelem INFO.
 - `page-eng.php` — angielska strona mapy pod adresem `/eng/`.
+- `page.php` — prosty szablon standardowych stron oparty na blokach WordPressa.
 - `single-budynek.php` — szablon pojedynczego budynku, zasilany przez ACF.
 - `archive-budynek.php` — archiwum budynków.
 - `search.php` i `searchform.php` — wyniki oraz formularz wyszukiwania.
