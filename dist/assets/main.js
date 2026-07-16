@@ -122,9 +122,9 @@ const geolocationToggle = document.getElementById('geolocation-toggle');
 let geolocationWatchId = null;
 const userMarker = L.marker([0,0], {
   icon: L.icon({
-    iconUrl: MAP_ASSETS.userLocation || '/wp-content/themes/osadafabryczna/dist/assets/user-location.png',
-    iconSize: [30,30],
-    iconAnchor: [15,15]
+    iconUrl: MAP_ASSETS.userLocation || '/wp-content/themes/osadafabryczna/dist/assets/user-location.gif',
+    iconSize: [37.5, 37.5],
+    iconAnchor: [18.75, 18.75]
   }),
   zIndexOffset: USER_MARKER_Z_INDEX_OFFSET
 });

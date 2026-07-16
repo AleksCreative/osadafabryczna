@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 2.31
+Version: 2.32
 */
 
 /* ---------------------------
@@ -1464,19 +1464,27 @@ body.admin-bar.single-budynek .site-header {
 }
 
 .building-page-header {
-    max-width: calc(100% - 316px);
+    max-width: none;
     margin-bottom: 32px;
 }
 
 .building-page-header h1 {
+    max-width: calc(100% - 316px);
     margin: 0;
     color: #222;
     font-size: clamp(2rem, 5vw, 4rem);
     line-height: 1.05;
 }
 
-.building-hero-illustration {
+.building-hero-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 56px;
+    align-items: start;
     margin-top: 28px;
+}
+
+.building-hero-illustration {
     text-align: center;
 }
 
@@ -1487,10 +1495,50 @@ body.admin-bar.single-budynek .site-header {
 }
 
 .building-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 260px;
-    gap: 56px;
-    align-items: start;
+    max-width: calc(100% - 316px);
+}
+
+@media (min-width: 901px) {
+    .building-page-article {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 260px;
+        column-gap: 56px;
+    }
+
+    .building-page-header,
+    .building-hero-row,
+    .building-layout {
+        display: contents;
+    }
+
+    .building-page-header h1 {
+        grid-column: 1;
+        grid-row: 1;
+        max-width: none;
+    }
+
+    .building-hero-illustration {
+        grid-column: 1;
+        grid-row: 2;
+        margin-top: 28px;
+    }
+
+    .building-toc {
+        grid-column: 2;
+        grid-row: 2 / 4;
+        align-self: start;
+    }
+
+    .building-content {
+        grid-column: 1;
+        grid-row: 3;
+        margin-top: 32px;
+    }
+
+    .building-footer {
+        grid-column: 1;
+        grid-row: 4;
+    }
 }
 
 .building-content {
@@ -1528,6 +1576,7 @@ body.admin-bar.single-budynek .site-header {
     border: 1px solid #b07c6c61;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 20px rgba(84, 76, 69, 0.1);
 }
 
 .building-summary__facts {
@@ -1576,6 +1625,7 @@ body.admin-bar.single-budynek .site-header {
     padding: 24px 32px;
     border: 1px solid #3c5f1f66;
     border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(84, 76, 69, 0.1);
 }
 
 .building-callout--fact {
@@ -1650,6 +1700,7 @@ body.admin-bar.single-budynek .site-header {
     border: 0;
     border-radius: 8px;
     background: transparent;
+    box-shadow: 0 8px 18px rgba(84, 76, 69, 0.14);
     cursor: zoom-in;
 }
 
@@ -1927,20 +1978,33 @@ body.admin-bar.single-budynek .site-header {
         flex-direction: column;
     }
 
-    .building-page-header,
     .building-content {
         padding-right: 20px;
         padding-left: 20px;
     }
 
     .building-page-header {
+        display: contents;
+    }
+
+    .building-page-header h1 {
         order: 2;
         max-width: none;
         margin-top: 20px;
+        padding-right: 20px;
+        padding-left: 20px;
+    }
+
+    .building-hero-row {
+        display: contents;
+        margin-top: 0;
     }
 
     .building-hero-illustration {
+        order: 2;
         margin-top: 20px;
+        padding-right: 20px;
+        padding-left: 20px;
     }
 
     .building-summary {
@@ -2012,6 +2076,7 @@ body.admin-bar.single-budynek .site-header {
 
     .building-layout {
         display: contents;
+        max-width: none;
     }
 
     .building-content {

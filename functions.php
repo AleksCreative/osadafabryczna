@@ -167,7 +167,7 @@ function osadafabryczna_enqueue_assets() {
                 )),
                 'assets'   => array(
                     'mapOverlay'   => esc_url_raw(get_template_directory_uri() . '/dist/assets/mapa2a.jpg'),
-                    'userLocation' => esc_url_raw(get_template_directory_uri() . '/dist/assets/user-location.png'),
+                    'userLocation' => esc_url_raw(get_template_directory_uri() . '/dist/assets/user-location.gif'),
                 ),
                 'labels'   => osadafabryczna_get_language_labels($language),
             )

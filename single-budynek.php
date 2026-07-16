@@ -117,11 +117,24 @@ $osada_toc_items = 'en' === $osada_language
             <article id="post-<?php the_ID(); ?>" <?php post_class('building-page-article'); ?>>
                 <header class="building-page-header">
                     <h1><?php the_title(); ?></h1>
-                    <?php if (!empty($osada_hero_illustration)) : ?>
-                        <div class="building-hero-illustration">
-                            <?php echo wp_get_attachment_image($osada_hero_illustration, 'large', false, array('class' => 'building-hero-illustration__image')); ?>
-                        </div>
-                    <?php endif; ?>
+                    <div class="building-hero-row">
+                        <?php if (!empty($osada_hero_illustration)) : ?>
+                            <div class="building-hero-illustration">
+                                <?php echo wp_get_attachment_image($osada_hero_illustration, 'large', false, array('class' => 'building-hero-illustration__image')); ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($osada_toc_items)) : ?>
+                            <aside class="building-toc" aria-labelledby="building-toc-title">
+                                <h2 id="building-toc-title" class="building-toc-title"><?php echo esc_html($osada_toc_title); ?></h2>
+                                <nav class="building-toc-nav" aria-label="<?php echo esc_attr($osada_toc_aria); ?>">
+                                    <?php foreach ($osada_toc_items as $anchor => $label) : ?>
+                                        <a href="#<?php echo esc_attr($anchor); ?>"><?php echo esc_html($label); ?></a>
+                                    <?php endforeach; ?>
+                                </nav>
+                            </aside>
+                        <?php endif; ?>
+                    </div>
                 </header>
 
                 <div class="building-layout">
@@ -338,16 +351,6 @@ $osada_toc_items = 'en' === $osada_language
                         <?php endif; ?>
                     </div>
 
-                    <?php if (!empty($osada_toc_items)) : ?>
-                        <aside class="building-toc" aria-labelledby="building-toc-title">
-                            <h2 id="building-toc-title" class="building-toc-title"><?php echo esc_html($osada_toc_title); ?></h2>
-                            <nav class="building-toc-nav" aria-label="<?php echo esc_attr($osada_toc_aria); ?>">
-                                <?php foreach ($osada_toc_items as $anchor => $label) : ?>
-                                    <a href="#<?php echo esc_attr($anchor); ?>"><?php echo esc_html($label); ?></a>
-                                <?php endforeach; ?>
-                            </nav>
-                        </aside>
-                    <?php endif; ?>
                 </div>
 
                 <footer class="building-footer">
