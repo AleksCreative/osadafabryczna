@@ -10,7 +10,7 @@ function osadafabryczna_is_map_page() {
 
 function osadafabryczna_add_pwa_metadata() {
     $manifest_url = get_theme_file_uri('/manifest.webmanifest');
-    $icon_url = get_theme_file_uri('/dist/assets/pwa-icon-192.png');
+    $icon_url = get_theme_file_uri('/dist/assets/pwa-icon-192-v2.png');
     ?>
     <link rel="manifest" href="<?php echo esc_url($manifest_url); ?>">
     <meta name="theme-color" content="#f3efe6">
