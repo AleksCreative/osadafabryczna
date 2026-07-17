@@ -200,6 +200,7 @@ $osada_toc_items = 'en' === $osada_language
                                             $osada_time_travel_image = isset($osada_time_travel_item['image']) ? $osada_time_travel_item['image'] : 0;
                                             $osada_time_travel_title = isset($osada_time_travel_item['title']) ? $osada_time_travel_item['title'] : '';
                                             $osada_time_travel_caption = isset($osada_time_travel_item['caption']) ? $osada_time_travel_item['caption'] : '';
+                                            $osada_time_travel_caption_url = isset($osada_time_travel_item['caption_url']) ? $osada_time_travel_item['caption_url'] : '';
                                             $osada_time_travel_image_full = $osada_time_travel_image ? wp_get_attachment_image_url($osada_time_travel_image, 'full') : '';
                                             $osada_time_travel_image_alt = $osada_time_travel_image ? get_post_meta($osada_time_travel_image, '_wp_attachment_image_alt', true) : '';
 
@@ -217,7 +218,11 @@ $osada_toc_items = 'en' === $osada_language
                                                             <strong><?php echo esc_html($osada_time_travel_title); ?></strong>
                                                         <?php endif; ?>
                                                         <?php if (!empty($osada_time_travel_caption)) : ?>
-                                                            <span><?php echo esc_html($osada_time_travel_caption); ?></span>
+                                                            <?php if (!empty($osada_time_travel_caption_url)) : ?>
+                                                                <a href="<?php echo esc_url($osada_time_travel_caption_url); ?>"><?php echo esc_html($osada_time_travel_caption); ?></a>
+                                                            <?php else : ?>
+                                                                <span><?php echo esc_html($osada_time_travel_caption); ?></span>
+                                                            <?php endif; ?>
                                                         <?php endif; ?>
                                                     </figcaption>
                                                 <?php endif; ?>
