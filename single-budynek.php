@@ -219,7 +219,7 @@ $osada_toc_items = 'en' === $osada_language
                                                         <?php endif; ?>
                                                         <?php if (!empty($osada_time_travel_caption)) : ?>
                                                             <?php if (!empty($osada_time_travel_caption_url)) : ?>
-                                                                <a href="<?php echo esc_url($osada_time_travel_caption_url); ?>"><?php echo esc_html($osada_time_travel_caption); ?></a>
+                                                                <a href="<?php echo esc_url($osada_time_travel_caption_url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($osada_time_travel_caption); ?></a>
                                                             <?php else : ?>
                                                                 <span><?php echo esc_html($osada_time_travel_caption); ?></span>
                                                             <?php endif; ?>
@@ -339,7 +339,7 @@ $osada_toc_items = 'en' === $osada_language
                                         ?>
                                         <li>
                                             <?php if (!empty($osada_source_url)) : ?>
-                                                <a href="<?php echo esc_url($osada_source_url); ?>"><?php echo esc_html($osada_source_text); ?></a>
+                                                <a href="<?php echo esc_url($osada_source_url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($osada_source_text); ?></a>
                                             <?php else : ?>
                                                 <?php echo esc_html($osada_source_text); ?>
                                             <?php endif; ?>
