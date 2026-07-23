@@ -19,6 +19,10 @@ function osadafabryczna_bump_buildings_cache_version($post_id) {
 add_action('save_post_budynek', 'osadafabryczna_bump_buildings_cache_version');
 
 function osadafabryczna_add_pwa_metadata() {
+    if (function_exists('osadafabryczna_is_holding_request') && osadafabryczna_is_holding_request()) {
+        return;
+    }
+
     $manifest_url = get_theme_file_uri('/manifest.webmanifest');
     $icon_url = get_theme_file_uri('/dist/assets/pwa-icon-192-v2.png');
     ?>
@@ -134,6 +138,10 @@ function osadafabryczna_enqueue_assets() {
         ['osadafabryczna-google-fonts'],
         filemtime(get_stylesheet_directory() . '/style.css')
     );
+
+    if (function_exists('osadafabryczna_is_holding_request') && osadafabryczna_is_holding_request()) {
+        return;
+    }
 
     wp_enqueue_script(
         'osadafabryczna-site-menu-js',
@@ -633,3 +641,277 @@ function osadafabryczna_language_body_classes($classes) {
     return $classes;
 }
 add_filter('body_class', 'osadafabryczna_language_body_classes');
+
+/**
+ * Temporary password gate and public holding page.
+ */
+function osadafabryczna_access_is_enabled() {
+    return '1' === get_option('osadafabryczna_access_enabled', '0')
+        && '' !== get_option('osadafabryczna_access_password', '');
+}
+
+function osadafabryczna_access_cookie_name() {
+    return 'osadafabryczna_private_access';
+}
+
+function osadafabryczna_access_cookie_value() {
+    $password_hash = (string) get_option('osadafabryczna_access_password', '');
+    return hash_hmac('sha256', $password_hash, wp_salt('auth'));
+}
+
+function osadafabryczna_visitor_has_access() {
+    if (!osadafabryczna_access_is_enabled() || is_user_logged_in()) {
+        return true;
+    }
+
+    $cookie_name = osadafabryczna_access_cookie_name();
+    $cookie_value = isset($_COOKIE[$cookie_name])
+        ? sanitize_text_field(wp_unslash($_COOKIE[$cookie_name]))
+        : '';
+
+    return '' !== $cookie_value && hash_equals(osadafabryczna_access_cookie_value(), $cookie_value);
+}
+
+function osadafabryczna_is_holding_request() {
+    return !empty($GLOBALS['osadafabryczna_show_holding']);
+}
+
+function osadafabryczna_set_access_cookie() {
+    $expires = time() + MONTH_IN_SECONDS;
+    $cookie_options = array(
+        'expires'  => $expires,
+        'path'     => COOKIEPATH ?: '/',
+        'secure'   => is_ssl(),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    );
+
+    setcookie(
+        osadafabryczna_access_cookie_name(),
+        osadafabryczna_access_cookie_value(),
+        $cookie_options
+    );
+}
+
+function osadafabryczna_handle_access_gate() {
+    if (!osadafabryczna_access_is_enabled() || osadafabryczna_visitor_has_access()) {
+        return;
+    }
+
+    if (isset($_SERVER['REQUEST_METHOD']) && 'POST' === strtoupper(sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])))) {
+        $nonce = isset($_POST['osada_access_nonce'])
+            ? sanitize_text_field(wp_unslash($_POST['osada_access_nonce']))
+            : '';
+        $password = isset($_POST['osada_access_password'])
+            ? (string) wp_unslash($_POST['osada_access_password'])
+            : '';
+
+        if (wp_verify_nonce($nonce, 'osadafabryczna_unlock') && wp_check_password(
+            $password,
+            (string) get_option('osadafabryczna_access_password', '')
+        )) {
+            osadafabryczna_set_access_cookie();
+            nocache_headers();
+
+            $request_uri = isset($_SERVER['REQUEST_URI'])
+                ? wp_unslash($_SERVER['REQUEST_URI'])
+                : '/';
+            wp_safe_redirect(home_url($request_uri));
+            exit;
+        }
+
+        $GLOBALS['osadafabryczna_access_error'] = true;
+    }
+
+    $GLOBALS['osadafabryczna_show_holding'] = true;
+    status_header(200);
+    nocache_headers();
+    header('X-Osada-Holding: 1');
+}
+add_action('template_redirect', 'osadafabryczna_handle_access_gate', 0);
+
+function osadafabryczna_use_holding_template($template) {
+    if (!osadafabryczna_is_holding_request()) {
+        return $template;
+    }
+
+    return get_theme_file_path('/holding-page.php');
+}
+add_filter('template_include', 'osadafabryczna_use_holding_template', 99);
+
+function osadafabryczna_protect_buildings_rest_api($result) {
+    if (!osadafabryczna_access_is_enabled() || osadafabryczna_visitor_has_access()) {
+        return $result;
+    }
+
+    $rest_route = isset($GLOBALS['wp']->query_vars['rest_route'])
+        ? (string) $GLOBALS['wp']->query_vars['rest_route']
+        : '';
+    $request_uri = isset($_SERVER['REQUEST_URI'])
+        ? (string) wp_unslash($_SERVER['REQUEST_URI'])
+        : '';
+
+    if (false === strpos($rest_route . $request_uri, '/wp/v2/budynek')) {
+        return $result;
+    }
+
+    return new WP_Error(
+        'osadafabryczna_access_required',
+        __('Access password required.', 'osadafabryczna'),
+        array('status' => 401)
+    );
+}
+add_filter('rest_authentication_errors', 'osadafabryczna_protect_buildings_rest_api');
+
+function osadafabryczna_register_access_settings_page() {
+    add_options_page(
+        'Dostęp do strony',
+        'Dostęp do strony',
+        'manage_options',
+        'osadafabryczna-access',
+        'osadafabryczna_render_access_settings_page'
+    );
+}
+add_action('admin_menu', 'osadafabryczna_register_access_settings_page');
+
+function osadafabryczna_save_access_settings() {
+    if (!current_user_can('manage_options')) {
+        wp_die(esc_html__('You are not allowed to change these settings.', 'osadafabryczna'));
+    }
+
+    check_admin_referer('osadafabryczna_access_settings');
+
+    update_option(
+        'osadafabryczna_access_enabled',
+        isset($_POST['access_enabled']) ? '1' : '0',
+        false
+    );
+    update_option(
+        'osadafabryczna_holding_title',
+        isset($_POST['holding_title'])
+            ? sanitize_text_field(wp_unslash($_POST['holding_title']))
+            : '',
+        false
+    );
+    update_option(
+        'osadafabryczna_holding_content',
+        isset($_POST['holding_content'])
+            ? wp_kses_post(wp_unslash($_POST['holding_content']))
+            : '',
+        false
+    );
+    update_option(
+        'osadafabryczna_facebook_url',
+        isset($_POST['facebook_url'])
+            ? esc_url_raw(wp_unslash($_POST['facebook_url']))
+            : '',
+        false
+    );
+    update_option(
+        'osadafabryczna_instagram_url',
+        isset($_POST['instagram_url'])
+            ? esc_url_raw(wp_unslash($_POST['instagram_url']))
+            : '',
+        false
+    );
+
+    $new_password = isset($_POST['access_password'])
+        ? (string) wp_unslash($_POST['access_password'])
+        : '';
+
+    if ('' !== $new_password) {
+        update_option(
+            'osadafabryczna_access_password',
+            wp_hash_password($new_password),
+            false
+        );
+    }
+
+    wp_safe_redirect(add_query_arg(
+        array(
+            'page'    => 'osadafabryczna-access',
+            'updated' => '1',
+        ),
+        admin_url('options-general.php')
+    ));
+    exit;
+}
+add_action('admin_post_osadafabryczna_save_access_settings', 'osadafabryczna_save_access_settings');
+
+function osadafabryczna_render_access_settings_page() {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    $has_password = '' !== get_option('osadafabryczna_access_password', '');
+    ?>
+    <div class="wrap">
+        <h1>Dostęp do strony</h1>
+        <?php if (isset($_GET['updated'])) : ?>
+            <div class="notice notice-success is-dismissible"><p>Ustawienia zostały zapisane.</p></div>
+        <?php endif; ?>
+        <?php if (!$has_password) : ?>
+            <div class="notice notice-warning"><p>Ustaw hasło przed włączeniem ochrony.</p></div>
+        <?php endif; ?>
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <input type="hidden" name="action" value="osadafabryczna_save_access_settings">
+            <?php wp_nonce_field('osadafabryczna_access_settings'); ?>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row">Ochrona strony</th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="access_enabled" value="1" <?php checked('1', get_option('osadafabryczna_access_enabled', '0')); ?>>
+                            Włącz holding page i wymagaj hasła
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="holding-title">Nagłówek</label></th>
+                    <td><input id="holding-title" class="regular-text" type="text" name="holding_title" value="<?php echo esc_attr(get_option('osadafabryczna_holding_title', 'Osada Fabryczna')); ?>"></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="holding-content">Informacja o projekcie</label></th>
+                    <td>
+                        <?php
+                        wp_editor(
+                            get_option(
+                                'osadafabryczna_holding_content',
+                                '<p>Tworzymy cyfrową mapę Osady Fabrycznej. Projekt jest obecnie w fazie testów terenowych.</p>'
+                            ),
+                            'holding_content',
+                            array(
+                                'textarea_rows' => 8,
+                                'media_buttons' => true,
+                            )
+                        );
+                        ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="access-password">Hasło dla testerów</label></th>
+                    <td>
+                        <input id="access-password" class="regular-text" type="password" name="access_password" autocomplete="new-password">
+                        <p class="description"><?php echo $has_password ? 'Pozostaw puste, aby zachować obecne hasło.' : 'Wpisz hasło wymagane do wejścia na stronę.'; ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="facebook-url">Facebook</label></th>
+                    <td>
+                        <input id="facebook-url" class="regular-text" type="url" name="facebook_url" value="<?php echo esc_attr(get_option('osadafabryczna_facebook_url', '')); ?>" placeholder="https://www.facebook.com/...">
+                        <p class="description">Adres profilu lub strony projektu na Facebooku.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="instagram-url">Instagram</label></th>
+                    <td>
+                        <input id="instagram-url" class="regular-text" type="url" name="instagram_url" value="<?php echo esc_attr(get_option('osadafabryczna_instagram_url', '')); ?>" placeholder="https://www.instagram.com/...">
+                        <p class="description">Adres profilu projektu na Instagramie.</p>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button('Zapisz ustawienia'); ?>
+        </form>
+    </div>
+    <?php
+}

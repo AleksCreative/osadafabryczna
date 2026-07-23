@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 2.46
+Version: 3.0.0
 */
 
 /* ---------------------------
@@ -36,6 +36,239 @@ body {
 
 main {
     position: relative;
+}
+
+/* ---------------------------
+Holding page
+--------------------------- */
+body.holding-page {
+    min-height: 100%;
+}
+
+.holding-page__main {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: clamp(24px, 6vw, 80px);
+}
+
+.holding-card {
+    width: min(760px, 100%);
+    padding: clamp(28px, 6vw, 64px);
+    background: rgba(243, 239, 230, 0.94);
+    border: 1px solid rgba(39, 46, 38, 0.2);
+    border-radius: 24px;
+    box-shadow: 0 24px 70px rgba(39, 46, 38, 0.14);
+}
+
+.holding-card__brand {
+    margin-bottom: clamp(36px, 7vw, 72px);
+}
+
+.holding-card__brand .custom-logo {
+    width: auto;
+    max-width: min(260px, 70vw);
+    max-height: 100px;
+}
+
+.holding-card__site-name {
+    font-family: "Faculty Glyphic", serif;
+    font-size: 1.5rem;
+}
+
+.holding-card__eyebrow {
+    margin-bottom: 10px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.holding-card h1 {
+    margin: 0 0 20px;
+    font-family: "Faculty Glyphic", serif;
+    font-size: clamp(2.2rem, 7vw, 2.5rem);
+    font-weight: 400;
+    line-height: 1.05;
+}
+
+.holding-card__description {
+    max-width: 620px;
+    font-size: 1.05rem;
+    line-height: 1.75;
+}
+
+.holding-card__description::after {
+    display: table;
+    clear: both;
+    content: "";
+}
+
+.holding-card__description img {
+    max-width: 100%;
+    height: auto;
+}
+
+.holding-card__description .alignleft {
+    float: left;
+    margin: 6px 24px 16px 0;
+}
+
+.holding-card__description .alignright {
+    float: right;
+    margin: 6px 0 16px 24px;
+}
+
+.holding-card__description .aligncenter {
+    display: block;
+    clear: both;
+    margin: 24px auto;
+}
+
+.holding-card__description figure.alignleft,
+.holding-card__description figure.alignright {
+    max-width: min(48%, 300px);
+}
+
+.holding-card__description figure img {
+    display: block;
+}
+
+.holding-card__description figcaption {
+    margin-top: 6px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.holding-card__description p + p {
+    margin-top: 1em;
+}
+
+.holding-socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 28px;
+}
+
+.holding-socials__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 16px;
+    border: 1px solid rgba(39, 46, 38, 0.3);
+    border-radius: 999px;
+    color: #272e26;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.holding-socials__button span {
+    display: grid;
+    width: 24px;
+    height: 24px;
+    place-items: center;
+    border-radius: 50%;
+    background: #272e26;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.holding-socials__button:hover,
+.holding-socials__button:focus-visible {
+    border-color: #272e26;
+    background: #272e26;
+    color: #fff;
+}
+
+.holding-socials__button:hover span,
+.holding-socials__button:focus-visible span {
+    background: #fff;
+    color: #272e26;
+}
+
+.holding-access-form {
+    margin-top: clamp(36px, 7vw, 64px);
+    padding-top: 28px;
+    border-top: 1px solid rgba(39, 46, 38, 0.2);
+}
+
+.holding-access-form h2 {
+    margin-bottom: 8px;
+    font-size: 1.15rem;
+    font-weight: 500;
+}
+
+.holding-access-form > p {
+    margin-bottom: 18px;
+    line-height: 1.6;
+}
+
+.holding-access-form__fields {
+    display: flex;
+    gap: 10px;
+}
+
+.holding-access-form input {
+    min-width: 0;
+    flex: 1;
+    padding: 13px 16px;
+    border: 1px solid rgba(39, 46, 38, 0.35);
+    border-radius: 8px;
+    background: #fff;
+    color: #272e26;
+    font: inherit;
+}
+
+.holding-access-form button {
+    padding: 13px 22px;
+    border: 1px solid #272e26;
+    border-radius: 8px;
+    background: #272e26;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 500;
+}
+
+.holding-access-form button:hover,
+.holding-access-form button:focus-visible {
+    background: #465343;
+}
+
+.holding-access-form__error {
+    color: #9c2d20;
+    font-weight: 500;
+}
+
+@media (max-width: 560px) {
+    .holding-card__description .alignleft,
+    .holding-card__description .alignright,
+    .holding-card__description figure.alignleft,
+    .holding-card__description figure.alignright {
+        display: block;
+        float: none;
+        width: auto;
+        max-width: 100%;
+        margin: 20px auto;
+    }
+
+    .holding-socials {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .holding-socials__button {
+        justify-content: center;
+    }
+
+    .holding-access-form__fields {
+        flex-direction: column;
+    }
 }
 
 .site-fallback {
@@ -1387,9 +1620,17 @@ Map container
     z-index: 900;
 }
 
-body.home,
-body.front-page {
+body.home:not(.holding-page),
+body.front-page:not(.holding-page) {
     overflow: hidden;
+}
+
+body.holding-page {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 body.home main,

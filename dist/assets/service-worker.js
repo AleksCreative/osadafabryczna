@@ -68,7 +68,11 @@ async function networkFirstPage(request) {
   try {
     const response = await fetch(request);
 
-    if (response.ok && !request.headers.get('Cookie')?.includes('wordpress_logged_in')) {
+    if (
+      response.ok
+      && !request.headers.get('Cookie')?.includes('wordpress_logged_in')
+      && response.headers.get('X-Osada-Holding') !== '1'
+    ) {
       runtimeCache.put(request, response.clone());
     }
 
