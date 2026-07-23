@@ -277,7 +277,7 @@ $osada_toc_items = 'en' === $osada_language
                                                 <button class="building-carousel__image-trigger" type="button" data-lightbox-image data-lightbox-source="<?php echo esc_url($osada_gallery_image_full); ?>" data-lightbox-alt="<?php echo esc_attr($osada_gallery_image_alt); ?>">
                                                     <?php echo wp_get_attachment_image($osada_gallery_image_id, 'medium_large', false, array('class' => 'building-carousel__image')); ?>
                                                 </button>
-                                                <?php if (!empty($osada_gallery_caption)) : ?>
+                                                <?php if ('pl' === $osada_language && !empty($osada_gallery_caption)) : ?>
                                                     <figcaption class="building-carousel__caption">
                                                         <span><?php echo wp_kses_post($osada_gallery_caption); ?></span>
                                                     </figcaption>
