@@ -6,7 +6,10 @@ if ('serviceWorker' in navigator && pwaConfig.serviceWorkerUrl) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register(
       pwaConfig.serviceWorkerUrl,
-      { scope: pwaConfig.scope }
+      {
+        scope: pwaConfig.scope,
+        updateViaCache: 'none'
+      }
     ).catch(function (error) {
       console.warn('PWA service worker registration failed.', error);
     });

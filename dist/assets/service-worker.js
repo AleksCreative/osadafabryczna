@@ -1,4 +1,4 @@
-const SERVICE_WORKER_VERSION = 'osada-fabryczna-v2';
+const SERVICE_WORKER_VERSION = 'osada-fabryczna-v3';
 const STATIC_CACHE = `${SERVICE_WORKER_VERSION}-static`;
 const RUNTIME_CACHE = `${SERVICE_WORKER_VERSION}-runtime`;
 const OFFLINE_URL = OSADA_PWA_CONFIG.offlineUrl;
@@ -45,7 +45,12 @@ self.addEventListener('fetch', function (event) {
     return;
   }
 
-  if (url.pathname.startsWith(THEME_URL.pathname) || url.pathname.includes('/wp-json/')) {
+  if (url.pathname.includes('/wp-json/')) {
+    event.respondWith(networkFirstData(request));
+    return;
+  }
+
+  if (url.pathname.startsWith(THEME_URL.pathname)) {
     event.respondWith(cacheFirstAsset(request));
   }
 });
@@ -72,6 +77,25 @@ async function networkFirstPage(request) {
     return (await runtimeCache.match(request))
       || (await caches.match(OFFLINE_URL))
       || Response.error();
+  }
+}
+
+async function networkFirstData(request) {
+  const runtimeCache = await caches.open(RUNTIME_CACHE);
+
+  try {
+    // Always revalidate WordPress REST data. The cached response is used only
+    // when the visitor is offline, so published and edited buildings appear
+    // on the next map load without manually clearing the PWA cache.
+    const response = await fetch(request, { cache: 'no-store' });
+
+    if (response.ok) {
+      await runtimeCache.put(request, response.clone());
+    }
+
+    return response;
+  } catch (error) {
+    return (await runtimeCache.match(request)) || Response.error();
   }
 }
 

@@ -8,6 +8,16 @@ function osadafabryczna_is_map_page() {
     return is_front_page() || osadafabryczna_is_english_front_page();
 }
 
+function osadafabryczna_bump_buildings_cache_version($post_id) {
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+        return;
+    }
+
+    $version = (int) get_option('osadafabryczna_buildings_cache_version', 1);
+    update_option('osadafabryczna_buildings_cache_version', $version + 1, false);
+}
+add_action('save_post_budynek', 'osadafabryczna_bump_buildings_cache_version');
+
 function osadafabryczna_add_pwa_metadata() {
     $manifest_url = get_theme_file_uri('/manifest.webmanifest');
     $icon_url = get_theme_file_uri('/dist/assets/pwa-icon-192-v2.png');
@@ -233,6 +243,7 @@ function osadafabryczna_enqueue_assets() {
                         '_embed'      => '1',
                         'language'    => $language,
                         'per_page'    => '50',
+                        'content_version' => (int) get_option('osadafabryczna_buildings_cache_version', 1),
                     ),
                     rest_url('wp/v2/budynek')
                 )),
