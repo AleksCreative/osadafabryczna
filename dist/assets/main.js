@@ -43,13 +43,13 @@ if (!mapElement || typeof L === 'undefined') {
 const markers = [];
 
 // Initialize map
-const initialZoom = 16;
+const initialZoom = 17;
 const map = L.map('map', {
   center: MAP_CENTER,
   zoom: initialZoom,
   zoomControl: false,
   minZoom: 14,
-  maxZoom: 17,
+  maxZoom: 18,
   maxBounds: IMAGE_BOUNDS,
   maxBoundsViscosity: 1,
   zoomSnap: 0.10,
