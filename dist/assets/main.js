@@ -1,8 +1,8 @@
 // Map center and overlay bounds
 const MAP_CENTER = [52.056891, 20.435654];
 const IMAGE_BOUNDS = [
-  [52.085027, 20.543456], // northeast
-  [52.029078, 20.345237]  // southwest
+  [52.078133, 20.520637], // northeast
+  [52.033089, 20.370405]  // southwest
 ];
 const TARGET_HEIGHT = 140; // default max height for vertical-style icons
 const TARGET_WIDTH = 140; // default max width for horizontal/square-style icons
@@ -79,7 +79,7 @@ const streetLabelTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_on
 }).addTo(map);
 
 // Add overlay image
-const overlayUrl = MAP_ASSETS.mapOverlay || '/wp-content/themes/osadafabryczna/dist/assets/mapa2a.jpg';
+const overlayUrl = MAP_ASSETS.mapOverlay || '/wp-content/themes/osadafabryczna/dist/assets/mapa-24-07.jpg';
 const overlay = L.imageOverlay(
   overlayUrl,
   IMAGE_BOUNDS,
