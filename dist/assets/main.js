@@ -4,13 +4,13 @@ const IMAGE_BOUNDS = [
   [52.078133, 20.520637], // northeast
   [52.033089, 20.370405]  // southwest
 ];
-const TARGET_HEIGHT = 140; // default max height for vertical-style icons
-const TARGET_WIDTH = 140; // default max width for horizontal/square-style icons
-const SQUARE_MAX_SIZE = 80;
-const HORIZONTAL_MAX_WIDTH = 90;
-const HORIZONTAL_MAX_HEIGHT = 140;
-const VERTICAL_MAX_WIDTH = 140;
-const VERTICAL_MAX_HEIGHT = 90;
+const TARGET_HEIGHT = 150; // default max height for vertical-style icons
+const TARGET_WIDTH = 150; // default max width for horizontal/square-style icons
+const SQUARE_MAX_SIZE = 90;
+const HORIZONTAL_MAX_WIDTH = 100;
+const HORIZONTAL_MAX_HEIGHT = 150;
+const VERTICAL_MAX_WIDTH = 150;
+const VERTICAL_MAX_HEIGHT = 100;
 const MARKER_PADDING = 6; // small padding around each icon
 const ZOOM_STEP_FACTOR = 1.2; // scale factor per zoom level
 const MOBILE_PANEL_MARKER_GAP = 84;
@@ -43,7 +43,7 @@ if (!mapElement || typeof L === 'undefined') {
 const markers = [];
 
 // Initialize map
-const initialZoom = 17;
+const initialZoom = 16.5;
 const map = L.map('map', {
   center: MAP_CENTER,
   zoom: initialZoom,

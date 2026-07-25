@@ -250,7 +250,7 @@ function osadafabryczna_enqueue_assets() {
                         'acf_format' => 'standard',
                         '_embed'      => '1',
                         'language'    => $language,
-                        'per_page'    => '50',
+                        'per_page'    => '70',
                         'content_version' => (int) get_option('osadafabryczna_buildings_cache_version', 1),
                     ),
                     rest_url('wp/v2/budynek')
