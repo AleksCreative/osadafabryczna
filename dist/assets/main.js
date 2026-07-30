@@ -48,7 +48,7 @@ const map = L.map('map', {
   center: MAP_CENTER,
   zoom: initialZoom,
   zoomControl: false,
-  minZoom: 14,
+  minZoom: 14.5,
   maxZoom: 18,
   maxBounds: IMAGE_BOUNDS,
   maxBoundsViscosity: 1,
@@ -100,7 +100,7 @@ const markerClusterGroup = typeof L.markerClusterGroup === 'function'
       spiderfyOnMaxZoom: true,
       disableClusteringAtZoom: 16,
       removeOutsideVisibleBounds: true,
-      maxClusterRadius: 400
+      maxClusterRadius: 50
     })
   : null;
 
