@@ -100,7 +100,7 @@ const markerClusterGroup = typeof L.markerClusterGroup === 'function'
       spiderfyOnMaxZoom: true,
       disableClusteringAtZoom: 16,
       removeOutsideVisibleBounds: true,
-      maxClusterRadius: 90
+      maxClusterRadius: 80
     })
   : null;
 
