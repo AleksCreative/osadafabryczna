@@ -397,6 +397,10 @@ async function addMarkers() {
       const lat = budynek.acf.latitude;
       const lng = budynek.acf.longitude;
       const marker_icon = budynek.acf.marker_icon;
+      const customMarkerWidth = Number.parseInt(
+        budynek.marker_icon_width ?? budynek.meta?.marker_icon_width,
+        10
+      );
 
       if (!lat || !lng) {
         console.warn(`Skipping "${title}": missing coordinates.`);
@@ -424,8 +428,11 @@ async function addMarkers() {
     scale = Math.min(SQUARE_MAX_SIZE / img.width, SQUARE_MAX_SIZE / img.height);
   }
 
-  const iconWidth = Math.max(24, img.width * scale);
-  const iconHeight = Math.max(24, img.height * scale);
+  const hasCustomMarkerWidth = Number.isFinite(customMarkerWidth) && customMarkerWidth >= 24;
+  const iconWidth = hasCustomMarkerWidth ? customMarkerWidth : Math.max(24, img.width * scale);
+  const iconHeight = hasCustomMarkerWidth
+    ? iconWidth / aspectRatio
+    : Math.max(24, img.height * scale);
   const paddedHeight = iconHeight + MARKER_PADDING * 2;
   const paddedWidth = iconWidth + MARKER_PADDING * 2;
 
