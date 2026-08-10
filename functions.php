@@ -98,6 +98,24 @@ function osadafabryczna_get_current_language() {
     return osadafabryczna_is_english_front_page() ? 'en' : 'pl';
 }
 
+function osadafabryczna_render_scholarship_footer() {
+    $is_english = 'en' === osadafabryczna_get_current_language();
+    $text = $is_english
+        ? 'This project was carried out as part of a scholarship awarded by the Minister of Culture and National Heritage'
+        : 'Zrealizowano w ramach stypendium Ministra Kultury i Dziedzictwa Narodowego';
+    $logo_filename = $is_english ? 'logo_MKiDN_ENG.png' : 'logo_MKiDN.png';
+    ?>
+    <div class="site-footer__scholarship">
+        <p><?php echo esc_html($text); ?></p>
+        <img
+            class="site-footer__scholarship-logo"
+            src="<?php echo esc_url(get_theme_file_uri('/dist/assets/' . $logo_filename)); ?>"
+            alt="<?php echo esc_attr($text); ?>"
+        >
+    </div>
+    <?php
+}
+
 function osadafabryczna_get_language_labels($language = null) {
     $language = $language ?: osadafabryczna_get_current_language();
 

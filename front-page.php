@@ -42,6 +42,7 @@ $osada_building_close = 'en' === $osada_language ? 'Close panel' : 'Zamknij pane
             <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); the_content(); endwhile; endif; ?>
         </div>
         <footer class="info-panel-footer">
+            <?php osadafabryczna_render_scholarship_footer(); ?>
             <p class="site-footer__copyright">
                 &copy; <?php echo esc_html(wp_date('Y')); ?> Osada Fabryczna Żyrardowa
             </p>

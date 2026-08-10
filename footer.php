@@ -6,6 +6,7 @@ $osada_show_standard_footer = is_post_type_archive('budynek')
 <?php if ($osada_show_standard_footer) : ?>
     <footer class="site-footer">
         <div class="footer-inner">
+            <?php osadafabryczna_render_scholarship_footer(); ?>
             <p class="site-footer__copyright">
                 &copy; <?php echo esc_html(wp_date('Y')); ?> Osada Fabryczna Żyrardowa
             </p>
