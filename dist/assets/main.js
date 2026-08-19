@@ -43,17 +43,17 @@ if (!mapElement || typeof L === 'undefined') {
 const markers = [];
 
 // Initialize map
-const initialZoom = 16.5;
+const initialZoom = 16;
 const map = L.map('map', {
   center: MAP_CENTER,
   zoom: initialZoom,
   zoomControl: false,
-  minZoom: 14.5,
+  minZoom: 14,
   maxZoom: 18,
   maxBounds: IMAGE_BOUNDS,
   maxBoundsViscosity: 1,
-  zoomSnap: 0.10,
-  zoomDelta: 0.10,
+  zoomSnap: 1,
+  zoomDelta: 1,
   wheelPxPerZoomLevel: 80
 });
 
@@ -79,12 +79,29 @@ const streetLabelTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_on
 }).addTo(map);
 
 // Add overlay image
-const overlayUrl = MAP_ASSETS.mapOverlay || '/wp-content/themes/osadafabryczna/dist/assets/mapa-24-07.jpg';
+/* const overlayUrl = MAP_ASSETS.mapOverlay || '/wp-content/themes/osadafabryczna/dist/assets/mapa-24-07.jpg';
 const overlay = L.imageOverlay(
   overlayUrl,
   IMAGE_BOUNDS,
   {
     opacity: 1
+  }
+).addTo(map); */
+const overlayTilesUrl =
+  MAP_ASSETS.mapTiles ||
+  '/wp-content/themes/osadafabryczna/dist/assets/map-tiles-v1';
+
+const overlay = L.tileLayer(
+  `${overlayTilesUrl}/{z}/{x}/{y}.webp`,
+  {
+    minZoom: 14,
+    maxZoom: 18,
+    minNativeZoom: 14,
+    maxNativeZoom: 18,
+    bounds: L.latLngBounds(IMAGE_BOUNDS),
+    noWrap: true,
+    opacity: 1,
+    pane: 'overlayPane'
   }
 ).addTo(map);
 

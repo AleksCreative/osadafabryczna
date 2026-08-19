@@ -274,7 +274,10 @@ function osadafabryczna_enqueue_assets() {
                     rest_url('wp/v2/budynek')
                 )),
                 'assets'   => array(
-                    'mapOverlay'   => esc_url_raw(get_template_directory_uri() . '/dist/assets/mapa-24-07.jpg'),
+                    'mapTiles' => esc_url_raw(
+        get_template_directory_uri() . '/dist/assets/map-tiles-v1'
+    ),
+               //     'mapOverlay'   => esc_url_raw(get_template_directory_uri() . '/dist/assets/mapa-24-07.jpg'),
                     'userLocation' => esc_url_raw(get_template_directory_uri() . '/dist/assets/user-location.gif'),
                 ),
                 'labels'   => osadafabryczna_get_language_labels($language),
