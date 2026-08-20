@@ -46,7 +46,7 @@ if (!mapElement || typeof L === 'undefined') {
 const markers = [];
 
 // Initialize map
-const initialZoom = 16;
+const initialZoom = 17;
 const map = L.map('map', {
   center: MAP_CENTER,
   zoom: initialZoom,
@@ -118,7 +118,7 @@ const markerClusterGroup = typeof L.markerClusterGroup === 'function'
   ? L.markerClusterGroup({
       showCoverageOnHover: false,
       spiderfyOnMaxZoom: true,
-      disableClusteringAtZoom: 16,
+      disableClusteringAtZoom: 17,
       removeOutsideVisibleBounds: true,
       maxClusterRadius: 80
     })
