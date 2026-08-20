@@ -1,5 +1,5 @@
 // Map center and overlay bounds
-const MAP_CENTER = [52.056891, 20.435654];
+const MAP_CENTER = [52.056438, 20.436555];
 const IMAGE_BOUNDS = [
   [52.078133, 20.520637], // northeast
   [52.033089, 20.370405]  // southwest
@@ -78,7 +78,7 @@ labelsPane.style.pointerEvents = 'none';
 const streetLabelTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
   pane: 'labelsPane',
-  opacity: 0.95
+  opacity: 0.85
 }).addTo(map);
 
 // Add overlay image
