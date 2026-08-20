@@ -6,11 +6,12 @@ const IMAGE_BOUNDS = [
 ];
 const TARGET_HEIGHT = 150; // default max height for vertical-style icons
 const TARGET_WIDTH = 150; // default max width for horizontal/square-style icons
-const SQUARE_MAX_SIZE = 90;
-const HORIZONTAL_MAX_WIDTH = 100;
+const SQUARE_MAX_SIZE = 70;
+const HORIZONTAL_MAX_WIDTH = 80;
 const HORIZONTAL_MAX_HEIGHT = 150;
 const VERTICAL_MAX_WIDTH = 150;
-const VERTICAL_MAX_HEIGHT = 100;
+const VERTICAL_MAX_HEIGHT = 80;
+const DEFAULT_BUILDING_MARKER_WIDTH = 50;
 const MARKER_PADDING = 6; // small padding around each icon
 const ZOOM_STEP_FACTOR = 1.2; // scale factor per zoom level
 const MOBILE_PANEL_MARKER_GAP = 84;
@@ -27,6 +28,8 @@ const USER_MARKER_SNAP_DISTANCE_METERS = 120;
 const MAP_CONFIG = window.OsadaFabrycznaMap || {};
 const MAP_LABELS = MAP_CONFIG.labels || {};
 const MAP_ASSETS = MAP_CONFIG.assets || {};
+const DEFAULT_BUILDING_MARKER_URL = MAP_ASSETS.defaultBuildingMarker ||
+  '/wp-content/themes/osadafabryczna/dist/assets/ikona-budynku.png';
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let activeBuildingMarker = null;
 let activePanelMarker = null;
@@ -89,7 +92,7 @@ const overlay = L.imageOverlay(
 ).addTo(map); */
 const overlayTilesUrl =
   MAP_ASSETS.mapTiles ||
-  '/wp-content/themes/osadafabryczna/dist/assets/map-tiles-v1';
+  '/wp-content/themes/osadafabryczna/dist/assets/map-tiles-v2';
 
 const overlay = L.tileLayer(
   `${overlayTilesUrl}/{z}/{x}/{y}.webp`,
@@ -100,7 +103,7 @@ const overlay = L.tileLayer(
     maxNativeZoom: 18,
     bounds: L.latLngBounds(IMAGE_BOUNDS),
     noWrap: true,
-    opacity: 1,
+    opacity: 0.7,
     pane: 'overlayPane'
   }
 ).addTo(map);
@@ -413,7 +416,7 @@ async function addMarkers() {
       const title = budynek.title.rendered;
       const lat = budynek.acf.latitude;
       const lng = budynek.acf.longitude;
-      const marker_icon = budynek.acf.marker_icon;
+      const marker_icon = budynek.acf.marker_icon || DEFAULT_BUILDING_MARKER_URL;
       const customMarkerWidth = Number.parseInt(
         budynek.marker_icon_width ?? budynek.meta?.marker_icon_width,
         10
@@ -421,11 +424,6 @@ async function addMarkers() {
 
       if (!lat || !lng) {
         console.warn(`Skipping "${title}": missing coordinates.`);
-        return;
-      }
-
-      if (!marker_icon) {
-        console.warn(`Skipping "${title}": missing marker URL.`);
         return;
       }
 
@@ -446,8 +444,11 @@ async function addMarkers() {
   }
 
   const hasCustomMarkerWidth = Number.isFinite(customMarkerWidth) && customMarkerWidth >= 24;
-  const iconWidth = hasCustomMarkerWidth ? customMarkerWidth : Math.max(24, img.width * scale);
-  const iconHeight = hasCustomMarkerWidth
+  const isDefaultBuildingMarker = marker_icon === DEFAULT_BUILDING_MARKER_URL;
+  const iconWidth = hasCustomMarkerWidth
+    ? customMarkerWidth
+    : (isDefaultBuildingMarker ? DEFAULT_BUILDING_MARKER_WIDTH : Math.max(24, img.width * scale));
+  const iconHeight = hasCustomMarkerWidth || isDefaultBuildingMarker
     ? iconWidth / aspectRatio
     : Math.max(24, img.height * scale);
   const paddedHeight = iconHeight + MARKER_PADDING * 2;

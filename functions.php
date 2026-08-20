@@ -275,8 +275,9 @@ function osadafabryczna_enqueue_assets() {
                 )),
                 'assets'   => array(
                     'mapTiles' => esc_url_raw(
-        get_template_directory_uri() . '/dist/assets/map-tiles-v1'
+        get_template_directory_uri() . '/dist/assets/map-tiles-v2'
     ),
+                    'defaultBuildingMarker' => esc_url_raw(get_template_directory_uri() . '/dist/assets/ikona-budynku.png'),
                //     'mapOverlay'   => esc_url_raw(get_template_directory_uri() . '/dist/assets/mapa-24-07.jpg'),
                     'userLocation' => esc_url_raw(get_template_directory_uri() . '/dist/assets/user-location.gif'),
                 ),
@@ -335,6 +336,29 @@ function osadafabryczna_register_menus() {
 }
 
 add_action('after_setup_theme', 'osadafabryczna_register_menus');
+
+/**
+ * Return a building's custom marker URL or the theme's default marker.
+ */
+function osadafabryczna_get_building_marker_url($post_id = 0) {
+    $post_id = $post_id ? absint($post_id) : get_the_ID();
+    $marker_icon = function_exists('get_field') ? get_field('marker_icon', $post_id) : '';
+    $marker_icon_url = '';
+
+    if (is_array($marker_icon)) {
+        if (!empty($marker_icon['url'])) {
+            $marker_icon_url = $marker_icon['url'];
+        } elseif (!empty($marker_icon['ID'])) {
+            $marker_icon_url = wp_get_attachment_image_url(absint($marker_icon['ID']), 'full');
+        }
+    } elseif (is_numeric($marker_icon)) {
+        $marker_icon_url = wp_get_attachment_image_url(absint($marker_icon), 'full');
+    } elseif (is_string($marker_icon)) {
+        $marker_icon_url = $marker_icon;
+    }
+
+    return $marker_icon_url ?: get_template_directory_uri() . '/dist/assets/ikona-budynku.png';
+}
 
 function osadafabryczna_register_sidebars() {
     register_sidebar(array(

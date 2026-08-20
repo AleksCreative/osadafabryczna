@@ -35,11 +35,7 @@ $osada_archive_labels = 'en' === $osada_language
             <?php while ( have_posts() ) : the_post(); ?>
                 <?php
                 $osada_subtitle = function_exists('get_field') ? get_field('subtitle') : '';
-                $osada_marker_icon = function_exists('get_field') ? get_field('marker_icon') : '';
-
-                if (is_array($osada_marker_icon)) {
-                    $osada_marker_icon = $osada_marker_icon['url'] ?? '';
-                }
+                $osada_marker_icon = osadafabryczna_get_building_marker_url(get_the_ID());
                 ?>
                 <article id="post-<?php the_ID(); ?>" <?php post_class( 'building-card' ); ?>>
                     <?php if ($osada_marker_icon) : ?>

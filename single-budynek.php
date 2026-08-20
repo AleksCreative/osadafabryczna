@@ -300,10 +300,9 @@ $osada_toc_items = 'en' === $osada_language
                                         $osada_nearby_building_id = is_object($osada_nearby_building_id) ? $osada_nearby_building_id->ID : $osada_nearby_building_id;
                                         $osada_nearby_distance = isset($osada_nearby_item['distance']) ? $osada_nearby_item['distance'] : '';
                                         $osada_nearby_walking_time = isset($osada_nearby_item['walking_time']) ? $osada_nearby_item['walking_time'] : '';
-                                        $osada_nearby_marker_icon = $osada_nearby_building_id && function_exists('get_field') ? get_field('marker_icon', $osada_nearby_building_id) : '';
-                                        $osada_nearby_marker_icon_url = is_array($osada_nearby_marker_icon) && isset($osada_nearby_marker_icon['url'])
-                                            ? $osada_nearby_marker_icon['url']
-                                            : (is_numeric($osada_nearby_marker_icon) ? wp_get_attachment_image_url($osada_nearby_marker_icon, 'thumbnail') : $osada_nearby_marker_icon);
+                                        $osada_nearby_marker_icon_url = $osada_nearby_building_id
+                                            ? osadafabryczna_get_building_marker_url($osada_nearby_building_id)
+                                            : '';
 
                                         if (empty($osada_nearby_building_id)) {
                                             continue;
