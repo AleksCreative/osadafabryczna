@@ -46,6 +46,7 @@ body.holding-page {
 }
 
 .holding-page__main {
+    width: 100%;
     min-height: 100vh;
     display: grid;
     place-items: center;
@@ -53,12 +54,16 @@ body.holding-page {
 }
 
 .holding-card {
-    width: min(760px, 100%);
+    width: 100%;
+    min-width: 0;
+    max-width: 760px;
     padding: clamp(28px, 6vw, 64px);
     background: rgba(243, 239, 230, 0.94);
     border: 1px solid rgba(39, 46, 38, 0.2);
     border-radius: 24px;
     box-shadow: 0 24px 70px rgba(39, 46, 38, 0.14);
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .holding-card__brand {
@@ -89,7 +94,7 @@ body.holding-page {
     font-family: "Faculty Glyphic", serif;
     font-size: clamp(2.2rem, 7vw, 2.5rem);
     font-weight: 400;
-    line-height: 1.05;
+    line-height: 1.2;
 }
 
 .holding-card__description {
@@ -107,6 +112,21 @@ body.holding-page {
 .holding-card__description img {
     max-width: 100%;
     height: auto;
+}
+
+.holding-card__description figure,
+.holding-card__description .wp-caption,
+.holding-card__description iframe,
+.holding-card__description video,
+.holding-card__description embed,
+.holding-card__description object {
+    max-width: 100%;
+}
+
+.holding-card__description table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 .holding-card__description .alignleft {
@@ -246,6 +266,15 @@ body.holding-page {
 }
 
 @media (max-width: 560px) {
+    .holding-page__main {
+        padding: 12px;
+    }
+
+    .holding-card {
+        padding: 24px 20px;
+        border-radius: 16px;
+    }
+
     .holding-card__description .alignleft,
     .holding-card__description .alignright,
     .holding-card__description figure.alignleft,
@@ -1144,6 +1173,41 @@ body.admin-bar .info-panel-toggle {
     top: calc(46px + var(--site-header-height, 72px));
     bottom: var(--mobile-map-action-bar-height);
     height: auto;
+  }
+}
+
+@media (max-width: 420px), (max-width: 767px) and (max-height: 700px) {
+  .info-panel {
+    padding-bottom: 14px;
+  }
+
+  .info-panel-footer {
+    margin-top: 8px;
+    padding-top: 7px;
+    font-size: 0.65rem;
+    line-height: 1.35;
+  }
+
+  .info-panel-footer .site-footer__scholarship {
+    margin-bottom: 0.55rem;
+  }
+
+  .info-panel-footer .site-footer__scholarship p {
+    margin-bottom: 0.35rem;
+    font-size: 0.65rem;
+  }
+
+  .info-panel-footer .site-footer__scholarship-logo {
+    max-width: min(100%, 190px);
+    max-height: 54px;
+  }
+
+  .info-panel-footer .site-footer__copyright {
+    font-size: 0.7rem;
+  }
+
+  .info-panel-footer .site-footer__credit {
+    margin-top: 0.2rem;
   }
 }
 
