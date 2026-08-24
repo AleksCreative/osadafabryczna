@@ -42,6 +42,8 @@ const passportState = {
   markers: new Map(),
   dismissedPlaces: new Map(),
   latestPosition: null,
+  locationEnabled: false,
+  locationSupported: 'geolocation' in navigator,
   database: null,
   storageAvailable: true,
   initialized: false,
@@ -237,6 +239,8 @@ function startGeolocation() {
   }
 
   geolocationEnabled = true;
+  passportState.locationEnabled = true;
+  refreshActiveBuildingVisitActions();
 
   if (geolocationWatchId !== null) {
     navigator.geolocation.clearWatch(geolocationWatchId);
@@ -259,6 +263,8 @@ function startGeolocation() {
 
 function stopGeolocation() {
   geolocationEnabled = false;
+  passportState.locationEnabled = false;
+  refreshActiveBuildingVisitActions();
 
   if (geolocationWatchId !== null && 'geolocation' in navigator) {
     navigator.geolocation.clearWatch(geolocationWatchId);
@@ -1741,11 +1747,28 @@ function renderBuildingVisitActions(container, building) {
   status.textContent = MAP_LABELS.locked || 'Not visited yet';
   button.type = 'button';
   button.className = 'map-building-visit__button';
+  feedback.className = 'map-building-visit__feedback';
+  feedback.setAttribute('role', 'status');
+
+  if (!passportState.locationSupported) {
+    feedback.textContent = MAP_LABELS.geolocationUnsupported || 'Geolocation is not supported in this browser.';
+    container.append(status, feedback);
+    return;
+  }
+
+  if (!passportState.locationEnabled) {
+    button.textContent = MAP_LABELS.enableLocationForStamp || 'Enable location';
+    feedback.textContent = MAP_LABELS.locationRequired || 'Enable location to visit this monument and earn its stamp.';
+    button.addEventListener('click', () => {
+      document.getElementById('geolocation-toggle')?.click();
+    });
+    container.append(status, button, feedback);
+    return;
+  }
+
   button.textContent = passportState.unlockedPlaceIds.has(visit.placeId)
     ? (MAP_LABELS.openChallenge || 'Open the on-site question')
     : (MAP_LABELS.checkProximity || 'Check whether I am close enough');
-  feedback.className = 'map-building-visit__feedback';
-  feedback.setAttribute('role', 'status');
   button.addEventListener('click', event => {
     const isUnlocked = passportState.unlockedPlaceIds.has(visit.placeId);
     const isNear = isPositionNearBuilding(passportState.latestPosition, building);
@@ -1762,6 +1785,16 @@ function renderBuildingVisitActions(container, building) {
   });
 
   container.append(status, button, feedback);
+}
+
+function refreshActiveBuildingVisitActions() {
+  const content = document.getElementById('panel-content');
+  const panel = document.getElementById('slide-panel');
+  const building = activePanelMarker?.options?.buildingData;
+
+  if (content && building && panel?.classList.contains('open')) {
+    renderBuildingPanelContent(content, building);
+  }
 }
 
 function openVisitChallenge(building, trigger = null, requireCurrentProximity = true) {

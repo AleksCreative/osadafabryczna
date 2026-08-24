@@ -142,6 +142,8 @@ function osadafabryczna_get_language_labels($language = null) {
             'close'                => 'Close',
             'openChallenge'        => 'Open the on-site question',
             'checkProximity'       => 'Check whether I am close enough',
+            'enableLocationForStamp' => 'Enable location',
+            'locationRequired'     => 'To visit this monument and earn its stamp, enable location. It is checked only while the map is open and is never saved or sent.',
             'moveCloser'           => 'Come closer to unlock this question.',
             'gpsWeak'              => 'GPS accuracy is too low. Stay outdoors for a moment.',
             'stayNearby'           => 'Stay near %1$s for %2$d more seconds…',
@@ -176,6 +178,8 @@ function osadafabryczna_get_language_labels($language = null) {
         'close'                => 'Zamknij',
         'openChallenge'        => 'Otwórz pytanie na miejscu',
         'checkProximity'       => 'Sprawdź, czy jestem wystarczająco blisko',
+        'enableLocationForStamp' => 'Włącz lokalizację',
+        'locationRequired'     => 'Aby odwiedzić ten zabytek i zdobyć pieczątkę, włącz lokalizację. Jest ona używana tylko na tej stronie a pieczątki są zapisywane lokalnie w Twojej przeglądarce.',
         'moveCloser'           => 'Podejdź bliżej zabytku, aby odblokować pytanie.',
         'gpsWeak'              => 'Dokładność GPS jest zbyt niska. Zaczekaj chwilę na otwartej przestrzeni.',
         'stayNearby'           => 'Pozostań przy miejscu %1$s jeszcze przez %2$d s…',
@@ -184,7 +188,7 @@ function osadafabryczna_get_language_labels($language = null) {
         'tryAgain'             => 'Nie do końca... Spójrz na zabytek i spróbuj ponownie.',
         'stampEarned'          => 'Pieczątka zdobyta!',
         'stampEarnedFor'       => 'Odwiedzone miejsce: %s.',
-        'locationPrivacy'      => 'Lokalizacja jest sprawdzana tylko na otwartej mapie - nie jest zapisywana ani wysyłana.',
+        'locationPrivacy'      => 'Lokalizacja jest używana tylko na tej stronie a pieczątki są zapisywane lokalnie w Twojej przeglądarce.',
         'storageUnavailable'   => 'Ta przeglądarka nie może zapisać postępu paszportu.',
     );
 }
