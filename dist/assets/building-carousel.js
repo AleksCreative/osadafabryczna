@@ -87,6 +87,8 @@ document.addEventListener('DOMContentLoaded', function () {
     activeIndex = index;
     image.src = trigger.dataset.lightboxSource;
     image.alt = trigger.dataset.lightboxAlt || '';
+    previousButton.hidden = activeTriggers.length <= 1;
+    nextButton.hidden = activeTriggers.length <= 1;
     previousButton.disabled = activeIndex === 0;
     nextButton.disabled = activeIndex === activeTriggers.length - 1;
   }
