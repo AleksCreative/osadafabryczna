@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 3.1.4
+Version: 4.0.0
 */
 
 /* ---------------------------
@@ -2543,7 +2543,7 @@ body.admin-bar.single-budynek .site-header {
         z-index: 900;
     }
 
-    body.admin-bar.single-budynek .building-toc {
+body.admin-bar.single-budynek .building-toc {
         top: calc(46px + var(--site-header-height, 64px));
     }
 
@@ -2572,5 +2572,403 @@ body.admin-bar.single-budynek .site-header {
     .building-content h3[id],
     .building-content h4[id] {
         scroll-margin-top: calc(var(--site-header-height, 64px) + 96px);
+    }
+}
+
+/* ---------------------------
+Monument passport
+--------------------------- */
+.passport-layer[hidden],
+.visit-challenge-layer[hidden],
+.passport-proximity-status[hidden],
+.stamp-celebration[hidden] {
+    display: none !important;
+}
+
+body.passport-modal-open {
+    overflow: hidden;
+}
+
+.passport-layer,
+.visit-challenge-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: grid;
+    place-items: center;
+    padding: calc(var(--site-header-height, 72px) + 24px) 24px 24px;
+    overflow: auto;
+    background: rgba(35, 30, 26, 0.66);
+    backdrop-filter: blur(5px);
+}
+
+.passport-dialog,
+.visit-challenge-dialog {
+    position: relative;
+    width: min(760px, 100%);
+    max-height: calc(100dvh - var(--site-header-height, 72px) - 48px);
+    padding: 30px;
+    overflow: auto;
+    border: 1px solid rgba(84, 76, 69, 0.2);
+    border-radius: 20px;
+    background: #f3efe6;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+}
+
+.visit-challenge-dialog {
+    width: min(560px, 100%);
+}
+
+.passport-dialog__header,
+.visit-challenge-dialog__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.passport-dialog__header h1,
+.visit-challenge-dialog__header h1 {
+    margin: 0;
+    padding-right: 12px;
+}
+
+.passport-dialog__close {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #3c5f1f;
+    color: #fff;
+    font: 400 30px/1 Arial, sans-serif;
+    cursor: pointer;
+}
+
+.passport-dialog__close:hover,
+.passport-dialog__close:focus-visible,
+.passport-reset:hover,
+.passport-reset:focus-visible,
+.visit-choice:hover,
+.visit-choice:focus-visible,
+.map-building-visit__button:hover,
+.map-building-visit__button:focus-visible {
+    background: #2f4f18;
+    color: #fff;
+}
+
+.passport-dialog__progress {
+    display: inline-flex;
+    margin: 16px 0 8px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: #3c5f1f;
+    color: #fff;
+    font-family: "Poppins", Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.passport-dialog__empty,
+.passport-dialog__privacy,
+.passport-dialog__warning {
+    margin: 12px 0;
+    color: #544c45;
+    font-family: "Poppins", Arial, sans-serif;
+    font-size: 0.9rem;
+}
+
+.passport-dialog__privacy {
+    margin-top: 26px;
+    padding: 14px 16px;
+    border-left: 4px solid #3c5f1f;
+    background: rgba(255, 255, 255, 0.58);
+}
+
+.passport-dialog__warning {
+    color: #8a3b23;
+    font-weight: 600;
+}
+
+.passport-section {
+    margin-top: 24px;
+}
+
+.passport-section__title {
+    margin-bottom: 12px;
+    font-size: 1.25rem;
+}
+
+.passport-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+}
+
+.passport-stamp {
+    min-width: 0;
+    display: grid;
+    grid-template-rows: 94px auto auto;
+    align-items: center;
+    padding: 14px;
+    border: 1px dashed rgba(84, 76, 69, 0.45);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.7);
+    text-align: center;
+}
+
+.passport-stamp--earned {
+    border: 2px solid #3c5f1f;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(60, 95, 31, 0.14);
+}
+
+.passport-stamp--locked .passport-stamp__image {
+    filter: grayscale(1);
+    opacity: 0.3;
+}
+
+.passport-section--coming-soon .passport-stamp {
+    background: rgba(84, 76, 69, 0.06);
+}
+
+.passport-stamp__image {
+    width: 86px;
+    height: 86px;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+.passport-stamp__title {
+    margin: 8px 0 4px;
+    overflow-wrap: anywhere;
+    font-size: 0.98rem;
+    line-height: 1.2;
+}
+
+.passport-stamp__status {
+    margin: 0;
+    color: #544c45;
+    font-family: "Poppins", Arial, sans-serif;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+.passport-stamp--earned .passport-stamp__status {
+    color: #3c5f1f;
+}
+
+.passport-dialog__controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 18px;
+}
+
+.passport-reset,
+.map-building-visit__button,
+.visit-choice {
+    padding: 11px 16px;
+    border: 0;
+    border-radius: 10px;
+    background: #3c5f1f;
+    color: #fff;
+    font-family: "Poppins", Arial, sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.passport-reset:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.visit-challenge-dialog__eyebrow {
+    margin: 0 0 4px;
+    color: #3c5f1f;
+    font-family: "Poppins", Arial, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.visit-challenge-dialog__question {
+    margin: 24px 0 16px;
+    color: #423931;
+    font-size: 1.12rem;
+    font-weight: 600;
+}
+
+.visit-challenge-dialog__choices {
+    display: grid;
+    gap: 10px;
+}
+
+.visit-choice {
+    width: 100%;
+    min-height: 48px;
+    text-align: left;
+}
+
+.visit-choice.is-incorrect {
+    background: #8a3b23;
+}
+
+.visit-choice.is-correct {
+    background: #3c5f1f;
+    box-shadow: 0 0 0 4px rgba(60, 95, 31, 0.22);
+}
+
+.visit-challenge-dialog__feedback {
+    min-height: 1.4em;
+    margin: 14px 0 0;
+    color: #544c45;
+    font-family: "Poppins", Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.passport-proximity-status {
+    position: fixed;
+    top: calc(var(--site-header-height, 72px) + 16px);
+    left: 50%;
+    z-index: 1800;
+    max-width: min(460px, calc(100vw - 32px));
+    padding: 11px 16px;
+    border-radius: 999px;
+    background: #3c5f1f;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+    font-family: "Poppins", Arial, sans-serif;
+    font-size: 0.86rem;
+    font-weight: 700;
+    text-align: center;
+    transform: translate(-50%, -10px);
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.passport-proximity-status.is-visible {
+    transform: translate(-50%, 0);
+    opacity: 1;
+}
+
+.stamp-celebration {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    z-index: 5200;
+    width: min(440px, calc(100vw - 32px));
+    display: grid;
+    grid-template-columns: 74px 1fr;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 2px solid #3c5f1f;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, 24px) scale(0.96);
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.stamp-celebration.is-visible {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+}
+
+.stamp-celebration img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+}
+
+.stamp-celebration div {
+    display: grid;
+    gap: 3px;
+    color: #423931;
+    font-family: "Poppins", Arial, sans-serif;
+}
+
+.stamp-celebration strong {
+    color: #3c5f1f;
+    font-size: 1.05rem;
+}
+
+.map-building-visit {
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+    margin: 14px 0;
+    font-family: "Poppins", Arial, sans-serif;
+}
+
+.map-building-visit__status,
+.map-building-visit__feedback {
+    margin: 0;
+    color: #544c45;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.map-building-visit__status.is-earned {
+    color: #3c5f1f;
+    font-weight: 800;
+}
+
+.map-building-visit__button {
+    font-size: 0.8rem;
+}
+
+.leaflet-marker-icon.building-marker--visited {
+    filter: drop-shadow(0 0 5px rgba(60, 95, 31, 0.95)) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.24));
+    opacity: 0.82;
+}
+
+.leaflet-marker-icon.building-marker--visited.building-marker--active {
+    filter: drop-shadow(0 0 7px rgba(60, 95, 31, 1)) drop-shadow(0 16px 18px rgba(0, 0, 0, 0.28));
+    opacity: 1;
+}
+
+@media (max-width: 767px) {
+    .passport-layer,
+    .visit-challenge-layer {
+        align-items: end;
+        padding: var(--site-header-height, 64px) 0 0;
+    }
+
+    .passport-dialog,
+    .visit-challenge-dialog {
+        width: 100%;
+        max-height: calc(100dvh - var(--site-header-height, 64px));
+        padding: 22px 18px calc(22px + env(safe-area-inset-bottom));
+        border-right: 0;
+        border-bottom: 0;
+        border-left: 0;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .passport-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .passport-proximity-status {
+        top: calc(var(--site-header-height, 64px) + 10px);
+        border-radius: 12px;
+    }
+
+    .stamp-celebration {
+        bottom: calc(var(--mobile-map-action-bar-height) + 16px + env(safe-area-inset-bottom));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .passport-proximity-status,
+    .stamp-celebration {
+        transition: none;
     }
 }

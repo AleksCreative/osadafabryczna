@@ -1,4 +1,4 @@
-const SERVICE_WORKER_VERSION = 'osada-fabryczna-v3';
+const SERVICE_WORKER_VERSION = 'osada-fabryczna-v4';
 const STATIC_CACHE = `${SERVICE_WORKER_VERSION}-static`;
 const RUNTIME_CACHE = `${SERVICE_WORKER_VERSION}-runtime`;
 const OFFLINE_URL = OSADA_PWA_CONFIG.offlineUrl;
