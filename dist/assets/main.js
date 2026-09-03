@@ -28,45 +28,40 @@ const USER_MARKER_SNAP_DISTANCE_METERS = 120;
 const MAP_CONFIG = window.OsadaFabrycznaMap || {};
 const MAP_LABELS = MAP_CONFIG.labels || {};
 const MAP_ASSETS = MAP_CONFIG.assets || {};
-const PASSPORT_CORE = window.OsadaPassportCore || null;
+const MAP_EXTENSIONS = Array.isArray(window.OsadaFabrycznaMapExtensions)
+  ? window.OsadaFabrycznaMapExtensions
+  : [];
 const DEFAULT_BUILDING_MARKER_URL = MAP_ASSETS.defaultBuildingMarker ||
   '/wp-content/themes/osadafabryczna/dist/assets/ikona-budynku.png';
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let activeBuildingMarker = null;
 let activePanelMarker = null;
 let spiderfiedCluster = null;
-const passportState = {
-  buildings: [],
-  earnedPlaceIds: new Set(),
-  unlockedPlaceIds: new Set(),
-  markers: new Map(),
-  dismissedPlaces: new Map(),
-  latestPosition: null,
-  locationEnabled: false,
-  locationSupported: 'geolocation' in navigator,
-  database: null,
-  storageAvailable: true,
-  initialized: false,
-  ready: false,
-  initializationPromise: null,
-  passportButton: null,
-  passportTrigger: null,
-  challengeBuilding: null,
-  challengeTrigger: null,
-  modalCleanup: null,
-  celebrationTimeout: null,
-  proximityMessageKey: '',
-  proximityMessageTimeout: null,
-  proximityRecheckTimeout: null
-};
-const proximityTracker = PASSPORT_CORE
-  ? new PASSPORT_CORE.ProximityTracker({
-      radiusMeters: 50,
-      maxAccuracyMeters: 50,
-      dwellMilliseconds: 10000,
-      minimumReadings: 2
-    })
-  : null;
+
+function notifyMapExtensions(method, ...args) {
+  MAP_EXTENSIONS.forEach(extension => {
+    if (typeof extension?.[method] === 'function') {
+      extension[method](...args);
+    }
+  });
+}
+
+function getMapExtensionResults(method, ...args) {
+  return MAP_EXTENSIONS.flatMap(extension => {
+    if (typeof extension?.[method] !== 'function') {
+      return [];
+    }
+
+    const result = extension[method](...args);
+    return Array.isArray(result) ? result : (result ? [result] : []);
+  });
+}
+
+function getMapMarkerClassName(building) {
+  const classNames = ['building-marker'];
+  notifyMapExtensions('extendMarkerClassNames', classNames, { building });
+  return [...new Set(classNames.filter(Boolean))].join(' ');
+}
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -75,7 +70,13 @@ if (!mapElement || typeof L === 'undefined') {
   return;
 }
 
-initializePassport();
+notifyMapExtensions('init', {
+  defaultMarkerUrl: DEFAULT_BUILDING_MARKER_URL,
+  closeInfoPanel: closeInfoPanelIfOpen,
+  closePanel,
+  refreshMarker: updateBuildingMarkerIcon,
+  refreshPanel: refreshActiveBuildingPanel
+});
 
 // Array to hold all markers for zoom scaling
 const markers = [];
@@ -219,7 +220,7 @@ function handleUserLocation(latlng, position) {
   }
 
   moveUserMarkerTo(latlng);
-  handlePassportPosition(position);
+  notifyMapExtensions('handlePosition', position);
 }
 
 function handleGeolocationError(error) {
@@ -239,8 +240,7 @@ function startGeolocation() {
   }
 
   geolocationEnabled = true;
-  passportState.locationEnabled = true;
-  refreshActiveBuildingVisitActions();
+  notifyMapExtensions('setLocationEnabled', true);
 
   if (geolocationWatchId !== null) {
     navigator.geolocation.clearWatch(geolocationWatchId);
@@ -263,8 +263,7 @@ function startGeolocation() {
 
 function stopGeolocation() {
   geolocationEnabled = false;
-  passportState.locationEnabled = false;
-  refreshActiveBuildingVisitActions();
+  notifyMapExtensions('setLocationEnabled', false);
 
   if (geolocationWatchId !== null && 'geolocation' in navigator) {
     navigator.geolocation.clearWatch(geolocationWatchId);
@@ -276,10 +275,7 @@ function stopGeolocation() {
     userMarkerAnimationFrame = null;
   }
 
-  passportState.latestPosition = null;
-  proximityTracker?.reset();
-  cancelProximityRecheck();
-  hideProximityStatus();
+  notifyMapExtensions('clearPosition');
 
   if (map.hasLayer(userMarker)) {
     userMarker.remove();
@@ -418,9 +414,7 @@ function setupMapControlMenu() {
     container.appendChild(geolocationToggle);
   }
 
-  const passportButton = createPassportControlButton();
-  passportState.passportButton = passportButton;
-  container.appendChild(passportButton);
+  getMapExtensionResults('createMapControls').forEach(control => container.appendChild(control));
 
   overlayToggle.type = 'button';
   overlayToggle.className = 'map-control-button map-overlay-toggle';
@@ -460,8 +454,7 @@ async function addMarkers() {
     }
 
     const budynki = await response.json();
-    passportState.buildings = budynki;
-    updatePassportInterface();
+    notifyMapExtensions('setBuildings', budynki);
 
     budynki.forEach(budynek => {
       const title = budynek.title.rendered;
@@ -510,7 +503,7 @@ async function addMarkers() {
     iconSize: [paddedWidth, paddedHeight],
     iconAnchor: [paddedWidth / 2, paddedHeight],
     popupAnchor: [0, -paddedHeight - 5],
-    className: getBuildingMarkerClassName(budynek.visit?.placeId)
+    className: getMapMarkerClassName(budynek)
   });
 
   const marker = L.marker([lat, lng], { icon });
@@ -559,12 +552,9 @@ async function addMarkers() {
   marker.options.baseWidth = iconWidth;
   marker.options.baseZoom = map.getZoom();
   marker.options.iconUrl = marker_icon;
-  marker.options.placeId = budynek.visit?.placeId || '';
   marker.options.buildingData = budynek;
 
-  if (marker.options.placeId) {
-    passportState.markers.set(marker.options.placeId, marker);
-  }
+  notifyMapExtensions('registerMarker', marker);
 
   markers.push(marker);
 };
@@ -759,7 +749,7 @@ function createBuildingMarkerIcon(marker) {
   const paddedHeight = newHeight + MARKER_PADDING * 2;
   const paddedWidth = newWidth + MARKER_PADDING * 2;
 
-  const classNames = [getBuildingMarkerClassName(marker.options.placeId)];
+  const classNames = [getMapMarkerClassName(marker.options.buildingData)];
 
   if (isActive) {
     classNames.push('building-marker--active');
@@ -786,7 +776,7 @@ function updateBuildingMarkerIcon(marker) {
 
     if (markerElement) {
       markerElement.classList.toggle('building-marker--active', marker === activeBuildingMarker);
-      markerElement.classList.toggle('building-marker--visited', passportState.earnedPlaceIds.has(marker.options.placeId));
+      notifyMapExtensions('syncMarkerElement', markerElement, marker);
     }
 
     if (marker === activeBuildingMarker && typeof marker.bringToFront === 'function') {
@@ -953,7 +943,7 @@ function renderBuildingPanelContent(content, budynek) {
   const subtitle = document.createElement('h3');
   const description = document.createElement('div');
   const link = document.createElement('a');
-  const visitArea = document.createElement('div');
+  const extensionArea = document.createElement('div');
 
   title.className = 'map-building-title';
   title.textContent = budynek.title?.rendered || '';
@@ -969,10 +959,14 @@ function renderBuildingPanelContent(content, budynek) {
 
   link.href = getSafeUrl(budynek.link) || window.location.origin;
 
-  visitArea.className = 'map-building-visit';
-  renderBuildingVisitActions(visitArea, budynek);
+  notifyMapExtensions('renderBuildingPanel', extensionArea, budynek);
 
-  content.replaceChildren(title, subtitle, description, visitArea, link);
+  const panelElements = [title, subtitle, description];
+  if (extensionArea.childNodes.length) {
+    panelElements.push(extensionArea);
+  }
+  panelElements.push(link);
+  content.replaceChildren(...panelElements);
 }
 
 // PANEL LOGIC
@@ -1088,706 +1082,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('mouseup', onTouchEnd);
 });
 
-function formatPassportLabel(template, values) {
-  let result = String(template || '');
-
-  values.forEach((value, index) => {
-    const position = index + 1;
-    result = result
-      .replace(new RegExp(`%${position}\\$[sd]`, 'g'), String(value))
-      .replace(/%[sd]/, String(value));
-  });
-
-  return result;
-}
-
-function getBuildingTitle(building) {
-  const parsed = new DOMParser().parseFromString(building?.title?.rendered || '', 'text/html');
-  return parsed.body.textContent || '';
-}
-
-function getBuildingMarkerClassName(placeId) {
-  const classNames = ['building-marker'];
-
-  if (placeId && passportState.earnedPlaceIds.has(placeId)) {
-    classNames.push('building-marker--visited');
-  }
-
-  return classNames.join(' ');
-}
-
-function getPassportProgress() {
-  const collectibleBuildings = passportState.buildings.filter(building => building.visit?.status === 'collectible');
-  const earnedCount = collectibleBuildings.filter(building => passportState.earnedPlaceIds.has(building.visit.placeId)).length;
-
-  return {
-    earnedCount,
-    totalCount: collectibleBuildings.length
-  };
-}
-
-function createPassportControlButton() {
-  const button = document.createElement('button');
-
-  button.type = 'button';
-  button.className = 'map-control-button passport-toggle';
-  button.addEventListener('pointerdown', event => {
-    event.stopPropagation();
-  });
-  button.addEventListener('click', async event => {
-    event.preventDefault();
-    event.stopPropagation();
-    await initializePassport();
-    openPassport(button);
-  });
-
-  updatePassportButton(button);
-  return button;
-}
-
-function updatePassportButton(button = passportState.passportButton) {
-  if (!button) {
-    return;
-  }
-
-  const progress = getPassportProgress();
-  const label = MAP_LABELS.passport || 'Paszport';
-
-  button.textContent = progress.totalCount
-    ? `${label} ${progress.earnedCount}/${progress.totalCount}`
-    : label;
-  button.setAttribute('aria-label', button.textContent);
-}
-
-function openPassportDatabase() {
-  return new Promise((resolve, reject) => {
-    if (!('indexedDB' in window)) {
-      reject(new Error('IndexedDB is unavailable.'));
-      return;
-    }
-
-    const request = window.indexedDB.open('osada-passport', 1);
-
-    request.onupgradeneeded = () => {
-      const database = request.result;
-
-      if (!database.objectStoreNames.contains('visits')) {
-        database.createObjectStore('visits', { keyPath: 'placeId' });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error('Could not open passport storage.'));
-    request.onblocked = () => reject(new Error('Passport storage upgrade was blocked.'));
-  });
-}
-
-function loadPassportVisits(database) {
-  return new Promise((resolve, reject) => {
-    const placeIds = [];
-    const transaction = database.transaction('visits', 'readonly');
-    const request = transaction.objectStore('visits').openCursor();
-
-    request.onsuccess = () => {
-      const cursor = request.result;
-
-      if (!cursor) {
-        resolve(placeIds);
-        return;
-      }
-
-      if (cursor.value?.placeId) {
-        placeIds.push(String(cursor.value.placeId));
-      }
-
-      cursor.continue();
-    };
-    request.onerror = () => reject(request.error || new Error('Could not read passport storage.'));
-    transaction.onerror = () => reject(transaction.error || new Error('Could not read passport storage.'));
-  });
-}
-
-function initializePassport() {
-  if (passportState.initializationPromise) {
-    return passportState.initializationPromise;
-  }
-
-  passportState.initialized = true;
-  passportState.initializationPromise = (async () => {
-    if (!PASSPORT_CORE) {
-      passportState.storageAvailable = false;
-      passportState.ready = true;
-      updatePassportInterface();
-      return;
-    }
-
-    try {
-      passportState.database = await openPassportDatabase();
-      const placeIds = await loadPassportVisits(passportState.database);
-      passportState.earnedPlaceIds = new Set(placeIds);
-    } catch (error) {
-      passportState.storageAvailable = false;
-      console.warn('Passport progress will only last for this page session.', error);
-    }
-
-    passportState.ready = true;
-    updatePassportInterface();
-    refreshPassportMarkers();
-  })();
-
-  document.addEventListener('visibilitychange', () => {
-    proximityTracker?.reset();
-    cancelProximityRecheck();
-    hideProximityStatus();
-
-    if (document.visibilityState !== 'visible') {
-      passportState.latestPosition = null;
-    }
-  });
-
-  return passportState.initializationPromise;
-}
-
-function savePassportVisit(placeId) {
-  if (!passportState.database) {
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve, reject) => {
-    const transaction = passportState.database.transaction('visits', 'readwrite');
-    transaction.objectStore('visits').put({
-      placeId,
-      earnedAt: new Date().toISOString()
-    });
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error || new Error('Could not save passport progress.'));
-    transaction.onabort = () => reject(transaction.error || new Error('Could not save passport progress.'));
-  });
-}
-
-function clearPassportVisits() {
-  if (!passportState.database) {
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve, reject) => {
-    const transaction = passportState.database.transaction('visits', 'readwrite');
-    transaction.objectStore('visits').clear();
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error || new Error('Could not reset passport progress.'));
-    transaction.onabort = () => reject(transaction.error || new Error('Could not reset passport progress.'));
-  });
-}
-
-async function requestPersistentPassportStorage() {
-  if (!navigator.storage?.persist) {
-    return;
-  }
-
-  try {
-    await navigator.storage.persist();
-  } catch (error) {
-    // Persistence is a best-effort enhancement. IndexedDB remains usable.
-  }
-}
-
-function updatePassportInterface() {
-  updatePassportButton();
-}
-
-function refreshPassportMarkers() {
-  passportState.markers.forEach(marker => updateBuildingMarkerIcon(marker));
-}
-
-function isPositionNearBuilding(position, building, radiusMeters = 50) {
-  if (!PASSPORT_CORE || !position?.coords || !building?.acf) {
-    return false;
-  }
-
-  const accuracy = Number(position.coords.accuracy);
-  const latitude = Number(position.coords.latitude);
-  const longitude = Number(position.coords.longitude);
-  const buildingLatitude = Number(building.acf.latitude);
-  const buildingLongitude = Number(building.acf.longitude);
-  const positionAge = Math.max(0, Date.now() - Number(position.timestamp || Date.now()));
-
-  if (![accuracy, latitude, longitude, buildingLatitude, buildingLongitude].every(Number.isFinite)) {
-    return false;
-  }
-
-  if (accuracy > 50 || positionAge > 30000) {
-    return false;
-  }
-
-  return PASSPORT_CORE.distanceMeters(
-    { latitude, longitude },
-    { latitude: buildingLatitude, longitude: buildingLongitude }
-  ) <= radiusMeters;
-}
-
-function updateDismissedPlaces(position) {
-  passportState.dismissedPlaces.forEach((dismissal, placeId) => {
-    const building = passportState.buildings.find(item => item.visit?.placeId === placeId);
-    const expired = Date.now() >= dismissal.until;
-    const hasLeftArea = building && !isPositionNearBuilding(position, building, 65);
-
-    if (expired || hasLeftArea) {
-      passportState.dismissedPlaces.delete(placeId);
-    }
-
-    if (hasLeftArea) {
-      passportState.unlockedPlaceIds.delete(placeId);
-    }
-  });
-}
-
-function getEligiblePassportPlaces(position) {
-  updateDismissedPlaces(position);
-
-  return passportState.buildings
-    .filter(building => building.visit?.status === 'collectible')
-    .filter(building => !passportState.earnedPlaceIds.has(building.visit.placeId))
-    .filter(building => !passportState.dismissedPlaces.has(building.visit.placeId))
-    .map(building => ({
-      placeId: building.visit.placeId,
-      latitude: Number(building.acf?.latitude),
-      longitude: Number(building.acf?.longitude),
-      building
-    }))
-    .filter(place => Number.isFinite(place.latitude) && Number.isFinite(place.longitude));
-}
-
-function isPassportLayerOpen() {
-  const passportLayer = document.getElementById('passport-layer');
-  const challengeLayer = document.getElementById('visit-challenge-layer');
-  return Boolean((passportLayer && !passportLayer.hidden) || (challengeLayer && !challengeLayer.hidden));
-}
-
-function handlePassportPosition(position) {
-  passportState.latestPosition = position;
-
-  if (!passportState.ready || !proximityTracker || document.visibilityState !== 'visible' || isPassportLayerOpen()) {
-    proximityTracker?.reset();
-    cancelProximityRecheck();
-    return;
-  }
-
-  const eligiblePlaces = getEligiblePassportPlaces(position);
-
-  if (!eligiblePlaces.length) {
-    proximityTracker.reset();
-    cancelProximityRecheck();
-    hideProximityStatus();
-    return;
-  }
-
-  const result = proximityTracker.update(position, eligiblePlaces, position.timestamp || Date.now());
-
-  if ('inaccurate' === result.status) {
-    cancelProximityRecheck();
-    showProximityStatus(MAP_LABELS.gpsWeak || 'GPS accuracy is too low.', 'gps-weak', 5000);
-    return;
-  }
-
-  if ('outside' === result.status) {
-    cancelProximityRecheck();
-    hideProximityStatus();
-    return;
-  }
-
-  if ('dwelling' === result.status) {
-    const seconds = Math.max(1, Math.ceil(result.remainingMilliseconds / 1000));
-    const title = getBuildingTitle(result.place.building);
-    showProximityStatus(
-      formatPassportLabel(MAP_LABELS.stayNearby || 'Stay near %1$s for %2$d more seconds…', [title, seconds]),
-      `dwell-${result.place.placeId}-${seconds}`
-    );
-    scheduleProximityRecheck(result.remainingMilliseconds + 100);
-    return;
-  }
-
-  if ('ready' === result.status) {
-    proximityTracker.reset();
-    cancelProximityRecheck();
-    hideProximityStatus();
-    passportState.unlockedPlaceIds.add(result.place.placeId);
-    openVisitChallenge(result.place.building, null, false);
-  }
-}
-
-function scheduleProximityRecheck(delayMilliseconds) {
-  if (passportState.proximityRecheckTimeout || !('geolocation' in navigator)) {
-    return;
-  }
-
-  passportState.proximityRecheckTimeout = window.setTimeout(() => {
-    passportState.proximityRecheckTimeout = null;
-
-    if (document.visibilityState !== 'visible' || isPassportLayerOpen()) {
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      handlePassportPosition,
-      () => {
-        proximityTracker?.reset();
-        showProximityStatus(MAP_LABELS.gpsWeak || 'GPS accuracy is too low.', 'gps-recheck-failed', 5000);
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 15000
-      }
-    );
-  }, Math.max(250, delayMilliseconds));
-}
-
-function cancelProximityRecheck() {
-  window.clearTimeout(passportState.proximityRecheckTimeout);
-  passportState.proximityRecheckTimeout = null;
-}
-
-function showProximityStatus(message, key = message, autoHideMilliseconds = 0) {
-  const element = document.getElementById('passport-proximity-status');
-
-  if (!element) {
-    return;
-  }
-
-  if (passportState.proximityMessageKey !== key) {
-    element.textContent = message;
-    passportState.proximityMessageKey = key;
-  }
-
-  element.hidden = false;
-  element.classList.add('is-visible');
-  window.clearTimeout(passportState.proximityMessageTimeout);
-
-  if (autoHideMilliseconds) {
-    passportState.proximityMessageTimeout = window.setTimeout(hideProximityStatus, autoHideMilliseconds);
-  }
-}
-
-function hideProximityStatus() {
-  const element = document.getElementById('passport-proximity-status');
-
-  window.clearTimeout(passportState.proximityMessageTimeout);
-  passportState.proximityMessageKey = '';
-
-  if (element) {
-    element.classList.remove('is-visible');
-    element.hidden = true;
-  }
-}
-
-function activateModal(layer, dialog, closeCallback, initialFocus) {
-  const onKeydown = event => {
-    if ('Escape' === event.key) {
-      event.preventDefault();
-      closeCallback();
-      return;
-    }
-
-    if ('Tab' !== event.key) {
-      return;
-    }
-
-    const focusable = Array.from(dialog.querySelectorAll(
-      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    )).filter(element => !element.hidden && element.getClientRects().length);
-
-    if (!focusable.length) {
-      event.preventDefault();
-      dialog.focus();
-      return;
-    }
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
-
-  const onBackdropClick = event => {
-    if (event.target === layer) {
-      closeCallback();
-    }
-  };
-
-  document.addEventListener('keydown', onKeydown);
-  layer.addEventListener('click', onBackdropClick);
-  document.body.classList.add('passport-modal-open');
-  window.requestAnimationFrame(() => (initialFocus || dialog).focus({ preventScroll: true }));
-
-  return () => {
-    document.removeEventListener('keydown', onKeydown);
-    layer.removeEventListener('click', onBackdropClick);
-  };
-}
-
-function releaseModal(layer, trigger) {
-  passportState.modalCleanup?.();
-  passportState.modalCleanup = null;
-  layer.hidden = true;
-
-  if (!isPassportLayerOpen()) {
-    document.body.classList.remove('passport-modal-open');
-  }
-
-  if (trigger?.isConnected) {
-    trigger.focus({ preventScroll: true });
-  }
-}
-
-function createCloseButton(closeCallback) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'passport-dialog__close';
-  button.setAttribute('aria-label', MAP_LABELS.close || 'Close');
-  button.textContent = '×';
-  button.addEventListener('click', closeCallback);
-  return button;
-}
-
-function openPassport(trigger) {
-  const layer = document.getElementById('passport-layer');
-
-  if (!layer) {
-    return;
-  }
-
-  closeInfoPanelIfOpen();
-  closePanel();
-  closeVisitChallenge(false);
-  passportState.passportTrigger = trigger || document.activeElement;
-  renderPassport(layer);
-  layer.hidden = false;
-
-  const dialog = layer.querySelector('.passport-dialog');
-  const closeButton = layer.querySelector('.passport-dialog__close');
-  passportState.modalCleanup = activateModal(layer, dialog, closePassport, closeButton);
-}
-
-function closePassport() {
-  const layer = document.getElementById('passport-layer');
-
-  if (!layer || layer.hidden) {
-    return;
-  }
-
-  const trigger = passportState.passportTrigger;
-  passportState.passportTrigger = null;
-  releaseModal(layer, trigger);
-  proximityTracker?.reset();
-}
-
-function createPassportCard(building) {
-  const article = document.createElement('article');
-  const image = document.createElement('img');
-  const title = document.createElement('h3');
-  const status = document.createElement('p');
-  const placeId = building.visit?.placeId;
-  const isEarned = passportState.earnedPlaceIds.has(placeId);
-  const isCollectible = building.visit?.status === 'collectible';
-  const markerIcon = building.acf?.marker_icon || DEFAULT_BUILDING_MARKER_URL;
-
-  article.className = `passport-stamp ${isEarned ? 'passport-stamp--earned' : 'passport-stamp--locked'}`;
-  image.className = 'passport-stamp__image';
-  image.src = markerIcon;
-  image.alt = '';
-  title.className = 'passport-stamp__title';
-  title.textContent = getBuildingTitle(building);
-  status.className = 'passport-stamp__status';
-  status.textContent = isEarned
-    ? (MAP_LABELS.earned || 'Visited')
-    : (isCollectible ? (MAP_LABELS.locked || 'Not visited yet') : (MAP_LABELS.comingSoon || 'Coming soon'));
-
-  article.append(image, title, status);
-  return article;
-}
-
-function renderPassportSection(titleText, buildings, modifier = '') {
-  const section = document.createElement('section');
-  const title = document.createElement('h2');
-  const grid = document.createElement('div');
-
-  section.className = `passport-section ${modifier}`.trim();
-  title.className = 'passport-section__title';
-  title.textContent = titleText;
-  grid.className = 'passport-grid';
-  buildings.forEach(building => grid.appendChild(createPassportCard(building)));
-  section.append(title, grid);
-  return section;
-}
-
-function renderPassport(layer) {
-  const dialog = document.createElement('div');
-  const header = document.createElement('header');
-  const title = document.createElement('h1');
-  const progress = document.createElement('p');
-  const privacy = document.createElement('p');
-  const controls = document.createElement('div');
-  const resetButton = document.createElement('button');
-  const progressData = getPassportProgress();
-  const sortedBuildings = [...passportState.buildings].sort((first, second) =>
-    getBuildingTitle(first).localeCompare(getBuildingTitle(second), MAP_CONFIG.language || 'pl')
-  );
-  const collectibleBuildings = sortedBuildings.filter(building => building.visit?.status === 'collectible');
-  const comingSoonBuildings = sortedBuildings.filter(building => building.visit?.status !== 'collectible');
-
-  dialog.className = 'passport-dialog';
-  dialog.setAttribute('role', 'dialog');
-  dialog.setAttribute('aria-modal', 'true');
-  dialog.setAttribute('aria-labelledby', 'passport-dialog-title');
-  dialog.tabIndex = -1;
-  header.className = 'passport-dialog__header';
-  title.id = 'passport-dialog-title';
-  title.textContent = MAP_LABELS.passportTitle || 'Monument passport';
-  progress.className = 'passport-dialog__progress';
-  progress.textContent = formatPassportLabel(
-    MAP_LABELS.passportProgress || '%1$d of %2$d stamps',
-    [progressData.earnedCount, progressData.totalCount]
-  );
-  privacy.className = 'passport-dialog__privacy';
-  privacy.textContent = `${MAP_LABELS.passportPrivacy || 'Your passport and location stay on this device.'} ${MAP_LABELS.locationPrivacy || ''}`.trim();
-  resetButton.type = 'button';
-  resetButton.className = 'passport-reset';
-  resetButton.textContent = MAP_LABELS.resetPassport || 'Reset passport';
-  resetButton.disabled = !passportState.earnedPlaceIds.size;
-  resetButton.addEventListener('click', async () => {
-    if (!window.confirm(MAP_LABELS.resetPassportConfirm || 'Remove all saved stamps?')) {
-      return;
-    }
-
-    try {
-      await clearPassportVisits();
-      passportState.earnedPlaceIds.clear();
-      passportState.unlockedPlaceIds.clear();
-      refreshPassportMarkers();
-      updatePassportButton();
-      const reopenTrigger = passportState.passportTrigger || passportState.passportButton;
-      closePassport();
-      openPassport(reopenTrigger);
-    } catch (error) {
-      console.warn('Could not reset passport progress.', error);
-    }
-  });
-
-  header.append(title, createCloseButton(closePassport));
-  dialog.append(header, progress);
-
-  if (!progressData.earnedCount) {
-    const empty = document.createElement('p');
-    empty.className = 'passport-dialog__empty';
-    empty.textContent = MAP_LABELS.passportEmpty || 'Earn your first stamp at a monument.';
-    dialog.appendChild(empty);
-  }
-
-  if (collectibleBuildings.length) {
-    dialog.appendChild(renderPassportSection(
-      MAP_LABELS.availableStamps || 'Monuments to discover',
-      collectibleBuildings
-    ));
-  }
-
-  if (comingSoonBuildings.length) {
-    dialog.appendChild(renderPassportSection(
-      MAP_LABELS.comingSoonTitle || 'Coming soon',
-      comingSoonBuildings,
-      'passport-section--coming-soon'
-    ));
-  }
-
-  dialog.appendChild(privacy);
-
-  if (!passportState.storageAvailable) {
-    const warning = document.createElement('p');
-    warning.className = 'passport-dialog__warning';
-    warning.textContent = MAP_LABELS.storageUnavailable || 'Progress cannot be saved permanently in this browser.';
-    dialog.appendChild(warning);
-  }
-
-  controls.className = 'passport-dialog__controls';
-  controls.appendChild(resetButton);
-  dialog.appendChild(controls);
-  layer.replaceChildren(dialog);
-}
-
-function renderBuildingVisitActions(container, building) {
-  const visit = building.visit;
-
-  if (!visit?.placeId) {
-    return;
-  }
-
-  const status = document.createElement('p');
-  status.className = 'map-building-visit__status';
-
-  if (passportState.earnedPlaceIds.has(visit.placeId)) {
-    status.classList.add('is-earned');
-    status.textContent = `✓ ${MAP_LABELS.earned || 'Visited'}`;
-    container.appendChild(status);
-    return;
-  }
-
-  if ('collectible' !== visit.status) {
-    status.textContent = MAP_LABELS.comingSoon || 'Challenge coming soon';
-    container.appendChild(status);
-    return;
-  }
-
-  const button = document.createElement('button');
-  const feedback = document.createElement('p');
-
-  status.textContent = MAP_LABELS.locked || 'Not visited yet';
-  button.type = 'button';
-  button.className = 'map-building-visit__button';
-  feedback.className = 'map-building-visit__feedback';
-  feedback.setAttribute('role', 'status');
-
-  if (!passportState.locationSupported) {
-    feedback.textContent = MAP_LABELS.geolocationUnsupported || 'Geolocation is not supported in this browser.';
-    container.append(status, feedback);
-    return;
-  }
-
-  if (!passportState.locationEnabled) {
-    button.textContent = MAP_LABELS.enableLocationForStamp || 'Enable location';
-    feedback.textContent = MAP_LABELS.locationRequired || 'Enable location to visit this monument and earn its stamp.';
-    button.addEventListener('click', () => {
-      document.getElementById('geolocation-toggle')?.click();
-    });
-    container.append(status, button, feedback);
-    return;
-  }
-
-  button.textContent = passportState.unlockedPlaceIds.has(visit.placeId)
-    ? (MAP_LABELS.openChallenge || 'Open the on-site question')
-    : (MAP_LABELS.checkProximity || 'Check whether I am close enough');
-  button.addEventListener('click', event => {
-    const isUnlocked = passportState.unlockedPlaceIds.has(visit.placeId);
-    const isNear = isPositionNearBuilding(passportState.latestPosition, building);
-
-    if (isUnlocked && isNear) {
-      openVisitChallenge(building, event.currentTarget, true);
-      return;
-    }
-
-    const accuracy = Number(passportState.latestPosition?.coords?.accuracy);
-    feedback.textContent = Number.isFinite(accuracy) && accuracy > 50
-      ? (MAP_LABELS.gpsWeak || 'GPS accuracy is too low.')
-      : (MAP_LABELS.moveCloser || 'Come within 50 metres to unlock this question.');
-  });
-
-  container.append(status, button, feedback);
-}
-
-function refreshActiveBuildingVisitActions() {
+function refreshActiveBuildingPanel() {
   const content = document.getElementById('panel-content');
   const panel = document.getElementById('slide-panel');
   const building = activePanelMarker?.options?.buildingData;
@@ -1795,159 +1090,4 @@ function refreshActiveBuildingVisitActions() {
   if (content && building && panel?.classList.contains('open')) {
     renderBuildingPanelContent(content, building);
   }
-}
-
-function openVisitChallenge(building, trigger = null, requireCurrentProximity = true) {
-  const layer = document.getElementById('visit-challenge-layer');
-  const visit = building?.visit;
-
-  if (!layer || 'collectible' !== visit?.status || passportState.earnedPlaceIds.has(visit.placeId)) {
-    return;
-  }
-
-  if (requireCurrentProximity && !isPositionNearBuilding(passportState.latestPosition, building)) {
-    showProximityStatus(MAP_LABELS.moveCloser || 'Come within 50 metres to unlock this question.', 'move-closer', 5000);
-    return;
-  }
-
-  closePassport();
-  closePanel();
-  passportState.challengeBuilding = building;
-  passportState.challengeTrigger = trigger?.closest('#slide-panel')
-    ? passportState.passportButton
-    : (trigger || passportState.passportButton || document.activeElement);
-
-  const dialog = document.createElement('div');
-  const header = document.createElement('header');
-  const eyebrow = document.createElement('p');
-  const title = document.createElement('h1');
-  const question = document.createElement('p');
-  const choices = document.createElement('div');
-  const feedback = document.createElement('p');
-
-  dialog.className = 'visit-challenge-dialog';
-  dialog.setAttribute('role', 'dialog');
-  dialog.setAttribute('aria-modal', 'true');
-  dialog.setAttribute('aria-labelledby', 'visit-challenge-title');
-  dialog.tabIndex = -1;
-  header.className = 'visit-challenge-dialog__header';
-  eyebrow.className = 'visit-challenge-dialog__eyebrow';
-  eyebrow.textContent = MAP_LABELS.challengeTitle || 'Look closely';
-  title.id = 'visit-challenge-title';
-  title.textContent = getBuildingTitle(building);
-  question.className = 'visit-challenge-dialog__question';
-  question.textContent = visit.question;
-  choices.className = 'visit-challenge-dialog__choices';
-  feedback.className = 'visit-challenge-dialog__feedback';
-  feedback.setAttribute('role', 'status');
-  feedback.textContent = MAP_LABELS.chooseAnswer || 'Choose one answer.';
-
-  visit.choices.forEach(choice => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'visit-choice';
-    button.textContent = choice.text;
-    button.addEventListener('click', async () => {
-      if (choice.id !== visit.correctChoiceId) {
-        button.classList.add('is-incorrect');
-        feedback.textContent = MAP_LABELS.tryAgain || 'Look again and try once more.';
-        return;
-      }
-
-      choices.querySelectorAll('button').forEach(choiceButton => {
-        choiceButton.disabled = true;
-      });
-      button.classList.add('is-correct');
-      await awardPassportStamp(building);
-    });
-    choices.appendChild(button);
-  });
-
-  header.append(eyebrow, title, createCloseButton(() => closeVisitChallenge(true)));
-  dialog.append(header, question, choices, feedback);
-  layer.replaceChildren(dialog);
-  layer.hidden = false;
-  passportState.modalCleanup = activateModal(
-    layer,
-    dialog,
-    () => closeVisitChallenge(true),
-    choices.querySelector('button')
-  );
-}
-
-function closeVisitChallenge(shouldSuppress = true) {
-  const layer = document.getElementById('visit-challenge-layer');
-
-  if (!layer || layer.hidden) {
-    return;
-  }
-
-  const building = passportState.challengeBuilding;
-  const trigger = passportState.challengeTrigger;
-
-  if (shouldSuppress && building?.visit?.placeId && !passportState.earnedPlaceIds.has(building.visit.placeId)) {
-    passportState.dismissedPlaces.set(building.visit.placeId, {
-      until: Date.now() + 5 * 60 * 1000
-    });
-  }
-
-  passportState.challengeBuilding = null;
-  passportState.challengeTrigger = null;
-  releaseModal(layer, trigger);
-  proximityTracker?.reset();
-}
-
-async function awardPassportStamp(building) {
-  const placeId = building.visit.placeId;
-
-  await initializePassport();
-
-  try {
-    await savePassportVisit(placeId);
-  } catch (error) {
-    passportState.storageAvailable = false;
-    console.warn('The stamp could not be saved permanently.', error);
-  }
-
-  passportState.earnedPlaceIds.add(placeId);
-  passportState.dismissedPlaces.delete(placeId);
-  passportState.unlockedPlaceIds.delete(placeId);
-  refreshPassportMarkers();
-  updatePassportInterface();
-  closeVisitChallenge(false);
-  showStampCelebration(building);
-  requestPersistentPassportStorage();
-}
-
-function showStampCelebration(building) {
-  const celebration = document.getElementById('stamp-celebration');
-
-  if (!celebration) {
-    return;
-  }
-
-  const image = document.createElement('img');
-  const content = document.createElement('div');
-  const title = document.createElement('strong');
-  const message = document.createElement('span');
-
-  image.src = building.acf?.marker_icon || DEFAULT_BUILDING_MARKER_URL;
-  image.alt = '';
-  title.textContent = MAP_LABELS.stampEarned || 'Stamp earned!';
-  message.textContent = formatPassportLabel(
-    MAP_LABELS.stampEarnedFor || 'You visited %s.',
-    [getBuildingTitle(building)]
-  );
-  content.append(title, message);
-  celebration.replaceChildren(image, content);
-  celebration.hidden = false;
-  celebration.classList.remove('is-visible');
-  window.requestAnimationFrame(() => celebration.classList.add('is-visible'));
-  window.clearTimeout(passportState.celebrationTimeout);
-  passportState.celebrationTimeout = window.setTimeout(() => {
-    celebration.classList.remove('is-visible');
-    window.setTimeout(() => {
-      celebration.hidden = true;
-    }, prefersReducedMotion ? 0 : 250);
-  }, 4500);
 }

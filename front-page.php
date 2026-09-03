@@ -57,10 +57,6 @@ $osada_building_close = 'en' === $osada_language ? 'Close panel' : 'Zamknij pane
         <span>INFO</span>
     </button>
 
-    <div id="passport-layer" class="passport-layer" hidden></div>
-    <div id="visit-challenge-layer" class="visit-challenge-layer" hidden></div>
-    <div id="passport-proximity-status" class="passport-proximity-status" role="status" aria-live="polite" hidden></div>
-    <div id="stamp-celebration" class="stamp-celebration" role="status" aria-live="polite" hidden></div>
 </main>
 
 <?php

@@ -127,33 +127,6 @@ function osadafabryczna_get_language_labels($language = null) {
             'changeMap'            => 'Change map',
             'changeMapAria'        => 'Change map layer',
             'readMore'             => 'Read more',
-            'passport'             => 'Passport',
-            'passportTitle'        => 'Monument passport',
-            'passportProgress'     => '%1$d of %2$d stamps',
-            'passportEmpty'        => 'Visit a monument and answer its question to earn your first stamp.',
-            'passportPrivacy'      => 'Your passport and location stay on this device. Progress may be lost if browser data is cleared.',
-            'earned'               => 'Visited',
-            'locked'               => 'Not visited yet',
-            'comingSoon'           => 'Challenge coming soon',
-            'availableStamps'      => 'Monuments to discover',
-            'comingSoonTitle'      => 'Coming soon',
-            'resetPassport'        => 'Reset passport',
-            'resetPassportConfirm' => 'Remove all stamps saved in this browser?',
-            'close'                => 'Close',
-            'openChallenge'        => 'Open the on-site question',
-            'checkProximity'       => 'Check whether I am close enough',
-            'enableLocationForStamp' => 'Enable location',
-            'locationRequired'     => 'To visit this monument and earn its stamp, enable location. It is checked only while the map is open and is never saved or sent.',
-            'moveCloser'           => 'Come closer to unlock this question.',
-            'gpsWeak'              => 'GPS accuracy is too low. Stay outdoors for a moment.',
-            'stayNearby'           => 'Stay near %1$s for %2$d more seconds…',
-            'challengeTitle'       => 'Look closely',
-            'chooseAnswer'         => 'Choose one answer.',
-            'tryAgain'             => 'Not quite. Look at the monument and try again.',
-            'stampEarned'          => 'Stamp earned!',
-            'stampEarnedFor'       => 'You visited %s.',
-            'locationPrivacy'      => 'Location is checked only in this open map and is never saved or sent.',
-            'storageUnavailable'   => 'This browser cannot save passport progress permanently.',
         );
     }
 
@@ -164,32 +137,6 @@ function osadafabryczna_get_language_labels($language = null) {
         'changeMap'            => 'Zmień mapę',
         'changeMapAria'        => 'Zmień mapę',
         'readMore'             => 'Czytaj więcej',
-        'passport'             => 'Mój paszport',
-        'passportTitle'        => 'Paszport zabytków',
-        'passportProgress'     => '%1$d z %2$d pieczątek',
-        'passportEmpty'        => 'Odwiedź zabytek i odpowiedz na pytanie, aby zdobyć pierwszą pieczątkę.',
-        'passportPrivacy'      => 'Paszport i lokalizacja pozostają na tym urządzeniu. Postęp może zniknąć po usunięciu danych przeglądarki.',
-        'earned'               => 'Zabytek odwiedzony',        'locked'               => 'Zabytek jeszcze nieodwiedzony',
-        'comingSoon'           => 'Wyzwanie będzie dostępne wkrótce',
-        'availableStamps'      => 'Zabytki do odkrycia',
-        'comingSoonTitle'      => 'Dostępne wkrótce',
-        'resetPassport'        => 'Wyczyść paszport',
-        'resetPassportConfirm' => 'Usunąć wszystkie pieczątki zapisane w tej przeglądarce?',
-        'close'                => 'Zamknij',
-        'openChallenge'        => 'Odpowiedz na pytanie o zabytku',
-        'checkProximity'       => 'Sprawdź, czy jestem wystarczająco blisko',
-        'enableLocationForStamp' => 'Włącz lokalizację',
-        'locationRequired'     => 'Aby odwiedzić ten zabytek i zdobyć pieczątkę, włącz lokalizację. Jest ona używana tylko na tej stronie a pieczątki są zapisywane lokalnie w Twojej przeglądarce.',
-        'moveCloser'           => 'Podejdź bliżej zabytku, aby odblokować pytanie.',
-        'gpsWeak'              => 'Dokładność GPS jest zbyt niska. Zaczekaj chwilę na otwartej przestrzeni.',
-        'stayNearby'           => 'Pozostań przy miejscu %1$s jeszcze przez %2$d sekund',
-        'challengeTitle'       => 'Przyjrzyj się uważnie',
-        'chooseAnswer'         => 'Wybierz jedną odpowiedź.',
-        'tryAgain'             => 'Nie do końca... Spójrz na zabytek i spróbuj ponownie.',
-        'stampEarned'          => 'Pieczątka zdobyta!',
-        'stampEarnedFor'       => 'Odwiedzone miejsce: %s.',
-        'locationPrivacy'      => 'Lokalizacja jest używana tylko na tej stronie a pieczątki są zapisywane lokalnie w Twojej przeglądarce.',
-        'storageUnavailable'   => 'Ta przeglądarka nie może zapisać postępu paszportu.',
     );
 }
 
@@ -263,14 +210,6 @@ function osadafabryczna_enqueue_assets() {
     }
 
     if ( osadafabryczna_is_map_page() ) {
-        wp_enqueue_script(
-            'osadafabryczna-passport-core-js',
-            get_template_directory_uri() . '/dist/assets/passport-core.js',
-            [],
-            filemtime(get_template_directory() . '/dist/assets/passport-core.js'),
-            true
-        );
-
         // Leaflet CSS
         wp_enqueue_style(
             'leaflet-css',
@@ -309,11 +248,10 @@ function osadafabryczna_enqueue_assets() {
             true
         );
 
-        // Map JS
         wp_enqueue_script(
             'osadafabryczna-main-js',
             get_template_directory_uri() . '/dist/assets/main.js',
-            ['leaflet-js', 'leaflet-markercluster-js', 'osadafabryczna-passport-core-js'],
+            ['leaflet-js', 'leaflet-markercluster-js'],
             filemtime(get_template_directory() . '/dist/assets/main.js'),
             true
         );
@@ -518,169 +456,6 @@ function osadafabryczna_save_building_marker_width($post_id) {
     }
 }
 add_action('save_post_budynek', 'osadafabryczna_save_building_marker_width');
-
-function osadafabryczna_add_visit_challenge_meta_box() {
-    add_meta_box(
-        'osada-visit-challenge',
-        __('Passport challenge / Wyzwanie paszportowe', 'osadafabryczna'),
-        'osadafabryczna_render_visit_challenge_meta_box',
-        'budynek',
-        'normal',
-        'default'
-    );
-}
-add_action('add_meta_boxes_budynek', 'osadafabryczna_add_visit_challenge_meta_box');
-
-function osadafabryczna_render_visit_challenge_meta_box($post) {
-    wp_nonce_field('osada_visit_challenge', 'osada_visit_challenge_nonce');
-
-    $question = (string) get_post_meta($post->ID, '_osada_visit_question', true);
-    $answers = array(
-        (string) get_post_meta($post->ID, '_osada_visit_answer_1', true),
-        (string) get_post_meta($post->ID, '_osada_visit_answer_2', true),
-        (string) get_post_meta($post->ID, '_osada_visit_answer_3', true),
-    );
-    $correct_answer = absint(get_post_meta($post->ID, '_osada_visit_correct_answer', true));
-    ?>
-    <p class="description">
-        <?php esc_html_e('Add one observation question and exactly three answers in this post’s language. The challenge becomes collectible only when every field is complete.', 'osadafabryczna'); ?>
-    </p>
-    <p>
-        <label for="osada_visit_question"><strong><?php esc_html_e('Question', 'osadafabryczna'); ?></strong></label>
-        <input
-            id="osada_visit_question"
-            name="osada_visit_question"
-            class="widefat"
-            type="text"
-            value="<?php echo esc_attr($question); ?>"
-        >
-    </p>
-    <?php foreach ($answers as $index => $answer) : ?>
-        <?php $answer_number = $index + 1; ?>
-        <p>
-            <label for="osada_visit_answer_<?php echo esc_attr($answer_number); ?>">
-                <strong><?php echo esc_html(sprintf(__('Answer %d', 'osadafabryczna'), $answer_number)); ?></strong>
-            </label>
-            <input
-                id="osada_visit_answer_<?php echo esc_attr($answer_number); ?>"
-                name="osada_visit_answer_<?php echo esc_attr($answer_number); ?>"
-                class="widefat"
-                type="text"
-                value="<?php echo esc_attr($answer); ?>"
-            >
-        </p>
-    <?php endforeach; ?>
-    <p>
-        <label for="osada_visit_correct_answer"><strong><?php esc_html_e('Correct answer', 'osadafabryczna'); ?></strong></label>
-        <select id="osada_visit_correct_answer" name="osada_visit_correct_answer">
-            <option value="0"><?php esc_html_e('Select…', 'osadafabryczna'); ?></option>
-            <?php for ($answer_number = 1; $answer_number <= 3; $answer_number++) : ?>
-                <option value="<?php echo esc_attr($answer_number); ?>" <?php selected($correct_answer, $answer_number); ?>>
-                    <?php echo esc_html(sprintf(__('Answer %d', 'osadafabryczna'), $answer_number)); ?>
-                </option>
-            <?php endfor; ?>
-        </select>
-    </p>
-    <?php
-}
-
-function osadafabryczna_save_visit_challenge($post_id) {
-    if (!isset($_POST['osada_visit_challenge_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['osada_visit_challenge_nonce'])), 'osada_visit_challenge')) {
-        return;
-    }
-
-    if ((defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) || !current_user_can('edit_post', $post_id)) {
-        return;
-    }
-
-    $text_fields = array(
-        '_osada_visit_question' => 'osada_visit_question',
-        '_osada_visit_answer_1' => 'osada_visit_answer_1',
-        '_osada_visit_answer_2' => 'osada_visit_answer_2',
-        '_osada_visit_answer_3' => 'osada_visit_answer_3',
-    );
-
-    foreach ($text_fields as $meta_key => $field_name) {
-        $value = isset($_POST[$field_name]) ? sanitize_text_field(wp_unslash($_POST[$field_name])) : '';
-
-        if ('' !== $value) {
-            update_post_meta($post_id, $meta_key, $value);
-        } else {
-            delete_post_meta($post_id, $meta_key);
-        }
-    }
-
-    $correct_answer = isset($_POST['osada_visit_correct_answer']) ? absint($_POST['osada_visit_correct_answer']) : 0;
-
-    if ($correct_answer >= 1 && $correct_answer <= 3) {
-        update_post_meta($post_id, '_osada_visit_correct_answer', $correct_answer);
-    } else {
-        delete_post_meta($post_id, '_osada_visit_correct_answer');
-    }
-}
-add_action('save_post_budynek', 'osadafabryczna_save_visit_challenge');
-
-function osadafabryczna_get_visit_place_id($post_id) {
-    $post_id = absint($post_id);
-    $paired_id = absint(get_post_meta($post_id, '_osada_translation_id', true));
-
-    if ($paired_id && 'budynek' === get_post_type($paired_id)) {
-        $post_id = min($post_id, $paired_id);
-    }
-
-    return 'budynek-' . $post_id;
-}
-
-function osadafabryczna_get_visit_rest_data($post_id) {
-    $question = trim((string) get_post_meta($post_id, '_osada_visit_question', true));
-    $answers = array(
-        trim((string) get_post_meta($post_id, '_osada_visit_answer_1', true)),
-        trim((string) get_post_meta($post_id, '_osada_visit_answer_2', true)),
-        trim((string) get_post_meta($post_id, '_osada_visit_answer_3', true)),
-    );
-    $correct_answer = absint(get_post_meta($post_id, '_osada_visit_correct_answer', true));
-    $is_collectible = '' !== $question
-        && !in_array('', $answers, true)
-        && $correct_answer >= 1
-        && $correct_answer <= 3;
-
-    $visit_data = array(
-        'placeId' => osadafabryczna_get_visit_place_id($post_id),
-        'status'  => $is_collectible ? 'collectible' : 'coming_soon',
-    );
-
-    if ($is_collectible) {
-        $choice_ids = array('a', 'b', 'c');
-        $visit_data['question'] = $question;
-        $visit_data['choices'] = array();
-
-        foreach ($answers as $index => $answer) {
-            $visit_data['choices'][] = array(
-                'id'   => $choice_ids[$index],
-                'text' => $answer,
-            );
-        }
-
-        $visit_data['correctChoiceId'] = $choice_ids[$correct_answer - 1];
-    }
-
-    return $visit_data;
-}
-
-function osadafabryczna_register_visit_rest_field() {
-    register_rest_field('budynek', 'visit', array(
-        'get_callback' => function ($post_data) {
-            return osadafabryczna_get_visit_rest_data($post_data['id']);
-        },
-        'schema' => array(
-            'description' => __('Local monument passport challenge.', 'osadafabryczna'),
-            'type'        => 'object',
-            'context'     => array('view'),
-            'readonly'    => true,
-        ),
-    ));
-}
-add_action('rest_api_init', 'osadafabryczna_register_visit_rest_field');
 
 function osadafabryczna_add_language_meta_boxes() {
     foreach (array('page', 'budynek') as $post_type) {
