@@ -8,16 +8,6 @@ function osadafabryczna_is_map_page() {
     return is_front_page() || osadafabryczna_is_english_front_page();
 }
 
-function osadafabryczna_bump_buildings_cache_version($post_id) {
-    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
-        return;
-    }
-
-    $version = (int) get_option('osadafabryczna_buildings_cache_version', 1);
-    update_option('osadafabryczna_buildings_cache_version', $version + 1, false);
-}
-add_action('save_post_budynek', 'osadafabryczna_bump_buildings_cache_version');
-
 function osadafabryczna_add_pwa_metadata() {
     if (function_exists('osadafabryczna_is_holding_request') && osadafabryczna_is_holding_request()) {
         return;
@@ -340,21 +330,9 @@ add_action('after_setup_theme', 'osadafabryczna_register_menus');
  * Return a building's custom marker URL or the theme's default marker.
  */
 function osadafabryczna_get_building_marker_url($post_id = 0) {
-    $post_id = $post_id ? absint($post_id) : get_the_ID();
-    $marker_icon = function_exists('get_field') ? get_field('marker_icon', $post_id) : '';
-    $marker_icon_url = '';
-
-    if (is_array($marker_icon)) {
-        if (!empty($marker_icon['url'])) {
-            $marker_icon_url = $marker_icon['url'];
-        } elseif (!empty($marker_icon['ID'])) {
-            $marker_icon_url = wp_get_attachment_image_url(absint($marker_icon['ID']), 'full');
-        }
-    } elseif (is_numeric($marker_icon)) {
-        $marker_icon_url = wp_get_attachment_image_url(absint($marker_icon), 'full');
-    } elseif (is_string($marker_icon)) {
-        $marker_icon_url = $marker_icon;
-    }
+    $marker_icon_url = function_exists('osada_core_get_building_marker_url')
+        ? osada_core_get_building_marker_url($post_id)
+        : '';
 
     return $marker_icon_url ?: get_template_directory_uri() . '/dist/assets/ikona-budynku.png';
 }
@@ -371,91 +349,6 @@ function osadafabryczna_register_sidebars() {
     ));
 }
 add_action('widgets_init', 'osadafabryczna_register_sidebars');
-
-function osadafabryczna_register_building_marker_width_meta() {
-    register_post_meta('budynek', 'marker_icon_width', array(
-        'type'              => 'integer',
-        'single'            => true,
-        'default'           => 0,
-        'sanitize_callback' => 'absint',
-        'show_in_rest'      => array(
-            'schema' => array(
-                'type'    => 'integer',
-                'default' => 0,
-            ),
-        ),
-        'auth_callback'     => '__return_true',
-    ));
-}
-add_action('init', 'osadafabryczna_register_building_marker_width_meta');
-
-function osadafabryczna_register_building_marker_width_rest_field() {
-    register_rest_field('budynek', 'marker_icon_width', array(
-        'get_callback' => function ($post_data) {
-            return absint(get_post_meta($post_data['id'], 'marker_icon_width', true));
-        },
-        'schema'       => array(
-            'description' => __('Szerokość ikony budynku na mapie w pikselach.', 'osadafabryczna'),
-            'type'        => 'integer',
-            'context'     => array('view', 'edit'),
-            'readonly'    => true,
-        ),
-    ));
-}
-add_action('rest_api_init', 'osadafabryczna_register_building_marker_width_rest_field');
-
-function osadafabryczna_add_building_marker_meta_box() {
-    add_meta_box(
-        'osada-building-marker-size',
-        __('Rozmiar ikony na mapie', 'osadafabryczna'),
-        'osadafabryczna_render_building_marker_meta_box',
-        'budynek',
-        'side',
-        'default'
-    );
-}
-add_action('add_meta_boxes_budynek', 'osadafabryczna_add_building_marker_meta_box');
-
-function osadafabryczna_render_building_marker_meta_box($post) {
-    wp_nonce_field('osada_building_marker_size', 'osada_building_marker_size_nonce');
-    $width = absint(get_post_meta($post->ID, 'marker_icon_width', true));
-    ?>
-    <p>
-        <label for="osada_marker_icon_width"><?php esc_html_e('Szerokość ikony (px)', 'osadafabryczna'); ?></label>
-        <input
-            id="osada_marker_icon_width"
-            name="osada_marker_icon_width"
-            class="small-text"
-            type="number"
-            min="24"
-            max="300"
-            step="1"
-            value="<?php echo $width ? esc_attr($width) : ''; ?>"
-            placeholder="auto"
-        >
-    </p>
-    <p class="description"><?php esc_html_e('Pozostaw puste, aby użyć automatycznego rozmiaru. Wysokość zostanie dopasowana proporcjonalnie.', 'osadafabryczna'); ?></p>
-    <?php
-}
-
-function osadafabryczna_save_building_marker_width($post_id) {
-    if (!isset($_POST['osada_building_marker_size_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['osada_building_marker_size_nonce'])), 'osada_building_marker_size')) {
-        return;
-    }
-
-    if ((defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) || !current_user_can('edit_post', $post_id)) {
-        return;
-    }
-
-    $width = isset($_POST['osada_marker_icon_width']) ? absint($_POST['osada_marker_icon_width']) : 0;
-
-    if ($width >= 24 && $width <= 300) {
-        update_post_meta($post_id, 'marker_icon_width', $width);
-    } else {
-        delete_post_meta($post_id, 'marker_icon_width');
-    }
-}
-add_action('save_post_budynek', 'osadafabryczna_save_building_marker_width');
 
 function osadafabryczna_add_language_meta_boxes() {
     foreach (array('page', 'budynek') as $post_type) {
