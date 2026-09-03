@@ -1,11 +1,7 @@
 <?php
 
-function osadafabryczna_is_english_front_page() {
-    return is_page('eng');
-}
-
 function osadafabryczna_is_map_page() {
-    return is_front_page() || osadafabryczna_is_english_front_page();
+    return is_front_page() || (function_exists('osada_core_is_english_front_page') && osada_core_is_english_front_page());
 }
 
 function osadafabryczna_add_pwa_metadata() {
@@ -53,43 +49,8 @@ function osadafabryczna_serve_pwa_service_worker($wp) {
 }
 add_action('parse_request', 'osadafabryczna_serve_pwa_service_worker', 0);
 
-function osadafabryczna_is_english_budynek_archive() {
-    return is_post_type_archive('budynek') && 'en' === get_query_var('osada_language_archive');
-}
-
-function osadafabryczna_get_post_language($post_id = null) {
-    $post_id = $post_id ?: get_queried_object_id();
-    $language = $post_id ? get_post_meta($post_id, '_osada_language', true) : '';
-
-    if ('en' === $language) {
-        return 'en';
-    }
-
-    if (osadafabryczna_is_english_front_page()) {
-        return 'en';
-    }
-
-    return 'pl';
-}
-
-function osadafabryczna_get_current_language() {
-    if (is_search() && 'en' === get_query_var('osada_search_language')) {
-        return 'en';
-    }
-
-    if (is_singular()) {
-        return osadafabryczna_get_post_language();
-    }
-
-    if (osadafabryczna_is_english_budynek_archive()) {
-        return 'en';
-    }
-
-    return osadafabryczna_is_english_front_page() ? 'en' : 'pl';
-}
-
 function osadafabryczna_render_scholarship_footer() {
-    $is_english = 'en' === osadafabryczna_get_current_language();
+    $is_english = function_exists('osada_core_get_current_language') && 'en' === osada_core_get_current_language();
     $text = $is_english
         ? 'This project was carried out as part of a scholarship awarded by the Minister of Culture and National Heritage'
         : 'Zrealizowano w ramach stypendium Ministra Kultury i Dziedzictwa Narodowego';
@@ -107,7 +68,7 @@ function osadafabryczna_render_scholarship_footer() {
 }
 
 function osadafabryczna_get_language_labels($language = null) {
-    $language = $language ?: osadafabryczna_get_current_language();
+    $language = $language ?: (function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl');
 
     if ('en' === $language) {
         return array(
@@ -173,7 +134,7 @@ function osadafabryczna_enqueue_assets() {
         array(
             'serviceWorkerUrl' => home_url('/sw.js'),
             'scope'            => home_url('/'),
-            'labels'           => 'en' === osadafabryczna_get_current_language()
+            'labels'           => function_exists('osada_core_get_current_language') && 'en' === osada_core_get_current_language()
                 ? array(
                     'install'      => 'Add to home screen',
                     'dialogTitle'  => 'Add Osada Fabryczna',
@@ -246,7 +207,7 @@ function osadafabryczna_enqueue_assets() {
             true
         );
 
-        $language = osadafabryczna_get_current_language();
+        $language = function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl';
         wp_localize_script(
             'osadafabryczna-main-js',
             'OsadaFabrycznaMap',
@@ -350,221 +311,6 @@ function osadafabryczna_register_sidebars() {
 }
 add_action('widgets_init', 'osadafabryczna_register_sidebars');
 
-function osadafabryczna_add_language_meta_boxes() {
-    foreach (array('page', 'budynek') as $post_type) {
-        add_meta_box(
-            'osada-language-settings',
-            __('Language settings', 'osadafabryczna'),
-            'osadafabryczna_render_language_meta_box',
-            $post_type,
-            'side',
-            'default'
-        );
-    }
-}
-add_action('add_meta_boxes', 'osadafabryczna_add_language_meta_boxes');
-
-function osadafabryczna_render_language_meta_box($post) {
-    wp_nonce_field('osada_language_settings', 'osada_language_settings_nonce');
-
-    $language = get_post_meta($post->ID, '_osada_language', true) ?: 'pl';
-    $translation_id = (int) get_post_meta($post->ID, '_osada_translation_id', true);
-    $posts = get_posts(array(
-        'post_type'      => $post->post_type,
-        'post_status'    => array('publish', 'draft', 'pending', 'private'),
-        'posts_per_page' => -1,
-        'orderby'        => 'title',
-        'order'          => 'ASC',
-        'exclude'        => array($post->ID),
-    ));
-    ?>
-    <p>
-        <label for="osada_language"><?php esc_html_e('Language', 'osadafabryczna'); ?></label>
-        <select id="osada_language" name="osada_language" class="widefat">
-            <option value="pl" <?php selected($language, 'pl'); ?>><?php esc_html_e('Polish', 'osadafabryczna'); ?></option>
-            <option value="en" <?php selected($language, 'en'); ?>><?php esc_html_e('English', 'osadafabryczna'); ?></option>
-        </select>
-    </p>
-    <p>
-        <label for="osada_translation_id"><?php esc_html_e('Paired translation', 'osadafabryczna'); ?></label>
-        <select id="osada_translation_id" name="osada_translation_id" class="widefat">
-            <option value="0"><?php esc_html_e('None', 'osadafabryczna'); ?></option>
-            <?php foreach ($posts as $translation_post) : ?>
-                <option value="<?php echo esc_attr($translation_post->ID); ?>" <?php selected($translation_id, $translation_post->ID); ?>>
-                    <?php echo esc_html(get_the_title($translation_post)); ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </p>
-    <?php
-}
-
-function osadafabryczna_save_language_meta($post_id) {
-    if (!isset($_POST['osada_language_settings_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['osada_language_settings_nonce'])), 'osada_language_settings')) {
-        return;
-    }
-
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-        return;
-    }
-
-    if (!current_user_can('edit_post', $post_id)) {
-        return;
-    }
-
-    $post_type = get_post_type($post_id);
-    if (!in_array($post_type, array('page', 'budynek'), true)) {
-        return;
-    }
-
-    $language = isset($_POST['osada_language']) ? sanitize_key(wp_unslash($_POST['osada_language'])) : 'pl';
-    $language = in_array($language, array('pl', 'en'), true) ? $language : 'pl';
-    $translation_id = isset($_POST['osada_translation_id']) ? absint($_POST['osada_translation_id']) : 0;
-
-    update_post_meta($post_id, '_osada_language', $language);
-
-    if ($translation_id) {
-        update_post_meta($post_id, '_osada_translation_id', $translation_id);
-        update_post_meta($translation_id, '_osada_translation_id', $post_id);
-    } else {
-        delete_post_meta($post_id, '_osada_translation_id');
-    }
-}
-add_action('save_post', 'osadafabryczna_save_language_meta');
-
-function osadafabryczna_add_language_rewrites() {
-    add_rewrite_rule('^eng/budynek/([^/]+)/?$', 'index.php?budynek=$matches[1]', 'top');
-    add_rewrite_rule('^eng/budynki/page/([0-9]+)/?$', 'index.php?post_type=budynek&osada_language_archive=en&paged=$matches[1]', 'top');
-    add_rewrite_rule('^eng/budynki/?$', 'index.php?post_type=budynek&osada_language_archive=en', 'top');
-}
-add_action('init', 'osadafabryczna_add_language_rewrites');
-
-function osadafabryczna_add_language_query_vars($query_vars) {
-    $query_vars[] = 'osada_language_archive';
-    $query_vars[] = 'osada_search_language';
-
-    return $query_vars;
-}
-add_filter('query_vars', 'osadafabryczna_add_language_query_vars');
-
-function osadafabryczna_filter_budynek_archive_query($query) {
-    if (is_admin() || !$query->is_main_query()) {
-        return;
-    }
-
-    $is_english_archive = 'en' === $query->get('osada_language_archive');
-    $is_polish_archive = $query->is_post_type_archive('budynek');
-
-    if (!$is_english_archive && !$is_polish_archive) {
-        return;
-    }
-
-    $language = $is_english_archive ? 'en' : 'pl';
-    $query->set('post_type', 'budynek');
-
-    $meta_query = $query->get('meta_query');
-    $meta_query = is_array($meta_query) ? $meta_query : array();
-
-    if ('en' === $language) {
-        $meta_query[] = array(
-            'key'     => '_osada_language',
-            'value'   => 'en',
-            'compare' => '=',
-        );
-    } else {
-        $meta_query[] = array(
-            'relation' => 'OR',
-            array(
-                'key'     => '_osada_language',
-                'value'   => 'pl',
-                'compare' => '=',
-            ),
-            array(
-                'key'     => '_osada_language',
-                'compare' => 'NOT EXISTS',
-            ),
-        );
-    }
-
-    $query->set('meta_query', $meta_query);
-}
-add_action('pre_get_posts', 'osadafabryczna_filter_budynek_archive_query');
-
-function osadafabryczna_filter_search_query($query) {
-    if (is_admin() || !$query->is_main_query() || !$query->is_search()) {
-        return;
-    }
-
-    $language = 'en' === $query->get('osada_search_language') ? 'en' : 'pl';
-    $query->set('post_type', array('page', 'budynek'));
-
-    $meta_query = $query->get('meta_query');
-    $meta_query = is_array($meta_query) ? $meta_query : array();
-
-    if ('en' === $language) {
-        $meta_query[] = array(
-            'key'     => '_osada_language',
-            'value'   => 'en',
-            'compare' => '=',
-        );
-    } else {
-        $meta_query[] = array(
-            'relation' => 'OR',
-            array(
-                'key'     => '_osada_language',
-                'value'   => 'pl',
-                'compare' => '=',
-            ),
-            array(
-                'key'     => '_osada_language',
-                'compare' => 'NOT EXISTS',
-            ),
-        );
-    }
-
-    $query->set('meta_query', $meta_query);
-}
-add_action('pre_get_posts', 'osadafabryczna_filter_search_query');
-
-function osadafabryczna_filter_budynek_rest_query($args, $request) {
-    $language = sanitize_key($request->get_param('language'));
-
-    if (!in_array($language, array('pl', 'en'), true)) {
-        $language = 'pl';
-    }
-
-    $args['meta_query'] = isset($args['meta_query']) && is_array($args['meta_query']) ? $args['meta_query'] : array();
-    $language_query = array(
-        'relation' => 'OR',
-        array(
-            'key'     => '_osada_language',
-            'value'   => $language,
-            'compare' => '=',
-        ),
-    );
-
-    if ('pl' === $language) {
-        $language_query[] = array(
-            'key'     => '_osada_language',
-            'compare' => 'NOT EXISTS',
-        );
-    }
-
-    $args['meta_query'][] = $language_query;
-
-    return $args;
-}
-add_filter('rest_budynek_query', 'osadafabryczna_filter_budynek_rest_query', 10, 2);
-
-function osadafabryczna_filter_english_budynek_link($post_link, $post) {
-    if ('budynek' === $post->post_type && 'en' === osadafabryczna_get_post_language($post->ID)) {
-        return home_url('/eng/budynek/' . $post->post_name . '/');
-    }
-
-    return $post_link;
-}
-add_filter('post_type_link', 'osadafabryczna_filter_english_budynek_link', 10, 2);
-
 function osadafabryczna_filter_english_budynek_archive_menu_link($items, $args) {
     if (empty($args->theme_location) || 'primary_en' !== $args->theme_location) {
         return $items;
@@ -580,83 +326,20 @@ function osadafabryczna_filter_english_budynek_archive_menu_link($items, $args) 
 }
 add_filter('wp_nav_menu_objects', 'osadafabryczna_filter_english_budynek_archive_menu_link', 10, 2);
 
-function osadafabryczna_filter_english_budynek_archive_pagination_link($link, $page_number) {
-    if (!osadafabryczna_is_english_budynek_archive()) {
-        return $link;
-    }
-
-    if ($page_number > 1) {
-        return home_url('/eng/budynki/page/' . $page_number . '/');
-    }
-
-    return home_url('/eng/budynki/');
-}
-add_filter('get_pagenum_link', 'osadafabryczna_filter_english_budynek_archive_pagination_link', 10, 2);
-
-function osadafabryczna_get_paired_translation_id($post_id = null) {
-    $post_id = $post_id ?: get_queried_object_id();
-    return $post_id ? (int) get_post_meta($post_id, '_osada_translation_id', true) : 0;
-}
-
-function osadafabryczna_get_english_front_page_url() {
-    $english_page = get_page_by_path('eng');
-    return $english_page ? get_permalink($english_page) : home_url('/eng/');
-}
-
-function osadafabryczna_get_language_url($language) {
-    if (is_search()) {
-        $search_args = array('s' => get_search_query(false));
-
-        if ('en' === $language) {
-            $search_args['osada_search_language'] = 'en';
-        }
-
-        return add_query_arg($search_args, home_url('/'));
-    }
-
-    if (is_singular()) {
-        $post_id = get_queried_object_id();
-        $current_language = osadafabryczna_get_post_language($post_id);
-
-        if ($language === $current_language) {
-            return get_permalink($post_id);
-        }
-
-        $translation_id = osadafabryczna_get_paired_translation_id($post_id);
-        if ($translation_id) {
-            return get_permalink($translation_id);
-        }
-    }
-
-    if (is_post_type_archive('budynek')) {
-        if ('en' === $language) {
-            return home_url('/eng/budynki/');
-        }
-
-        return get_post_type_archive_link('budynek');
-    }
-
-    if ('en' === $language) {
-        return osadafabryczna_get_english_front_page_url();
-    }
-
-    return home_url('/');
-}
-
 function osadafabryczna_language_switcher() {
-    $current_language = osadafabryczna_get_current_language();
+    $current_language = function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl';
     ?>
     <nav class="language-switcher" aria-label="<?php esc_attr_e('Language switcher', 'osadafabryczna'); ?>">
-        <a class="<?php echo 'pl' === $current_language ? 'is-active' : ''; ?>" href="<?php echo esc_url(osadafabryczna_get_language_url('pl')); ?>" lang="pl">PL</a>
-        <a class="<?php echo 'en' === $current_language ? 'is-active' : ''; ?>" href="<?php echo esc_url(osadafabryczna_get_language_url('en')); ?>" lang="en">EN</a>
+        <a class="<?php echo 'pl' === $current_language ? 'is-active' : ''; ?>" href="<?php echo esc_url(function_exists('osada_core_get_language_url') ? osada_core_get_language_url('pl') : home_url('/')); ?>" lang="pl">PL</a>
+        <a class="<?php echo 'en' === $current_language ? 'is-active' : ''; ?>" href="<?php echo esc_url(function_exists('osada_core_get_language_url') ? osada_core_get_language_url('en') : home_url('/eng/')); ?>" lang="en">EN</a>
     </nav>
     <?php
 }
 
 function osadafabryczna_language_body_classes($classes) {
-    $classes[] = 'site-language-' . osadafabryczna_get_current_language();
+    $classes[] = 'site-language-' . (function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl');
 
-    if (osadafabryczna_is_english_front_page()) {
+    if (function_exists('osada_core_is_english_front_page') && osada_core_is_english_front_page()) {
         $classes[] = 'front-page';
     }
 

@@ -1,6 +1,6 @@
 <?php
 $osada_show_standard_footer = is_post_type_archive('budynek')
-    || (is_page() && !is_front_page() && !osadafabryczna_is_english_front_page());
+    || (is_page() && !is_front_page() && !(function_exists('osada_core_is_english_front_page') && osada_core_is_english_front_page()));
 ?>
 
 <?php if ($osada_show_standard_footer) : ?>

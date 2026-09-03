@@ -1,7 +1,8 @@
 # Osada Fabryczna — motyw WordPress
 
-Motyw obsługuje interaktywną mapę Osady Fabrycznej, archiwum budynków,
-dwujęzyczność oraz rozbudowane strony pojedynczych zabytków.
+Motyw odpowiada za prezentację interaktywnej mapy Osady Fabrycznej, archiwum
+budynków oraz rozbudowanych stron pojedynczych zabytków. Model budynków i
+logikę dwujęzyczności dostarcza wtyczka `osada-core`.
 
 ## Najważniejsze pliki
 
@@ -14,7 +15,7 @@ dwujęzyczność oraz rozbudowane strony pojedynczych zabytków.
 - `header.php` — logo, menu, wyszukiwarka i przełącznik języka.
 - `footer.php` — wspólne wywołanie `wp_footer()`.
 - `footer-budynek.php` — stopka stron budynków.
-- `functions.php` — assety, menu, języki, reguły adresów i REST API mapy.
+- `functions.php` — assety, menu oraz prezentacyjna integracja mapy i języków.
 - `style.css` — style motywu.
 - `dist/assets/main.js` — mapa, markery, geolokalizacja i panele.
 - `dist/assets/site-menu.js` — menu główne i wyszukiwarka.
@@ -24,7 +25,8 @@ dwujęzyczność oraz rozbudowane strony pojedynczych zabytków.
 
 Typ wpisu `budynek` rejestruje wtyczka `osada-core`. Pola mapy obejmują m.in.
 współrzędne, `marker_icon`, `subtitle` oraz opis popupu.
-Mapa pobiera maksymalnie 50 budynków przez WordPress REST API.
+Definicje grup pól znajdują się w `osada-core/acf-json/` i są automatycznie
+wczytywane przez ACF. Mapa pobiera maksymalnie 70 budynków przez WordPress REST API.
 
 Strona pojedynczego budynku używa poniższych pól ACF. Wszystkie są opcjonalne —
 pusta sekcja nie wyświetli się ani w spisie treści.
@@ -63,8 +65,9 @@ Ikony są elementami stałego wyglądu i są podłączane automatycznie przez sz
 ## Języki
 
 Wersje polska i angielska są osobnymi wpisami połączonymi metadanymi
-`_osada_language` i `_osada_translation_id`. Motyw ma osobne lokalizacje menu
-`primary` oraz `primary_en`.
+`_osada_language` i `_osada_translation_id`. Metadane, panel edycji, filtrowanie
+zapytań oraz angielskie adresy obsługuje wtyczka `osada-core`. Motyw odpowiada
+za wygląd przełącznika i ma osobne lokalizacje menu `primary` oraz `primary_en`.
 
 Angielskie budynki i archiwum są dostępne pod `/eng/budynek/{slug}/`
 oraz `/eng/budynki/`. Przy sparowanym tłumaczeniu przełącznik języka prowadzi

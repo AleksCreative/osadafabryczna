@@ -1,6 +1,6 @@
 <?php
 get_header(); 
-$osada_language = function_exists('osadafabryczna_get_current_language') ? osadafabryczna_get_current_language() : 'pl';
+$osada_language = function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl';
 $osada_labels = function_exists('osadafabryczna_get_language_labels') ? osadafabryczna_get_language_labels($osada_language) : array();
 $osada_info_label = 'en' === $osada_language ? 'Information panel' : 'Panel informacyjny';
 $osada_info_close = 'en' === $osada_language ? 'Close information panel' : 'Zamknij panel informacyjny';

@@ -1,8 +1,8 @@
 <?php
 get_header();
-$osada_language = function_exists('osadafabryczna_get_current_language') ? osadafabryczna_get_current_language() : 'pl';
-$osada_back_url = 'en' === $osada_language && function_exists('osadafabryczna_get_english_front_page_url')
-    ? osadafabryczna_get_english_front_page_url()
+$osada_language = function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl';
+$osada_back_url = 'en' === $osada_language && function_exists('osada_core_get_english_front_page_url')
+    ? osada_core_get_english_front_page_url()
     : home_url('/');
 $osada_back_label = 'en' === $osada_language ? 'Back to map' : 'Powrót do mapy';
 $osada_toc_title = 'en' === $osada_language ? 'On this page' : 'Na tej stronie';

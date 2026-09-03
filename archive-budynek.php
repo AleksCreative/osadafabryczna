@@ -1,7 +1,7 @@
 <?php
 get_header();
 
-$osada_language = function_exists('osadafabryczna_get_current_language') ? osadafabryczna_get_current_language() : 'pl';
+$osada_language = function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl';
 $osada_archive_labels = 'en' === $osada_language
     ? array(
         'title'       => 'Buildings',

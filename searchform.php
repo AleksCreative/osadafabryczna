@@ -1,5 +1,5 @@
 <?php
-$osada_search_language = function_exists('osadafabryczna_get_current_language') ? osadafabryczna_get_current_language() : 'pl';
+$osada_search_language = function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl';
 $osada_search_placeholder = 'en' === $osada_search_language ? 'Search the website' : 'Szukaj na stronie';
 $osada_search_submit = 'en' === $osada_search_language ? 'Search' : 'Szukaj';
 ?>

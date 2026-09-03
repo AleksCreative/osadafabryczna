@@ -8,7 +8,7 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 <?php
-$osada_header_language = function_exists('osadafabryczna_get_current_language') ? osadafabryczna_get_current_language() : 'pl';
+$osada_header_language = function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl';
 $osada_search_label = 'en' === $osada_header_language ? 'Search' : 'Szukaj';
 ?>
 <header class="site-header">
@@ -29,7 +29,7 @@ $osada_search_label = 'en' === $osada_header_language ? 'Search' : 'Szukaj';
     <nav id="primary-menu" class="main-nav" aria-label="<?php esc_attr_e('Primary navigation', 'osadafabryczna'); ?>">
       <?php
         wp_nav_menu([
-          'theme_location' => function_exists('osadafabryczna_get_current_language') && 'en' === osadafabryczna_get_current_language() ? 'primary_en' : 'primary',
+          'theme_location' => function_exists('osada_core_get_current_language') && 'en' === osada_core_get_current_language() ? 'primary_en' : 'primary',
           'container' => false,
           'menu_class' => 'menu',
           'fallback_cb' => false
