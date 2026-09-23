@@ -725,7 +725,8 @@ body.admin-bar .leaflet-top.leaflet-left {
   background: var(--slide-panel-background);
   padding: 30px;
   box-shadow: 0 0 25px rgba(0,0,0,0.15);
-  z-index: 1000;
+  /* Keep the building panel above the fixed header on short desktop viewports. */
+  z-index: 1250;
   overflow: visible;
   transition: transform 0.35s ease;
   will-change: transform;
