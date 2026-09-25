@@ -1,38 +1,60 @@
-// Map center and overlay bounds
-const MAP_CENTER = [52.056438, 20.436555];
+// Centrum Osady używane w widoku startowym i przy centrowaniu mapy.
+const MAP_CENTER = [52.057082, 20.436703];
+// Granice geograficzne mapy ilustrowanej.
 const IMAGE_BOUNDS = [
-  [52.078133, 20.520637], // northeast
-  [52.033089, 20.370405]  // southwest
+  [52.078133, 20.520637], // północny wschód
+  [52.033089, 20.370405]  // południowy zachód
 ];
-const TARGET_HEIGHT = 150; // default max height for vertical-style icons
-const TARGET_WIDTH = 150; // default max width for horizontal/square-style icons
-const SQUARE_MAX_SIZE = 70;
-const HORIZONTAL_MAX_WIDTH = 80;
-const HORIZONTAL_MAX_HEIGHT = 150;
-const VERTICAL_MAX_WIDTH = 150;
-const VERTICAL_MAX_HEIGHT = 80;
-const DEFAULT_BUILDING_MARKER_WIDTH = 50;
-const MARKER_PADDING = 6; // small padding around each icon
-const ZOOM_STEP_FACTOR = 1.2; // scale factor per zoom level
-const MOBILE_PANEL_MARKER_GAP = 84;
-const EXTRA_PANEL_MARGIN = 8;
-const PANEL_MARKER_GAP_SCALE = 0.6;
-const ACTIVE_MARKER_SCALE = 1.12;
-const PANEL_MARKER_FLY_DURATION = 1.05;
-const PANEL_MARKER_FLY_TIMEOUT = 1300;
-const DESKTOP_POPUP_MARKER_GAP = 24;
-const DESKTOP_POPUP_MARKER_TARGET_Y_RATIO = 0.78;
-const USER_MARKER_Z_INDEX_OFFSET = 10000;
-const USER_MARKER_MOVE_DURATION = 700;
-const USER_MARKER_SNAP_DISTANCE_METERS = 120;
-const MAP_CONFIG = window.OsadaFabrycznaMap || {};
-const MAP_LABELS = MAP_CONFIG.labels || {};
-const MAP_ASSETS = MAP_CONFIG.assets || {};
+const TARGET_HEIGHT = 150; // Domyślna maksymalna wysokość pionowych ikon w pikselach.
+const TARGET_WIDTH = 150; // Domyślna maksymalna szerokość poziomych i kwadratowych ikon w pikselach.
+const SQUARE_MAX_SIZE = 70; // Maksymalny bok kwadratowej ikony budynku w pikselach.
+const HORIZONTAL_MAX_WIDTH = 80; // Maksymalna szerokość poziomej ikony budynku w pikselach.
+const HORIZONTAL_MAX_HEIGHT = 150; // Maksymalna wysokość poziomej ikony budynku w pikselach.
+const VERTICAL_MAX_WIDTH = 150; // Maksymalna szerokość pionowej ikony budynku w pikselach.
+const VERTICAL_MAX_HEIGHT = 80; // Maksymalna wysokość pionowej ikony budynku w pikselach.
+const DEFAULT_BUILDING_MARKER_WIDTH = 50; // Szerokość zastępczej ikony budynku w pikselach.
+const MARKER_PADDING = 6; // Wewnętrzny odstęp wokół ikony znacznika w pikselach.
+const ZOOM_STEP_FACTOR = 1.2; // Skala zmiany wielkości ikon pomiędzy poziomami zoomu.
+const MOBILE_PANEL_MARKER_GAP = 84; // Odstęp znacznika od panelu budynku na telefonie w pikselach.
+const EXTRA_PANEL_MARGIN = 8; // Dodatkowy margines panelu budynku w pikselach.
+const PANEL_MARKER_GAP_SCALE = 0.6; // Mnożnik odstępu znacznika od otwartego panelu.
+const ACTIVE_MARKER_SCALE = 1.2; // Powiększenie aktywnego znacznika budynku.
+const PANEL_MARKER_FLY_DURATION = 1.2; // Czas lotu do znacznika po otwarciu panelu w sekundach.
+const PANEL_MARKER_FLY_TIMEOUT = 1300; // Awaryjny limit czasu lotu do znacznika w milisekundach.
+const DESKTOP_POPUP_MARKER_GAP = 24; // Odstęp między znacznikiem a popupem na komputerze w pikselach.
+const DESKTOP_POPUP_MARKER_TARGET_Y_RATIO = 0.78; // Docelowa pionowa pozycja znacznika przy otwartym popupie.
+const USER_MARKER_Z_INDEX_OFFSET = 10000; // Priorytet wyświetlania znacznika użytkownika nad pozostałymi ikonami.
+const USER_MARKER_MOVE_DURATION = 900; // Czas animacji przesunięcia znacznika użytkownika w milisekundach.
+const USER_MARKER_SNAP_DISTANCE_METERS = 120; // Odległość, poniżej której znacznik użytkownika przeskakuje bez animacji.
+const USER_MARKER_SIZE = 60; // Rozmiar znacznika lokalizacji użytkownika w pikselach.
+const ILLUSTRATED_MARKER_EDGE_PADDING = 40; // Bezpieczny odstęp znacznika użytkownika od krawędzi ilustracji w pikselach.
+const OSM_MIN_ZOOM = 7; // Najdalszy dozwolony poziom oddalenia mapy współczesnej.
+const SETTLEMENT_OVERVIEW_MAX_ZOOM = 11; // Najbliższy zoom, przy którym widać zbiorczy znacznik Osady.
+const USER_LOCATION_FOCUS_ZOOM = 16.5; // Zoom używany przy centrowaniu mapy na użytkowniku.
+const SETTLEMENT_FOCUS_ZOOM = 16.5; // Zoom używany po kliknięciu zbiorczego znacznika Osady.
+const ILLUSTRATED_SWITCH_ZOOM = 16.5; // Zoom po powrocie z odległego miejsca na mapę ilustrowaną.
+const DISTANT_LOCATION_NOTICE_METERS = 300000; // Odległość uruchamiająca komunikat o dalekiej lokalizacji w metrach.
+const MAP_MODE_FLY_DURATION = 1.3; // Całkowity czas lotu przy zmianie mapy w sekundach.
+const MAP_ILLUSTRATED_REVEAL_LEAD_TIME = 0.25; // Ile sekund przed końcem lotu zaczyna pojawiać się ilustracja.
+const MAP_LAYER_FADE_DURATION = 500; // Czas przenikania mapy ilustrowanej w milisekundach.
+const MAP_LAYER_LOAD_TIMEOUT = 900; // Maksymalny czas oczekiwania na kafelki ilustracji przed przenikaniem.
+const ILLUSTRATED_OVERLAY_OPACITY = 0.7; // Docelowa przezroczystość warstwy ilustracji.
+const ILLUSTRATED_LABEL_OPACITY = 0.95; // Docelowa przezroczystość nazw ulic nad ilustracją.
+const EDGE_GESTURE_MIN_DISTANCE = 32; // Minimalna długość gestu przy krawędzi uruchamiającego podpowiedź w pikselach.
+const EDGE_NOTICE_COOLDOWN = 8000; // Minimalny odstęp między podświetleniami przełącznika w milisekundach.
+const MAP_NOTICE_DURATION = 9000; // Czas wyświetlania komunikatu mapy w milisekundach.
+const MAP_SWITCH_GUIDANCE_STORAGE_KEY = 'osada-map-switch-guidance-seen'; // Klucz zapamiętujący pokazanie podpowiedzi w sesji.
+const MAP_CONFIG = window.OsadaFabrycznaMap || {}; // Konfiguracja mapy przekazana przez WordPress.
+const MAP_LABELS = MAP_CONFIG.labels || {}; // Przetłumaczone etykiety interfejsu mapy.
+const MAP_ASSETS = MAP_CONFIG.assets || {}; // Adresy plików graficznych i kafelków mapy.
+// Rozszerzenia pozwalające innym modułom uzupełniać zachowanie mapy.
 const MAP_EXTENSIONS = Array.isArray(window.OsadaFabrycznaMapExtensions)
   ? window.OsadaFabrycznaMapExtensions
   : [];
+// Zastępcza ikona używana, gdy budynek nie ma własnego znacznika.
 const DEFAULT_BUILDING_MARKER_URL = MAP_ASSETS.defaultBuildingMarker ||
   '/wp-content/themes/osadafabryczna/dist/assets/ikona-budynku.png';
+// Informacja o systemowym ustawieniu ograniczającym animacje.
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let activeBuildingMarker = null;
 let activePanelMarker = null;
@@ -82,7 +104,7 @@ notifyMapExtensions('init', {
 const markers = [];
 
 // Initialize map
-const initialZoom = 17;
+const initialZoom = 16.5;
 const map = L.map('map', {
   center: MAP_CENTER,
   zoom: initialZoom,
@@ -91,8 +113,8 @@ const map = L.map('map', {
   maxZoom: 18,
   maxBounds: IMAGE_BOUNDS,
   maxBoundsViscosity: 1,
-  zoomSnap: 1,
-  zoomDelta: 1,
+  zoomSnap: 0.5,
+  zoomDelta: 0.5,
   wheelPxPerZoomLevel: 80
 });
 
@@ -146,9 +168,18 @@ const overlay = L.tileLayer(
 
 // Set initial view without forcing the map to fit the entire overlay bounds,
 // so the configured initial zoom level is respected.
+const imageBounds = L.latLngBounds(IMAGE_BOUNDS);
+const illustratedMinZoom = Math.max(14, map.getBoundsZoom(imageBounds, false));
+
 map.setView(MAP_CENTER, initialZoom);
-map.setMaxBounds(IMAGE_BOUNDS);
-map.setMinZoom(Math.max(14, map.getBoundsZoom(IMAGE_BOUNDS, false)));
+map.setMaxBounds(imageBounds);
+map.setMinZoom(illustratedMinZoom);
+
+let overlayVisible = true;
+let mapModeTransitioning = false;
+let mapModeFlightTimeout = null;
+let mapModeRevealTimeout = null;
+let mapLayerFadeTimeout = null;
 
 const markerClusterGroup = typeof L.markerClusterGroup === 'function'
   ? L.markerClusterGroup({
@@ -156,7 +187,7 @@ const markerClusterGroup = typeof L.markerClusterGroup === 'function'
       spiderfyOnMaxZoom: true,
       disableClusteringAtZoom: 17,
       removeOutsideVisibleBounds: true,
-      maxClusterRadius: 80
+      maxClusterRadius: 60
     })
   : null;
 
@@ -172,15 +203,53 @@ if (markerClusterGroup) {
   });
 }
 
+const settlementMarkerContent = document.createElement('div');
+const settlementMarkerImage = document.createElement('img');
+const settlementMarkerLabel = document.createElement('span');
+
+settlementMarkerContent.className = 'settlement-overview-marker__content';
+settlementMarkerImage.className = 'settlement-overview-marker__image';
+settlementMarkerImage.src = MAP_ASSETS.settlementMarker || DEFAULT_BUILDING_MARKER_URL;
+settlementMarkerImage.alt = '';
+settlementMarkerImage.setAttribute('aria-hidden', 'true');
+settlementMarkerLabel.className = 'settlement-overview-marker__label';
+settlementMarkerLabel.textContent = MAP_LABELS.settlementName || 'Osada Fabryczna';
+settlementMarkerContent.append(settlementMarkerImage, settlementMarkerLabel);
+
+const settlementMarker = L.marker(MAP_CENTER, {
+  icon: L.divIcon({
+    className: 'settlement-overview-marker',
+    html: settlementMarkerContent,
+    iconSize: [190, 88],
+    iconAnchor: [95, 88]
+  }),
+  keyboard: true,
+  title: MAP_LABELS.showSettlement || 'Pokaż Osadę Fabryczną',
+  zIndexOffset: 9000
+});
+
+settlementMarker.on('click', () => {
+  map.flyTo(MAP_CENTER, SETTLEMENT_FOCUS_ZOOM, {
+    animate: !prefersReducedMotion,
+    duration: prefersReducedMotion ? 0 : 0.8
+  });
+});
+
 // Locate user
 let geolocationEnabled = false;
 const geolocationToggle = document.getElementById('geolocation-toggle');
+let centerLocationButton = null;
+let centerOnNextLocation = false;
 let geolocationWatchId = null;
+let lastUserLatLng = null;
+let outsideLocationNeedsFocus = false;
+let outsideLocationNoticeShown = false;
+let distantOverviewNoticeShown = false;
 const userMarker = L.marker([0,0], {
   icon: L.icon({
     iconUrl: MAP_ASSETS.userLocation || '/wp-content/themes/osadafabryczna/dist/assets/user-location.gif',
-    iconSize: [50, 50],
-    iconAnchor: [25, 25],
+    iconSize: [USER_MARKER_SIZE, USER_MARKER_SIZE],
+    iconAnchor: [USER_MARKER_SIZE / 2, USER_MARKER_SIZE / 2],
     className: 'user-location-marker'
   }),
   zIndexOffset: USER_MARKER_Z_INDEX_OFFSET
@@ -188,20 +257,25 @@ const userMarker = L.marker([0,0], {
 let userMarkerAnimationFrame = null;
 
 function updateGeolocationButtonState(isEnabled, isSupported = true) {
-  if (!geolocationToggle) {
-    return;
+  if (geolocationToggle) {
+    geolocationToggle.classList.toggle('is-active', isEnabled);
+    geolocationToggle.setAttribute('aria-pressed', String(isEnabled));
+    geolocationToggle.title = isSupported ? '' : (MAP_LABELS.geolocationUnsupported || 'Geolocation is not supported in this browser.');
+    geolocationToggle.disabled = !isSupported;
+
+    const label = geolocationToggle.querySelector('.geolocation-toggle__label');
+    if (label) {
+      label.textContent = isEnabled
+        ? (MAP_LABELS.locationEnabled || 'Lokalizacja: włączona')
+        : (MAP_LABELS.enableLocation || 'Włącz lokalizację');
+    }
   }
 
-  geolocationToggle.classList.toggle('is-active', isEnabled);
-  geolocationToggle.setAttribute('aria-pressed', String(isEnabled));
-  geolocationToggle.title = isSupported ? '' : (MAP_LABELS.geolocationUnsupported || 'Geolocation is not supported in this browser.');
-  geolocationToggle.disabled = !isSupported;
-
-  const label = geolocationToggle.querySelector('.geolocation-toggle__label');
-  if (label) {
-    label.textContent = isEnabled
-      ? (MAP_LABELS.locationEnabled || 'Lokalizacja: włączona')
-      : (MAP_LABELS.enableLocation || 'Włącz lokalizację');
+  if (centerLocationButton) {
+    centerLocationButton.disabled = !isSupported;
+    centerLocationButton.title = isSupported
+      ? (MAP_LABELS.centerLocation || 'Wyśrodkuj na mojej lokalizacji')
+      : (MAP_LABELS.geolocationUnsupported || 'Geolokalizacja nie jest obsługiwana w tej przeglądarce.');
   }
 }
 
@@ -210,6 +284,10 @@ function isGeolocationSupported() {
 }
 
 function handleUserLocation(latlng, position) {
+  const isFirstLocationUpdate = !lastUserLatLng;
+  const shouldCenterOnArrival = centerOnNextLocation;
+  lastUserLatLng = latlng;
+
   if (!map.hasLayer(userMarker)) {
     userMarker.setLatLng(latlng);
     userMarker.addTo(map);
@@ -221,11 +299,33 @@ function handleUserLocation(latlng, position) {
 
   moveUserMarkerTo(latlng);
   notifyMapExtensions('handlePosition', position);
+
+  if (!isLocationMarkerSafelyInsideIllustration(latlng, getIllustratedZoom(map.getZoom()))) {
+    if (overlayVisible && (!outsideLocationNoticeShown || shouldCenterOnArrival)) {
+      outsideLocationNeedsFocus = true;
+      outsideLocationNoticeShown = true;
+      promptContemporaryMapSwitch(
+        MAP_LABELS.outsideIllustratedMap
+          || 'Twoja lokalizacja znajduje się poza mapą ilustrowaną. Przełącz na mapę współczesną, aby ją zobaczyć.'
+      );
+    } else if (!overlayVisible && isFirstLocationUpdate && !shouldCenterOnArrival) {
+      outsideLocationNeedsFocus = true;
+      focusMapOnOutsideLocation();
+    }
+  }
+
+  updateSettlementMarkerVisibility();
+
+  if (shouldCenterOnArrival) {
+    focusMapOnUser();
+  }
 }
 
 function handleGeolocationError(error) {
   const message = error?.message || 'Nie udalo sie pobrac lokalizacji.';
   console.warn('Geolocation error:', message);
+  centerOnNextLocation = false;
+  centerLocationButton?.classList.remove('is-waiting');
 
   if (geolocationEnabled) {
     setGeolocationEnabled(false);
@@ -263,6 +363,11 @@ function startGeolocation() {
 
 function stopGeolocation() {
   geolocationEnabled = false;
+  centerOnNextLocation = false;
+  lastUserLatLng = null;
+  outsideLocationNeedsFocus = false;
+  outsideLocationNoticeShown = false;
+  distantOverviewNoticeShown = false;
   notifyMapExtensions('setLocationEnabled', false);
 
   if (geolocationWatchId !== null && 'geolocation' in navigator) {
@@ -281,6 +386,8 @@ function stopGeolocation() {
     userMarker.remove();
   }
 
+  centerLocationButton?.classList.remove('is-waiting', 'is-centered');
+  updateSettlementMarkerVisibility();
   updateGeolocationButtonState(false, isGeolocationSupported());
 }
 
@@ -363,15 +470,330 @@ if (geolocationToggle) {
 
 updateGeolocationButtonState(false, isGeolocationSupported());
 
-let overlayVisible = true;
 const overlayToggle = document.createElement('button');
+const mapModeNotice = document.createElement('div');
+const mapModeNoticeText = document.createElement('span');
+const mapModeNoticeSwitch = document.createElement('button');
+const mapModeNoticeClose = document.createElement('button');
+let mapModeNoticeTimeout = null;
+let mapModeNoticeAction = null;
+let mapToggleAttentionTimeout = null;
+let mapSwitchGuidanceAcknowledged = false;
+
+try {
+  mapSwitchGuidanceAcknowledged = sessionStorage.getItem(MAP_SWITCH_GUIDANCE_STORAGE_KEY) === '1';
+} catch (error) {
+  console.warn('Map guidance state is unavailable:', error);
+}
+
+mapModeNotice.className = 'map-mode-notice';
+mapModeNotice.hidden = true;
+
+mapModeNoticeText.className = 'map-mode-notice__text';
+mapModeNoticeText.setAttribute('role', 'status');
+mapModeNoticeText.setAttribute('aria-live', 'polite');
+
+mapModeNoticeSwitch.className = 'map-mode-notice__switch';
+mapModeNoticeSwitch.type = 'button';
+mapModeNoticeSwitch.textContent = MAP_LABELS.contemporaryMap || 'Mapa współczesna';
+
+mapModeNoticeClose.className = 'map-mode-notice__close';
+mapModeNoticeClose.type = 'button';
+mapModeNoticeClose.textContent = '×';
+mapModeNoticeClose.setAttribute('aria-label', MAP_LABELS.dismissNotice || 'Zamknij komunikat');
+
+mapModeNotice.append(mapModeNoticeText, mapModeNoticeSwitch, mapModeNoticeClose);
+document.body.appendChild(mapModeNotice);
+
+function hideMapModeNotice() {
+  if (mapModeNoticeTimeout) {
+    clearTimeout(mapModeNoticeTimeout);
+    mapModeNoticeTimeout = null;
+  }
+
+  mapModeNotice.hidden = true;
+  mapModeNoticeAction = null;
+}
+
+function showMapModeNotice(message, options = {}) {
+  const {
+    allowOnContemporary = false,
+    actionLabel = MAP_LABELS.contemporaryMap || 'Mapa współczesna',
+    onAction = () => setMapMode(false)
+  } = options;
+
+  if (!message || (!allowOnContemporary && !overlayVisible)) {
+    return;
+  }
+
+  mapModeNoticeText.textContent = message;
+  mapModeNoticeAction = typeof onAction === 'function' ? onAction : null;
+  mapModeNoticeSwitch.hidden = !mapModeNoticeAction;
+  mapModeNoticeSwitch.textContent = actionLabel;
+  mapModeNotice.hidden = false;
+
+  if (mapModeNoticeTimeout) {
+    clearTimeout(mapModeNoticeTimeout);
+  }
+
+  mapModeNoticeTimeout = setTimeout(hideMapModeNotice, MAP_NOTICE_DURATION);
+}
+
+function acknowledgeMapSwitchGuidance() {
+  mapSwitchGuidanceAcknowledged = true;
+
+  try {
+    sessionStorage.setItem(MAP_SWITCH_GUIDANCE_STORAGE_KEY, '1');
+  } catch (error) {
+    console.warn('Map guidance state could not be saved:', error);
+  }
+}
+
+function highlightContemporaryMapButton() {
+  if (!overlayVisible) {
+    return;
+  }
+
+  if (mapToggleAttentionTimeout) {
+    clearTimeout(mapToggleAttentionTimeout);
+  }
+
+  overlayToggle.classList.remove('needs-attention');
+  void overlayToggle.offsetWidth;
+  overlayToggle.classList.add('needs-attention');
+  mapToggleAttentionTimeout = setTimeout(() => {
+    overlayToggle.classList.remove('needs-attention');
+    mapToggleAttentionTimeout = null;
+  }, 2200);
+}
+
+function promptContemporaryMapSwitch(message) {
+  highlightContemporaryMapButton();
+
+  if (!mapSwitchGuidanceAcknowledged) {
+    showMapModeNotice(message, { onAction: null });
+  }
+}
+
+function focusMapOnOutsideLocation() {
+  if (!lastUserLatLng || isLocationMarkerSafelyInsideIllustration(
+    lastUserLatLng,
+    getIllustratedZoom(map.getZoom())
+  )) {
+    outsideLocationNeedsFocus = false;
+    return;
+  }
+
+  const distanceFromSettlement = lastUserLatLng.distanceTo(L.latLng(MAP_CENTER));
+  const locationBounds = L.latLngBounds(IMAGE_BOUNDS);
+  locationBounds.extend(lastUserLatLng);
+  map.fitBounds(locationBounds, {
+    padding: [60, 60],
+    maxZoom: 15,
+    animate: !prefersReducedMotion
+  });
+  outsideLocationNeedsFocus = false;
+
+  if (distanceFromSettlement >= DISTANT_LOCATION_NOTICE_METERS && !distantOverviewNoticeShown) {
+    distantOverviewNoticeShown = true;
+    showMapModeNotice(
+      MAP_LABELS.distantLocationOverview
+        || 'Mapa została oddalona, aby pokazać Twoją lokalizację i Osadę Fabryczną w Żyrardowie.',
+      {
+        allowOnContemporary: true,
+        actionLabel: MAP_LABELS.myLocation || 'Moja lokalizacja',
+        onAction: focusMapOnUser
+      }
+    );
+  }
+}
+
+function focusMapOnUser() {
+  if (!isGeolocationSupported()) {
+    updateGeolocationButtonState(false, false);
+    return;
+  }
+
+  hideMapModeNotice();
+
+  if (!lastUserLatLng) {
+    centerOnNextLocation = true;
+    centerLocationButton?.classList.add('is-waiting');
+
+    if (!geolocationEnabled) {
+      startGeolocation();
+    }
+    return;
+  }
+
+  centerOnNextLocation = false;
+  centerLocationButton?.classList.remove('is-waiting');
+
+  if (overlayVisible && !isLocationMarkerSafelyInsideIllustration(
+    lastUserLatLng,
+    getIllustratedZoom(map.getZoom())
+  )) {
+    outsideLocationNeedsFocus = true;
+    outsideLocationNoticeShown = true;
+    promptContemporaryMapSwitch(
+      MAP_LABELS.outsideIllustratedMap
+        || 'Twoja lokalizacja znajduje się poza mapą ilustrowaną. Przełącz na mapę współczesną, aby ją zobaczyć.'
+    );
+    return;
+  }
+
+  map.flyTo(lastUserLatLng, USER_LOCATION_FOCUS_ZOOM, {
+    animate: !prefersReducedMotion,
+    duration: prefersReducedMotion ? 0 : 0.8
+  });
+}
+
+function isUserOutsideIllustratedMap() {
+  return Boolean(
+    lastUserLatLng
+      && !isLocationMarkerSafelyInsideIllustration(
+        lastUserLatLng,
+        getIllustratedZoom(map.getZoom())
+      )
+  );
+}
+
+function shouldShowSettlementOverviewMarker() {
+  if (overlayVisible) {
+    return false;
+  }
+
+  return map.getZoom() <= SETTLEMENT_OVERVIEW_MAX_ZOOM
+    || (isUserOutsideIllustratedMap() && !imageBounds.contains(map.getCenter()));
+}
+
+function setBuildingMarkersVisible(isVisible) {
+  if (markerClusterGroup) {
+    if (isVisible && !map.hasLayer(markerClusterGroup)) {
+      map.addLayer(markerClusterGroup);
+    } else if (!isVisible && map.hasLayer(markerClusterGroup)) {
+      map.removeLayer(markerClusterGroup);
+    }
+    return;
+  }
+
+  markers.forEach(marker => {
+    if (isVisible && !map.hasLayer(marker)) {
+      marker.addTo(map);
+    } else if (!isVisible && map.hasLayer(marker)) {
+      marker.remove();
+    }
+  });
+}
+
+function updateSettlementMarkerVisibility() {
+  const showSettlementMarker = shouldShowSettlementOverviewMarker();
+
+  setBuildingMarkersVisible(!showSettlementMarker);
+
+  if (showSettlementMarker && !map.hasLayer(settlementMarker)) {
+    settlementMarker.addTo(map);
+  } else if (!showSettlementMarker && map.hasLayer(settlementMarker)) {
+    settlementMarker.remove();
+  }
+}
+
+function updateCenterLocationButtonState() {
+  if (!centerLocationButton) {
+    return;
+  }
+
+  const isCentered = Boolean(
+    lastUserLatLng
+      && map.getZoom() >= USER_LOCATION_FOCUS_ZOOM - 1
+      && map.getCenter().distanceTo(lastUserLatLng) <= 75
+  );
+
+  centerLocationButton.classList.toggle('is-centered', isCentered);
+}
+
+function getIllustratedZoom(zoom) {
+  return Math.max(illustratedMinZoom, Math.min(map.getMaxZoom(), zoom));
+}
+
+function isLocationMarkerSafelyInsideIllustration(latlng, zoom) {
+  if (!latlng) {
+    return false;
+  }
+
+  const markerRadius = USER_MARKER_SIZE / 2;
+  const safePadding = markerRadius + ILLUSTRATED_MARKER_EDGE_PADDING;
+  const northWest = map.project(imageBounds.getNorthWest(), zoom);
+  const southEast = map.project(imageBounds.getSouthEast(), zoom);
+  const locationPoint = map.project(latlng, zoom);
+
+  return locationPoint.x >= northWest.x + safePadding
+    && locationPoint.x <= southEast.x - safePadding
+    && locationPoint.y >= northWest.y + safePadding
+    && locationPoint.y <= southEast.y - safePadding;
+}
 
 function updateOverlayToggleState() {
-  overlayToggle.textContent = MAP_LABELS.changeMap || 'Zmień mapę';
-  overlayToggle.setAttribute('aria-pressed', String(overlayVisible));
+  const label = overlayVisible
+    ? (MAP_LABELS.contemporaryMap || 'Mapa współczesna')
+    : (MAP_LABELS.illustratedMap || 'Mapa ilustrowana');
+  const ariaLabel = overlayVisible
+    ? (MAP_LABELS.showContemporaryMap || 'Pokaż mapę współczesną')
+    : (MAP_LABELS.showIllustratedMap || 'Pokaż mapę ilustrowaną');
+
+  overlayToggle.textContent = label;
+  overlayToggle.setAttribute('aria-label', ariaLabel);
+  overlayToggle.dataset.mapMode = overlayVisible ? 'illustrated' : 'contemporary';
+}
+
+function setMapModeTransitionState(isTransitioning) {
+  mapModeTransitioning = isTransitioning;
+  overlayToggle.disabled = isTransitioning;
+  overlayToggle.classList.toggle('is-transitioning', isTransitioning);
+}
+
+function setLayerOpacityTransition(layer, enabled) {
+  const container = typeof layer.getContainer === 'function'
+    ? layer.getContainer()
+    : null;
+
+  if (container) {
+    container.style.transition = enabled
+      ? `opacity ${MAP_LAYER_FADE_DURATION}ms ease-in-out`
+      : '';
+  }
+}
+
+function clearMapLayerTransitions() {
+  [overlay, streetLabelTiles, osmTiles].forEach(layer => {
+    setLayerOpacityTransition(layer, false);
+  });
+  mapElement.classList.remove('is-revealing-illustrated-map');
+}
+
+function completeMapModeTransition() {
+  if (mapModeFlightTimeout) {
+    clearTimeout(mapModeFlightTimeout);
+    mapModeFlightTimeout = null;
+  }
+
+  if (mapModeRevealTimeout) {
+    clearTimeout(mapModeRevealTimeout);
+    mapModeRevealTimeout = null;
+  }
+
+  if (mapLayerFadeTimeout) {
+    clearTimeout(mapLayerFadeTimeout);
+    mapLayerFadeTimeout = null;
+  }
+
+  clearMapLayerTransitions();
+  setMapModeTransitionState(false);
 }
 
 function updateMapLayerVisibility() {
+  clearMapLayerTransitions();
+
   if (overlayVisible) {
     if (!map.hasLayer(overlay)) {
       overlay.addTo(map);
@@ -381,7 +803,8 @@ function updateMapLayerVisibility() {
       streetLabelTiles.addTo(map);
     }
 
-    streetLabelTiles.setOpacity(0.95);
+    overlay.setOpacity(ILLUSTRATED_OVERLAY_OPACITY);
+    streetLabelTiles.setOpacity(ILLUSTRATED_LABEL_OPACITY);
     osmTiles.setOpacity(0);
   } else {
     if (map.hasLayer(overlay)) {
@@ -392,6 +815,216 @@ function updateMapLayerVisibility() {
     osmTiles.setOpacity(1);
   }
 }
+
+function revealIllustratedMap() {
+  if (prefersReducedMotion) {
+    updateMapLayerVisibility();
+    completeMapModeTransition();
+    return;
+  }
+
+  let fadeStarted = false;
+  let layerLoadTimeout = null;
+
+  overlay.setOpacity(0);
+  streetLabelTiles.setOpacity(0);
+  osmTiles.setOpacity(1);
+
+  if (!map.hasLayer(overlay)) {
+    overlay.addTo(map);
+  }
+
+  if (!map.hasLayer(streetLabelTiles)) {
+    streetLabelTiles.addTo(map);
+  }
+
+  mapElement.classList.add('is-revealing-illustrated-map');
+
+  const startFade = () => {
+    if (fadeStarted) {
+      return;
+    }
+
+    fadeStarted = true;
+    overlay.off('load', startFade);
+
+    if (layerLoadTimeout) {
+      clearTimeout(layerLoadTimeout);
+      layerLoadTimeout = null;
+    }
+
+    [overlay, streetLabelTiles, osmTiles].forEach(layer => {
+      setLayerOpacityTransition(layer, true);
+      const container = layer.getContainer?.();
+      if (container) {
+        void container.offsetWidth;
+      }
+    });
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        overlay.setOpacity(ILLUSTRATED_OVERLAY_OPACITY);
+        streetLabelTiles.setOpacity(ILLUSTRATED_LABEL_OPACITY);
+        osmTiles.setOpacity(0);
+
+        mapLayerFadeTimeout = setTimeout(
+          completeMapModeTransition,
+          MAP_LAYER_FADE_DURATION + 80
+        );
+      });
+    });
+  };
+
+  if (typeof overlay.isLoading === 'function' && overlay.isLoading()) {
+    overlay.once('load', startFade);
+    layerLoadTimeout = setTimeout(startFade, MAP_LAYER_LOAD_TIMEOUT);
+  } else {
+    window.requestAnimationFrame(startFade);
+  }
+}
+
+function activateIllustratedMap(targetCenter, targetZoom, shouldFade) {
+  overlayVisible = true;
+  map.setMaxBounds(null);
+  map.options.maxBoundsViscosity = 1;
+  map.setView(targetCenter, targetZoom, { animate: false });
+  map.setMinZoom(illustratedMinZoom);
+  map.setMaxBounds(imageBounds);
+
+  updateOverlayToggleState();
+  updateSettlementMarkerVisibility();
+  updateCenterLocationButtonState();
+
+  if (shouldFade) {
+    revealIllustratedMap();
+  } else {
+    updateMapLayerVisibility();
+    completeMapModeTransition();
+  }
+}
+
+function flyToIllustratedMap(targetCenter, targetZoom) {
+  let flightFinished = false;
+
+  const beginReveal = () => {
+    if (overlayVisible) {
+      return;
+    }
+
+    mapModeRevealTimeout = null;
+    overlayVisible = true;
+    updateOverlayToggleState();
+    updateSettlementMarkerVisibility();
+    updateCenterLocationButtonState();
+    revealIllustratedMap();
+  };
+
+  const finishFlight = () => {
+    if (flightFinished) {
+      return;
+    }
+
+    flightFinished = true;
+    map.off('moveend', finishFlight);
+
+    if (mapModeFlightTimeout) {
+      clearTimeout(mapModeFlightTimeout);
+      mapModeFlightTimeout = null;
+    }
+
+    if (mapModeRevealTimeout) {
+      clearTimeout(mapModeRevealTimeout);
+      mapModeRevealTimeout = null;
+    }
+
+    beginReveal();
+    map.options.maxBoundsViscosity = 1;
+    map.setMinZoom(illustratedMinZoom);
+    map.setMaxBounds(imageBounds);
+    updateSettlementMarkerVisibility();
+    updateCenterLocationButtonState();
+  };
+
+  map.stop();
+  map.once('moveend', finishFlight);
+  map.flyTo(targetCenter, targetZoom, {
+    animate: true,
+    duration: MAP_MODE_FLY_DURATION,
+    easeLinearity: 0.22
+  });
+  mapModeRevealTimeout = setTimeout(
+    beginReveal,
+    Math.max(0, MAP_MODE_FLY_DURATION - MAP_ILLUSTRATED_REVEAL_LEAD_TIME) * 1000
+  );
+  mapModeFlightTimeout = setTimeout(
+    finishFlight,
+    MAP_MODE_FLY_DURATION * 1000 + 500
+  );
+}
+
+function setMapMode(showIllustratedMap) {
+  if (mapModeTransitioning || overlayVisible === showIllustratedMap) {
+    return;
+  }
+
+  const currentCenter = map.getCenter();
+  const currentZoom = map.getZoom();
+  const centerIsInsideIllustration = imageBounds.contains(currentCenter);
+  const retainedIllustratedZoom = getIllustratedZoom(currentZoom);
+  const userMarkerIsInsideIllustration = isLocationMarkerSafelyInsideIllustration(
+    lastUserLatLng,
+    retainedIllustratedZoom
+  );
+  hideMapModeNotice();
+
+  if (showIllustratedMap) {
+    const targetCenter = centerIsInsideIllustration
+      ? currentCenter
+      : (userMarkerIsInsideIllustration ? lastUserLatLng : MAP_CENTER);
+    const targetZoom = centerIsInsideIllustration || userMarkerIsInsideIllustration
+      ? retainedIllustratedZoom
+      : ILLUSTRATED_SWITCH_ZOOM;
+    const shouldFlyToSettlement = !centerIsInsideIllustration
+      && !userMarkerIsInsideIllustration
+      && !prefersReducedMotion;
+
+    setMapModeTransitionState(true);
+
+    if (shouldFlyToSettlement) {
+      flyToIllustratedMap(targetCenter, targetZoom);
+    } else {
+      activateIllustratedMap(targetCenter, targetZoom, true);
+    }
+    return;
+  }
+
+  overlayVisible = false;
+  map.setMaxBounds(null);
+  map.options.maxBoundsViscosity = 0;
+  map.setMinZoom(OSM_MIN_ZOOM);
+
+  if (outsideLocationNeedsFocus) {
+    focusMapOnOutsideLocation();
+  } else {
+    map.setView(currentCenter, currentZoom, { animate: false });
+  }
+
+  updateMapLayerVisibility();
+  updateOverlayToggleState();
+  updateSettlementMarkerVisibility();
+  updateCenterLocationButtonState();
+}
+
+mapModeNoticeSwitch.addEventListener('click', () => {
+  const action = mapModeNoticeAction;
+  hideMapModeNotice();
+
+  if (action) {
+    action();
+  }
+});
+
+mapModeNoticeClose.addEventListener('click', hideMapModeNotice);
 
 function setupMapControlMenu() {
   const mapControlMenu = L.control({
@@ -418,7 +1051,6 @@ function setupMapControlMenu() {
 
   overlayToggle.type = 'button';
   overlayToggle.className = 'map-control-button map-overlay-toggle';
-  overlayToggle.setAttribute('aria-label', MAP_LABELS.changeMapAria || 'Zmień mapę');
   updateOverlayToggleState();
 
   overlayToggle.addEventListener('pointerdown', event => {
@@ -429,9 +1061,9 @@ function setupMapControlMenu() {
     event.preventDefault();
     event.stopPropagation();
 
-    overlayVisible = !overlayVisible;
-    updateMapLayerVisibility();
-    updateOverlayToggleState();
+    acknowledgeMapSwitchGuidance();
+    overlayToggle.classList.remove('needs-attention');
+    setMapMode(!overlayVisible);
   });
 
     container.appendChild(overlayToggle);
@@ -443,6 +1075,163 @@ function setupMapControlMenu() {
 }
 
 setupMapControlMenu();
+
+function setupCenterLocationControl() {
+  const centerLocationControl = L.control({
+    position: 'topright'
+  });
+
+  centerLocationControl.onAdd = function () {
+    const container = L.DomUtil.create('div', 'leaflet-control center-location-control');
+    centerLocationButton = L.DomUtil.create('button', 'center-location-control__button', container);
+    centerLocationButton.type = 'button';
+    centerLocationButton.setAttribute(
+      'aria-label',
+      MAP_LABELS.centerLocation || 'Wyśrodkuj na mojej lokalizacji'
+    );
+    centerLocationButton.innerHTML = [
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
+      '<circle cx="12" cy="12" r="5"></circle>',
+      '<path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>',
+      '<circle class="center-location-control__dot" cx="12" cy="12" r="1.5"></circle>',
+      '</svg>'
+    ].join('');
+
+    if (typeof L.DomEvent?.disableClickPropagation === 'function') {
+      L.DomEvent.disableClickPropagation(container);
+    }
+
+    if (typeof L.DomEvent?.disableScrollPropagation === 'function') {
+      L.DomEvent.disableScrollPropagation(container);
+    }
+
+    centerLocationButton.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      focusMapOnUser();
+    });
+
+    return container;
+  };
+
+  centerLocationControl.addTo(map);
+  updateGeolocationButtonState(geolocationEnabled, isGeolocationSupported());
+  updateCenterLocationButtonState();
+}
+
+setupCenterLocationControl();
+
+let mapPointerStart = null;
+let illustratedDragActive = false;
+let lastEdgeNoticeAt = 0;
+
+function isMapInteractionTarget(target) {
+  return target instanceof Element && Boolean(target.closest(
+    '.leaflet-control, #slide-panel, #info-panel, #info-panel-toggle'
+  ));
+}
+
+function getIllustratedEdgeState() {
+  const visibleBounds = map.getBounds();
+  const latitudeTolerance = Math.max(0.00002, (visibleBounds.getNorth() - visibleBounds.getSouth()) * 0.015);
+  const longitudeTolerance = Math.max(0.00002, (visibleBounds.getEast() - visibleBounds.getWest()) * 0.015);
+
+  return {
+    north: visibleBounds.getNorth() >= imageBounds.getNorth() - latitudeTolerance,
+    south: visibleBounds.getSouth() <= imageBounds.getSouth() + latitudeTolerance,
+    east: visibleBounds.getEast() >= imageBounds.getEast() - longitudeTolerance,
+    west: visibleBounds.getWest() <= imageBounds.getWest() + longitudeTolerance
+  };
+}
+
+function isOutwardEdgeGesture(deltaX, deltaY) {
+  const edge = getIllustratedEdgeState();
+
+  return (deltaX >= EDGE_GESTURE_MIN_DISTANCE && edge.west)
+    || (deltaX <= -EDGE_GESTURE_MIN_DISTANCE && edge.east)
+    || (deltaY >= EDGE_GESTURE_MIN_DISTANCE && edge.north)
+    || (deltaY <= -EDGE_GESTURE_MIN_DISTANCE && edge.south);
+}
+
+function isAtIllustratedMapEdge() {
+  const edge = getIllustratedEdgeState();
+
+  return edge.north || edge.south || edge.east || edge.west;
+}
+
+function showIllustratedMapEdgeNotice() {
+  const now = Date.now();
+
+  if (!overlayVisible) {
+    return;
+  }
+
+  highlightContemporaryMapButton();
+
+  if (mapSwitchGuidanceAcknowledged || now - lastEdgeNoticeAt < EDGE_NOTICE_COOLDOWN) {
+    return;
+  }
+
+  lastEdgeNoticeAt = now;
+  showMapModeNotice(
+    MAP_LABELS.illustratedMapEdge
+      || 'To koniec mapy ilustrowanej. Przełącz na mapę współczesną, aby przejść dalej.',
+    { onAction: null }
+  );
+}
+
+mapElement.addEventListener('pointerdown', event => {
+  if (!overlayVisible || !event.isPrimary || event.button !== 0 || isMapInteractionTarget(event.target)) {
+    mapPointerStart = null;
+    return;
+  }
+
+  mapPointerStart = {
+    pointerId: event.pointerId,
+    x: event.clientX,
+    y: event.clientY
+  };
+}, true);
+
+window.addEventListener('pointerup', event => {
+  if (!mapPointerStart || event.pointerId !== mapPointerStart.pointerId) {
+    return;
+  }
+
+  const deltaX = event.clientX - mapPointerStart.x;
+  const deltaY = event.clientY - mapPointerStart.y;
+  mapPointerStart = null;
+
+  window.requestAnimationFrame(() => {
+    if (overlayVisible && isOutwardEdgeGesture(deltaX, deltaY)) {
+      showIllustratedMapEdgeNotice();
+    }
+  });
+}, true);
+
+window.addEventListener('pointercancel', event => {
+  if (mapPointerStart && event.pointerId === mapPointerStart.pointerId) {
+    mapPointerStart = null;
+  }
+}, true);
+
+map.on('dragstart', () => {
+  illustratedDragActive = overlayVisible;
+});
+
+map.on('dragend', () => {
+  if (illustratedDragActive && overlayVisible && isAtIllustratedMapEdge()) {
+    showIllustratedMapEdgeNotice();
+  }
+
+  illustratedDragActive = false;
+});
+
+mapElement.addEventListener('wheel', event => {
+  if (overlayVisible && event.deltaY > 0 && map.getZoom() <= illustratedMinZoom) {
+    showIllustratedMapEdgeNotice();
+  }
+}, { passive: true, capture: true });
 
 // Fetch buildings and add markers
 async function addMarkers() {
@@ -509,7 +1298,7 @@ async function addMarkers() {
   const marker = L.marker([lat, lng], { icon });
   if (markerClusterGroup) {
     markerClusterGroup.addLayer(marker);
-  } else {
+  } else if (!shouldShowSettlementOverviewMarker()) {
     marker.addTo(map);
   }
 
@@ -573,6 +1362,13 @@ map.on('zoomend', () => {
   markers.forEach(marker => {
     updateBuildingMarkerIcon(marker);
   });
+  updateSettlementMarkerVisibility();
+  updateCenterLocationButtonState();
+});
+
+map.on('moveend', () => {
+  updateSettlementMarkerVisibility();
+  updateCenterLocationButtonState();
 });
 
 map.on('move zoom resize zoomend', () => {

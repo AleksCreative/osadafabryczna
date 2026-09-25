@@ -75,8 +75,20 @@ function osadafabryczna_get_language_labels($language = null) {
             'enableLocation'       => 'Enable location',
             'locationEnabled'      => 'Location: enabled',
             'geolocationUnsupported' => 'Geolocation is not supported in this browser.',
+            'centerLocation'       => 'Center on my location',
+            'myLocation'           => 'My location',
+            'settlementName'       => 'Osada Fabryczna',
+            'showSettlement'       => 'Show Osada Fabryczna in Żyrardów',
+            'distantLocationOverview' => 'The map has zoomed out to show your location and Osada Fabryczna in Żyrardów.',
             'changeMap'            => 'Change map',
             'changeMapAria'        => 'Change map layer',
+            'contemporaryMap'      => 'Contemporary map',
+            'illustratedMap'       => 'Illustrated map',
+            'showContemporaryMap'  => 'Show contemporary map',
+            'showIllustratedMap'   => 'Show illustrated map',
+            'outsideIllustratedMap' => 'Your location is outside the illustrated map. Switch to the contemporary map to see it.',
+            'illustratedMapEdge'   => 'This is the edge of the illustrated map. Switch to the contemporary map to explore further.',
+            'dismissNotice'        => 'Dismiss message',
             'readMore'             => 'Read more',
         );
     }
@@ -85,8 +97,20 @@ function osadafabryczna_get_language_labels($language = null) {
         'enableLocation'       => 'Włącz lokalizację',
         'locationEnabled'      => 'Lokalizacja: włączona',
         'geolocationUnsupported' => 'Geolokalizacja nie jest obsługiwana w tej przeglądarce.',
+        'centerLocation'       => 'Wyśrodkuj na mojej lokalizacji',
+        'myLocation'           => 'Moja lokalizacja',
+        'settlementName'       => 'Osada Fabryczna',
+        'showSettlement'       => 'Pokaż Osadę Fabryczną w Żyrardowie',
+        'distantLocationOverview' => 'Mapa została oddalona, aby pokazać Twoją lokalizację i Osadę Fabryczną w Żyrardowie.',
         'changeMap'            => 'Zmień mapę',
         'changeMapAria'        => 'Zmień mapę',
+        'contemporaryMap'      => 'Mapa współczesna',
+        'illustratedMap'       => 'Mapa ilustrowana',
+        'showContemporaryMap'  => 'Pokaż mapę współczesną',
+        'showIllustratedMap'   => 'Pokaż mapę ilustrowaną',
+        'outsideIllustratedMap' => 'Twoja lokalizacja znajduje się poza mapą ilustrowaną. Przełącz na mapę współczesną, aby ją zobaczyć.',
+        'illustratedMapEdge'   => 'To koniec mapy ilustrowanej. Przełącz na mapę współczesną, aby przejść dalej.',
+        'dismissNotice'        => 'Zamknij komunikat',
         'readMore'             => 'Czytaj więcej',
     );
 }
@@ -208,6 +232,15 @@ function osadafabryczna_enqueue_assets() {
         );
 
         $language = function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl';
+        $custom_logo_id = (int) get_theme_mod('custom_logo');
+        $settlement_marker_url = $custom_logo_id
+            ? wp_get_attachment_image_url($custom_logo_id, 'thumbnail')
+            : false;
+
+        if (!$settlement_marker_url) {
+            $settlement_marker_url = get_template_directory_uri() . '/dist/assets/ikona-budynku.png';
+        }
+
         wp_localize_script(
             'osadafabryczna-main-js',
             'OsadaFabrycznaMap',
@@ -230,6 +263,7 @@ function osadafabryczna_enqueue_assets() {
                     'defaultBuildingMarker' => esc_url_raw(get_template_directory_uri() . '/dist/assets/ikona-budynku.png'),
                //     'mapOverlay'   => esc_url_raw(get_template_directory_uri() . '/dist/assets/mapa-24-07.jpg'),
                     'userLocation' => esc_url_raw(get_template_directory_uri() . '/dist/assets/user-location.gif'),
+                    'settlementMarker' => esc_url_raw($settlement_marker_url),
                 ),
                 'labels'   => osadafabryczna_get_language_labels($language),
             )
