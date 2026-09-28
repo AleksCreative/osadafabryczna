@@ -419,8 +419,11 @@ Building archive
 }
 
 .archive-header {
-    max-width: 760px;
     margin-bottom: 32px;
+}
+
+.archive-description {
+    max-width: 760px;
 }
 
 .buildings-grid {
@@ -1257,6 +1260,13 @@ body.admin-bar .leaflet-top.leaflet-right {
   max-height: 80px;
 }
 
+.info-panel-acknowledgements .site-footer__museum {
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+  margin-bottom: 0;
+  font-size: inherit;
+}
+
 .info-panel-footer {
   flex: 0 0 auto;
   margin-top: 16px;
@@ -1468,6 +1478,11 @@ body.admin-bar .info-panel-toggle {
   .info-panel-acknowledgements .site-footer__scholarship-logo {
     max-width: min(100%, 190px);
     max-height: 54px;
+  }
+
+  .info-panel-acknowledgements .site-footer__museum {
+    grid-template-columns: 68px minmax(0, 1fr);
+    gap: 10px;
   }
 
   .info-panel-footer .site-footer__copyright {
@@ -2080,6 +2095,99 @@ Footer
     object-fit: contain;
 }
 
+.site-footer__museum {
+    display: grid;
+    grid-template-columns: min(112px, 30%) minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+    max-width: 520px;
+    margin: 0 auto 1.25rem;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: left;
+}
+
+.site-footer__museum-link {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.site-footer__museum-link:focus-visible {
+    outline: 2px solid #3c5f1f;
+    outline-offset: 4px;
+}
+
+.site-footer__museum-logo {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.site-footer__museum p {
+    margin: 0;
+}
+
+.site-footer__partners {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(16px, 4vw, 40px);
+    margin-bottom: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(84, 76, 69, 0.22);
+}
+
+.site-footer__partners .site-footer__scholarship,
+.site-footer__partners .site-footer__museum {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    text-align: center;
+}
+
+.site-footer__partners p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.site-footer__partners .site-footer__museum-link {
+    order: 1;
+    margin-top: auto;
+}
+
+.site-footer__partners img {
+    order: 1;
+    width: auto;
+    height: 80px;
+    max-width: 100%;
+    max-height: 80px;
+    margin: auto 0 0;
+    object-fit: contain;
+}
+
+@media (max-width: 767px) {
+    .site-footer__partners {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .site-footer__partners p {
+        font-size: 12px;
+    }
+
+    .site-footer__partners img {
+        height: 64px;
+        max-height: 64px;
+    }
+}
+
 .site-footer__copyright,
 .site-footer__credit {
     margin: 0;
@@ -2283,6 +2391,47 @@ body.admin-bar.single-budynek .site-header {
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.4);
     box-shadow: 0 8px 20px rgba(84, 76, 69, 0.1);
+}
+
+.building-consultation {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 0;
+    color: #544c45;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.building-consultation__logo {
+    display: block;
+    flex: 0 0 70px;
+    width: 70px;
+    padding-left: 10px;
+}
+
+.building-consultation__logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+}
+
+.building-consultation p {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+}
+
+.building-consultation a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.building-consultation a:hover,
+.building-consultation a:focus-visible {
+    color: #3c5f1f;
 }
 
 .building-summary__facts {
