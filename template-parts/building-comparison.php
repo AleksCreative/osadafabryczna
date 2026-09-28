@@ -16,7 +16,7 @@ $comparison_labels = $comparison_english
         'title' => 'Illustration and photo',
         'illustration' => 'Illustration',
         'photo' => 'Photo',
-        'today' => 'Present day',
+        'today' => 'Photo',
         'choose' => 'Choose an image',
         'close' => 'Close comparison',
     )
@@ -25,7 +25,7 @@ $comparison_labels = $comparison_english
         'title' => 'Ilustracja i zdjęcie',
         'illustration' => 'Ilustracja',
         'photo' => 'Zdjęcie',
-        'today' => 'Współcześnie',
+        'today' => 'Zdjęcie',
         'choose' => 'Wybierz obraz',
         'close' => 'Zamknij porównanie',
     );
@@ -67,9 +67,8 @@ if (!$comparison_illustration || !$comparison_photo) {
     <button class="building-comparison-trigger" type="button" data-comparison-open aria-haspopup="dialog" aria-controls="building-comparison-dialog" hidden>
         <?php echo esc_html($comparison_labels['open']); ?>
     </button>
-    <dialog id="building-comparison-dialog" class="building-comparison" aria-labelledby="building-comparison-title">
+    <dialog id="building-comparison-dialog" class="building-comparison" aria-label="<?php echo esc_attr($comparison_labels['title']); ?>">
         <div class="building-comparison__header">
-            <h2 id="building-comparison-title" class="building-comparison__title"><?php echo esc_html($comparison_labels['title']); ?></h2>
             <button class="building-comparison__close" type="button" data-comparison-close aria-label="<?php echo esc_attr($comparison_labels['close']); ?>">×</button>
         </div>
         <div class="building-comparison__switch" data-comparison-switch role="group" aria-label="<?php echo esc_attr($comparison_labels['choose']); ?>" hidden>
