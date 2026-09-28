@@ -67,6 +67,38 @@ function osadafabryczna_render_scholarship_footer() {
     <?php
 }
 
+function osadafabryczna_render_museum_footer() {
+    $is_english = function_exists('osada_core_get_current_language') && 'en' === osada_core_get_current_language();
+    $text = $is_english
+        ? 'The building descriptions were prepared in consultation with the staff of the Museum of Western Mazovia in Żyrardów.'
+        : 'Opisy budynków skonsultowano merytorycznie z pracownikami Muzeum Mazowsza Zachodniego w Żyrardowie.';
+    $museum_name = $is_english
+        ? 'Museum of Western Mazovia in Żyrardów'
+        : 'Muzeum Mazowsza Zachodniego w Żyrardowie';
+    $link_label = $museum_name . ($is_english ? ' (opens in a new tab)' : ' (otwiera się w nowej karcie)');
+    ?>
+    <div class="site-footer__museum">
+        <a
+            class="site-footer__museum-link"
+            href="https://www.muzeumzyrardow.pl/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="<?php echo esc_attr($link_label); ?>"
+        >
+            <img
+                class="site-footer__museum-logo"
+                src="<?php echo esc_url(get_theme_file_uri('/dist/assets/' . rawurlencode('logo muzeum mazowsza zachodniego3.png'))); ?>"
+                alt="<?php echo esc_attr($museum_name); ?>"
+                width="648"
+                height="725"
+                decoding="async"
+            >
+        </a>
+        <p><?php echo esc_html($text); ?></p>
+    </div>
+    <?php
+}
+
 function osadafabryczna_get_language_labels($language = null) {
     $language = $language ?: (function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl');
 
@@ -77,8 +109,8 @@ function osadafabryczna_get_language_labels($language = null) {
             'geolocationUnsupported' => 'Geolocation is not supported in this browser.',
             'centerLocation'       => 'Center on my location',
             'myLocation'           => 'My location',
-            'settlementName'       => 'Osada Fabryczna',
-            'showSettlement'       => 'Show Osada Fabryczna in Żyrardów',
+            'settlementName'       => 'Factory Settlement of Żyrardów',
+            'showSettlement'       => 'Show the Factory Settlement in Żyrardów',
             'distantLocationOverview' => 'The map has zoomed out to show your location and Osada Fabryczna in Żyrardów.',
             'changeMap'            => 'Change map',
             'changeMapAria'        => 'Change map layer',
@@ -100,7 +132,7 @@ function osadafabryczna_get_language_labels($language = null) {
         'geolocationUnsupported' => 'Geolokalizacja nie jest obsługiwana w tej przeglądarce.',
         'centerLocation'       => 'Wyśrodkuj na mojej lokalizacji',
         'myLocation'           => 'Moja lokalizacja',
-        'settlementName'       => 'Osada Fabryczna',
+        'settlementName'       => 'Osada Fabryczna Żyrardowa',
         'showSettlement'       => 'Pokaż Osadę Fabryczną w Żyrardowie',
         'distantLocationOverview' => 'Mapa została oddalona, aby pokazać Twoją lokalizację i Osadę Fabryczną w Żyrardowie.',
         'changeMap'            => 'Zmień mapę',
@@ -250,14 +282,10 @@ function osadafabryczna_enqueue_assets() {
         );
 
         $language = function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl';
-        $custom_logo_id = (int) get_theme_mod('custom_logo');
-        $settlement_marker_url = $custom_logo_id
-            ? wp_get_attachment_image_url($custom_logo_id, 'thumbnail')
-            : false;
-
-        if (!$settlement_marker_url) {
-            $settlement_marker_url = get_template_directory_uri() . '/dist/assets/ikona-budynku.png';
-        }
+        $settlement_marker_file = 'en' === $language
+            ? 'factory settlement.png'
+            : 'osada fabryczna tytul.png';
+        $settlement_marker_url = get_theme_file_uri('/dist/assets/' . rawurlencode($settlement_marker_file));
 
         wp_localize_script(
             'osadafabryczna-main-js',

@@ -7,6 +7,10 @@ $osada_back_url = 'en' === $osada_language && function_exists('osada_core_get_en
 $osada_back_label = 'en' === $osada_language ? 'Back to map' : 'Powrót do mapy';
 $osada_toc_title = 'en' === $osada_language ? 'On this page' : 'Na tej stronie';
 $osada_toc_aria = 'en' === $osada_language ? 'Table of contents' : 'Spis treści';
+$osada_museum_name = 'en' === $osada_language
+    ? 'Museum of Western Mazovia in Żyrardów'
+    : 'Muzeum Mazowsza Zachodniego w Żyrardowie';
+$osada_museum_link_label = $osada_museum_name . ('en' === $osada_language ? ' (opens in a new tab)' : ' (otwiera się w nowej karcie)');
 $osada_toc_items = 'en' === $osada_language
     ? array(
         'w-skrocie' => 'Short summary',
@@ -217,7 +221,25 @@ $osada_toc_items = 'en' === $osada_language
                                 </div>
                             </section>
                         <?php endif; ?>
-
+<!--
+                        <div class="building-consultation">
+                            <a class="building-consultation__logo" href="https://www.muzeumzyrardow.pl/" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($osada_museum_link_label); ?>">
+                                <img
+                                    src="<?php echo esc_url(get_theme_file_uri('/dist/assets/' . rawurlencode('logo muzeum mazowsza zachodniego3.png'))); ?>"
+                                    alt="<?php echo esc_attr($osada_museum_name); ?>"
+                                    width="648"
+                                    height="725"
+                                    decoding="async"
+                                >
+                            </a>
+                            <p>
+                                <?php echo esc_html('en' === $osada_language
+                                    ? 'The building description was prepared in consultation with the staff of the'
+                                    : 'Opis budynku skonsultowano merytorycznie z pracownikami'); ?>
+                                <a href="https://www.muzeumzyrardow.pl/" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($osada_museum_link_label); ?>"><?php echo esc_html($osada_museum_name); ?></a>.
+                            </p>
+                        </div>
+-->
                         <?php if (!empty($osada_history)) : ?>
                             <section id="historia" class="building-section" aria-labelledby="building-history-title">
                                 <h2 id="building-history-title"><?php echo esc_html('en' === $osada_language ? 'Discover the history' : 'Poznaj historię'); ?></h2>

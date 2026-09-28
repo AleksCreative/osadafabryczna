@@ -205,27 +205,27 @@ if (markerClusterGroup) {
   });
 }
 
-const settlementMarkerContent = document.createElement('div');
+const settlementMarkerContent = document.createElement('button');
 const settlementMarkerImage = document.createElement('img');
-const settlementMarkerLabel = document.createElement('span');
 
 settlementMarkerContent.className = 'settlement-overview-marker__content';
+settlementMarkerContent.type = 'button';
+settlementMarkerContent.setAttribute('aria-label', MAP_LABELS.showSettlement || 'Pokaż Osadę Fabryczną w Żyrardowie');
 settlementMarkerImage.className = 'settlement-overview-marker__image';
 settlementMarkerImage.src = MAP_ASSETS.settlementMarker || DEFAULT_BUILDING_MARKER_URL;
-settlementMarkerImage.alt = '';
-settlementMarkerImage.setAttribute('aria-hidden', 'true');
-settlementMarkerLabel.className = 'settlement-overview-marker__label';
-settlementMarkerLabel.textContent = MAP_LABELS.settlementName || 'Osada Fabryczna';
-settlementMarkerContent.append(settlementMarkerImage, settlementMarkerLabel);
+settlementMarkerImage.alt = MAP_LABELS.settlementName || 'Osada Fabryczna Żyrardowa';
+settlementMarkerImage.draggable = false;
+settlementMarkerContent.append(settlementMarkerImage);
 
 const settlementMarker = L.marker(MAP_CENTER, {
   icon: L.divIcon({
     className: 'settlement-overview-marker',
     html: settlementMarkerContent,
-    iconSize: [190, 88],
-    iconAnchor: [95, 88]
+    iconSize: [154, 60.2],
+    iconAnchor: [77, 70]
   }),
-  keyboard: true,
+  // The native button provides one focus target and handles Enter/Space.
+  keyboard: false,
   title: MAP_LABELS.showSettlement || 'Pokaż Osadę Fabryczną',
   zIndexOffset: 9000
 });

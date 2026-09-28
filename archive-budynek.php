@@ -17,6 +17,10 @@ $osada_archive_labels = 'en' === $osada_language
         'next'        => 'Następna',
         'no_results'  => 'Brak budynków do wyświetlenia.',
     );
+$osada_museum_name = 'en' === $osada_language
+    ? 'Museum of Western Mazovia in Żyrardów'
+    : 'Muzeum Mazowsza Zachodniego w Żyrardowie';
+$osada_museum_link_label = $osada_museum_name . ('en' === $osada_language ? ' (opens in a new tab)' : ' (otwiera się w nowej karcie)');
 ?>
 
 <main class="buildings-archive">
@@ -28,6 +32,23 @@ $osada_archive_labels = 'en' === $osada_language
             ?>
             <div class="archive-description"><?php echo wp_kses_post( $desc ); ?></div>
         <?php endif; ?>
+        <!--<div class="building-consultation">
+            <a class="building-consultation__logo" href="https://www.muzeumzyrardow.pl/" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($osada_museum_link_label); ?>">
+                <img
+                    src="<?php echo esc_url(get_theme_file_uri('/dist/assets/' . rawurlencode('logo muzeum mazowsza zachodniego3.png'))); ?>"
+                    alt="<?php echo esc_attr($osada_museum_name); ?>"
+                    width="648"
+                    height="506"
+                    decoding="async"
+                >
+            </a>
+            <p>
+                <?php echo esc_html('en' === $osada_language
+                    ? 'The building descriptions were prepared in consultation with the staff of the'
+                    : 'Opisy budynków skonsultowano merytorycznie z pracownikami'); ?>
+                <a href="https://www.muzeumzyrardow.pl/" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($osada_museum_link_label); ?>"><?php echo esc_html($osada_museum_name); ?></a>.
+            </p>
+        </div>-->
     </section>
 
     <?php if ( have_posts() ) : ?>

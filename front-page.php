@@ -40,8 +40,9 @@ $osada_building_close = 'en' === $osada_language ? 'Close panel' : 'Zamknij pane
         <button id="info-panel-close" class="info-panel-close" aria-label="<?php echo esc_attr($osada_info_close); ?>">×</button>
         <div id="info-panel-content" class="info-panel-content">
             <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); the_content(); endwhile; endif; ?>
-            <div class="info-panel-acknowledgements">
+          <div class="info-panel-acknowledgements">
                 <?php osadafabryczna_render_scholarship_footer(); ?>
+                 <!-- <?php osadafabryczna_render_museum_footer(); ?>-->
             </div>
         </div>
         <footer class="info-panel-footer">
