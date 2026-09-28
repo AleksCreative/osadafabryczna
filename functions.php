@@ -184,6 +184,22 @@ function osadafabryczna_enqueue_assets() {
             filemtime(get_template_directory() . '/dist/assets/building-carousel.js'),
             true
         );
+
+        if (function_exists('get_field') && get_field('comparison_photo', get_queried_object_id())) {
+            wp_enqueue_style(
+                'osadafabryczna-building-comparison',
+                get_theme_file_uri('/dist/assets/building-comparison.css'),
+                array('theme-style'),
+                filemtime(get_theme_file_path('/dist/assets/building-comparison.css'))
+            );
+            wp_enqueue_script(
+                'osadafabryczna-building-comparison',
+                get_theme_file_uri('/dist/assets/building-comparison.js'),
+                array(),
+                filemtime(get_theme_file_path('/dist/assets/building-comparison.js')),
+                true
+            );
+        }
     }
 
     if ( osadafabryczna_is_map_page() ) {

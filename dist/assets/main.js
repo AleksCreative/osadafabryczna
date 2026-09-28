@@ -986,13 +986,13 @@ function setMapMode(showIllustratedMap) {
     const targetZoom = centerIsInsideIllustration || userMarkerIsInsideIllustration
       ? retainedIllustratedZoom
       : ILLUSTRATED_SWITCH_ZOOM;
-    const shouldFlyToSettlement = !centerIsInsideIllustration
-      && !userMarkerIsInsideIllustration
+    // Animate from a distant viewport even when the destination is the user's location.
+    const shouldFlyToIllustration = !centerIsInsideIllustration
       && !prefersReducedMotion;
 
     setMapModeTransitionState(true);
 
-    if (shouldFlyToSettlement) {
+    if (shouldFlyToIllustration) {
       flyToIllustratedMap(targetCenter, targetZoom);
     } else {
       activateIllustratedMap(targetCenter, targetZoom, true);
