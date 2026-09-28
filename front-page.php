@@ -40,14 +40,16 @@ $osada_building_close = 'en' === $osada_language ? 'Close panel' : 'Zamknij pane
         <button id="info-panel-close" class="info-panel-close" aria-label="<?php echo esc_attr($osada_info_close); ?>">×</button>
         <div id="info-panel-content" class="info-panel-content">
             <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); the_content(); endwhile; endif; ?>
+            <div class="info-panel-acknowledgements">
+                <?php osadafabryczna_render_scholarship_footer(); ?>
+            </div>
         </div>
         <footer class="info-panel-footer">
-            <?php osadafabryczna_render_scholarship_footer(); ?>
             <p class="site-footer__copyright">
                 &copy; <?php echo esc_html(wp_date('Y')); ?> Osada Fabryczna Żyrardowa
             </p>
             <p class="site-footer__credit">
-                Stworzona z <span aria-label="miłością">♥</span> i hektolitrami <span aria-label="kawy">☕</span> przez
+                Stworzona z <span aria-label="miłością">♥</span> przez
                 <a href="https://alekscreative.com/">Aleks Creative</a>
             </p>
         </footer>

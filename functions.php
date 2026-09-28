@@ -90,6 +90,7 @@ function osadafabryczna_get_language_labels($language = null) {
             'illustratedMapEdge'   => 'This is the edge of the illustrated map. Switch to the contemporary map to explore further.',
             'dismissNotice'        => 'Dismiss message',
             'readMore'             => 'Read more',
+            'opensInNewTab'        => 'opens in a new tab',
         );
     }
 
@@ -112,6 +113,7 @@ function osadafabryczna_get_language_labels($language = null) {
         'illustratedMapEdge'   => 'To koniec mapy ilustrowanej. Przełącz na mapę współczesną, aby przejść dalej.',
         'dismissNotice'        => 'Zamknij komunikat',
         'readMore'             => 'Czytaj więcej',
+        'opensInNewTab'        => 'otwiera się w nowej karcie',
     );
 }
 
@@ -246,6 +248,7 @@ function osadafabryczna_enqueue_assets() {
             'OsadaFabrycznaMap',
             array(
                 'language' => $language,
+                'cartoBasemapKey' => trim((string) get_option('osadafabryczna_carto_basemap_key', '')),
                 'restUrl'  => esc_url_raw(add_query_arg(
                     array(
                         'acf_format' => 'standard',
@@ -271,6 +274,38 @@ function osadafabryczna_enqueue_assets() {
     }
 }
 add_action('wp_enqueue_scripts', 'osadafabryczna_enqueue_assets');
+
+function osadafabryczna_register_carto_basemap_setting() {
+    register_setting('general', 'osadafabryczna_carto_basemap_key', array(
+        'type'              => 'string',
+        'sanitize_callback' => 'sanitize_text_field',
+        'default'           => '',
+    ));
+    add_settings_field(
+        'osadafabryczna-carto-basemap-key',
+        'Klucz CARTO Basemaps',
+        'osadafabryczna_render_carto_basemap_setting',
+        'general',
+        'default',
+        array('label_for' => 'osadafabryczna-carto-basemap-key')
+    );
+}
+add_action('admin_init', 'osadafabryczna_register_carto_basemap_setting');
+
+function osadafabryczna_render_carto_basemap_setting() {
+    ?>
+    <input
+        id="osadafabryczna-carto-basemap-key"
+        class="regular-text code"
+        type="text"
+        name="osadafabryczna_carto_basemap_key"
+        value="<?php echo esc_attr(get_option('osadafabryczna_carto_basemap_key', '')); ?>"
+        autocomplete="off"
+        spellcheck="false"
+    >
+    <p class="description">Klucz do wyświetlania nazw ulic na mapie ilustrowanej.</p>
+    <?php
+}
 
 function osadafabryczna_google_fonts_resource_hints($urls, $relation_type) {
     if ('preconnect' === $relation_type) {

@@ -7,7 +7,7 @@
             <p>© <?php echo esc_html(wp_date('Y')); ?> <?php echo esc_html(get_bloginfo('name')); ?></p>
         <?php endif; ?>
         <p class="site-footer__credit">
-            Stworzona z <span aria-label="miłością">♥</span> i hektolitrami <span aria-label="kawy">☕</span> przez
+            Stworzona z <span aria-label="miłością">♥</span> przez
             <a href="https://alekscreative.com/">Aleks Creative</a>
         </p>
     </div>

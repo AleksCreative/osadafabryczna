@@ -11,7 +11,7 @@ $osada_show_standard_footer = is_post_type_archive('budynek')
                 &copy; <?php echo esc_html(wp_date('Y')); ?> Osada Fabryczna Żyrardowa
             </p>
             <p class="site-footer__credit">
-                Stworzona z <span aria-label="miłością">♥</span> i hektolitrami <span aria-label="kawy">☕</span> przez
+                Stworzona z <span aria-label="miłością">♥</span> przez
                 <a href="https://alekscreative.com/">Aleks Creative</a>
             </p>
         </div>

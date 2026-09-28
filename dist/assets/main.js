@@ -133,7 +133,9 @@ const labelsPane = map.createPane('labelsPane');
 labelsPane.style.zIndex = 450;
 labelsPane.style.pointerEvents = 'none';
 
-const streetLabelTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+const streetLabelTilesUrl = 'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'
+  + (MAP_CONFIG.cartoBasemapKey ? `?key=${encodeURIComponent(MAP_CONFIG.cartoBasemapKey)}` : '');
+const streetLabelTiles = L.tileLayer(streetLabelTilesUrl, {
   attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
   pane: 'labelsPane',
   opacity: 0.85
@@ -1078,7 +1080,7 @@ setupMapControlMenu();
 
 function setupCenterLocationControl() {
   const centerLocationControl = L.control({
-    position: 'topright'
+    position: 'bottomleft'
   });
 
   centerLocationControl.onAdd = function () {
@@ -1751,9 +1753,17 @@ function renderBuildingPanelContent(content, budynek) {
   appendSafeRichText(description, buildingData.short_description);
 
   link.className = 'map-building-link';
-  link.textContent = `${MAP_LABELS.readMore || 'Czytaj więcej'} →`;
-
+  const readMoreLabel = MAP_LABELS.readMore || 'Czytaj więcej';
+  const opensInNewTabLabel = MAP_LABELS.opensInNewTab || 'otwiera się w nowej karcie';
+  const buildingTitle = title.textContent.trim();
+  link.textContent = `${readMoreLabel} ↗`;
   link.href = getSafeUrl(budynek.link) || window.location.origin;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.setAttribute(
+    'aria-label',
+    `${readMoreLabel}${buildingTitle ? `: ${buildingTitle}` : ''} (${opensInNewTabLabel})`
+  );
 
   notifyMapExtensions('renderBuildingPanel', extensionArea, budynek);
 

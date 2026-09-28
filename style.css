@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 4.0.8
+Version: 4.0.9
 */
 
 /* ---------------------------
@@ -605,7 +605,7 @@ strong {
 }
 
 .center-location-control {
-    margin: 12px 12px 0 0 !important;
+    margin: 0 0 12px 12px !important;
     border: 0;
     background: transparent;
     box-shadow: none;
@@ -862,6 +862,13 @@ body.admin-bar .leaflet-top.leaflet-right {
 }
 
 @media (max-width: 767px) {
+    .leaflet-bottom.leaflet-left .center-location-control {
+        position: fixed;
+        left: 10px;
+        bottom: calc(var(--mobile-map-action-bar-height) + 12px);
+        margin: 0 !important;
+    }
+
     .center-location-control__button {
         width: 46px;
         height: 46px;
@@ -1162,8 +1169,8 @@ body.admin-bar .leaflet-top.leaflet-right {
   flex-direction: column;
   top: 0;
   right: 0;
-  width: min(420px, 33vw);
-  max-width: 420px;
+  width: min(546px, 42.9vw);
+  max-width: 100vw;
   height: 100vh;
   padding: 28px 30px 30px;
   background: var(--info-panel-background);
@@ -1222,6 +1229,34 @@ body.admin-bar .leaflet-top.leaflet-right {
   margin-top: 1rem;
 }
 
+.info-panel-acknowledgements {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(84, 76, 69, 0.22);
+  color: #544C45;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.info-panel-acknowledgements p {
+  margin: 0;
+}
+
+.info-panel-acknowledgements .site-footer__scholarship {
+  margin-bottom: 1rem;
+}
+
+.info-panel-acknowledgements .site-footer__scholarship p {
+  margin-bottom: 0.65rem;
+  font-size: inherit;
+}
+
+.info-panel-acknowledgements .site-footer__scholarship-logo {
+  max-width: min(100%, 300px);
+  max-height: 80px;
+}
+
 .info-panel-footer {
   flex: 0 0 auto;
   margin-top: 16px;
@@ -1234,19 +1269,6 @@ body.admin-bar .leaflet-top.leaflet-right {
 
 .info-panel-footer p {
   margin: 0;
-}
-
-.info-panel-footer .site-footer__scholarship {
-  margin-bottom: 1rem;
-}
-
-.info-panel-footer .site-footer__scholarship p {
-  margin-bottom: 0.65rem;
-}
-
-.info-panel-footer .site-footer__scholarship-logo {
-  max-width: min(100%, 300px);
-  max-height: 80px;
 }
 
 .info-panel-toggle {
@@ -1431,16 +1453,19 @@ body.admin-bar .info-panel-toggle {
     line-height: 1.35;
   }
 
-  .info-panel-footer .site-footer__scholarship {
-    margin-bottom: 0.55rem;
-  }
-
-  .info-panel-footer .site-footer__scholarship p {
-    margin-bottom: 0.35rem;
+  .info-panel-acknowledgements {
     font-size: 0.65rem;
   }
 
-  .info-panel-footer .site-footer__scholarship-logo {
+  .info-panel-acknowledgements .site-footer__scholarship {
+    margin-bottom: 0.55rem;
+  }
+
+  .info-panel-acknowledgements .site-footer__scholarship p {
+    margin-bottom: 0.35rem;
+  }
+
+  .info-panel-acknowledgements .site-footer__scholarship-logo {
     max-width: min(100%, 190px);
     max-height: 54px;
   }
