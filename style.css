@@ -3,7 +3,7 @@ Theme Name: Osada Fabryczna
 Text Domain: osadafabryczna
 Author: Aleksandra Osińska
 Description: Custom theme for Osada Fabryczna heritage map
-Version: 4.0.13
+Version: 4.0.14
 */
 
 /* ---------------------------
@@ -715,7 +715,7 @@ strong {
 .map-control-menu {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
     margin: 0 0 24px 0;
     border-radius: 0 16px 16px 0;
     background: #3c5f1f;
@@ -748,7 +748,10 @@ strong {
 }
 
 .map-control-menu .map-overlay-toggle.needs-attention {
+    position: relative;
+    z-index: 1;
     animation: map-switch-attention 1.05s ease-in-out 2;
+    
 }
 
 .map-control-menu .map-overlay-toggle.is-transitioning,
@@ -759,20 +762,22 @@ strong {
 
 @keyframes map-switch-attention {
     0%, 100% {
-        background: #3c5f1f;
-        color: #fff;
-        box-shadow: inset 0 0 0 0 rgba(255, 221, 77, 0);
+        box-shadow: 0 0 0 0 rgba(248, 219, 174, 0);
     }
 
     45%, 65% {
-        background: #f4cf3f;
-        color: #2f2a25;
-        box-shadow: inset 0 0 0 5px #fff0a3;
+        box-shadow: 0 0 0 1px rgba(248, 219, 174, 0.9), 0 0 16px 6px rgba(248, 219, 174, 0.75);
+        background: #2f4f18;
     }
+}
+
+.map-control-menu .map-control-button:first-child {
+    border-top-right-radius: 16px;
 }
 
 .map-control-menu .map-control-button:last-child {
     border-bottom: 0;
+    border-bottom-right-radius: 16px;
 }
 
 .map-mode-notice {
@@ -797,6 +802,48 @@ strong {
 
 .map-mode-notice[hidden] {
     display: none;
+}
+
+.map-mode-notice.is-map-switch-guidance {
+    width: min(320px, calc(100vw - 24px));
+    transform: none;
+}
+
+.map-mode-notice.is-map-switch-guidance::before {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #fbefe0;
+    pointer-events: none;
+}
+
+.map-mode-notice.is-map-switch-guidance[data-placement="right"]::before {
+    left: -7px;
+    top: var(--notice-arrow-position);
+    border-left: 1px solid rgba(60, 95, 31, 0.35);
+    border-bottom: 1px solid rgba(60, 95, 31, 0.35);
+    transform: translateY(-50%) rotate(45deg);
+    animation: map-guidance-bounce-left 1.2s ease-in-out 3;
+}
+
+.map-mode-notice.is-map-switch-guidance[data-placement="above"]::before {
+    bottom: -7px;
+    left: var(--notice-arrow-position);
+    border-right: 1px solid rgba(60, 95, 31, 0.35);
+    border-bottom: 1px solid rgba(60, 95, 31, 0.35);
+    transform: translateX(-50%) rotate(45deg);
+    animation: map-guidance-bounce-down 1.2s ease-in-out 3;
+}
+
+@keyframes map-guidance-bounce-left {
+    0%, 100% { transform: translateY(-50%) rotate(45deg); }
+    50% { transform: translate(-3px, -50%) rotate(45deg); }
+}
+
+@keyframes map-guidance-bounce-down {
+    0%, 100% { transform: translateX(-50%) rotate(45deg); }
+    50% { transform: translate(-50%, 3px) rotate(45deg); }
 }
 
 .map-mode-notice__text {
@@ -937,18 +984,22 @@ body.admin-bar .leaflet-top.leaflet-right {
     .map-control-menu .map-control-button:last-child {
         border-right: 0;
     }
+
+    .map-control-menu .map-control-button:first-child,
+    .map-control-menu .map-control-button:last-child {
+        border-radius: 0;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .map-control-menu .map-overlay-toggle.needs-attention,
+    .map-mode-notice.is-map-switch-guidance[data-placement]::before,
     .center-location-control__button.is-waiting svg {
         animation: none;
     }
 
     .map-control-menu .map-overlay-toggle.needs-attention {
-        background: #f4cf3f;
-        color: #2f2a25;
-        box-shadow: inset 0 0 0 5px #fff0a3;
+        box-shadow: 0 0 0 3px rgba(255, 247, 235, 0.9), 0 0 16px 6px rgba(255, 247, 235, 0.75);
     }
 }
 

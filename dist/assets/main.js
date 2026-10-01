@@ -515,11 +515,63 @@ function hideMapModeNotice() {
 
   mapModeNotice.hidden = true;
   mapModeNoticeAction = null;
+  overlayToggle.removeAttribute('aria-describedby');
+}
+
+// Only map-switch guidance follows the toggle; other notices keep their usual position.
+function positionMapSwitchGuidance() {
+  if (mapModeNotice.hidden || !mapModeNotice.classList.contains('is-map-switch-guidance')) {
+    return;
+  }
+
+  const button = overlayToggle.getBoundingClientRect();
+  const viewport = window.visualViewport;
+  const viewportLeft = viewport ? viewport.offsetLeft : 0;
+  const viewportTop = viewport ? viewport.offsetTop : 0;
+  const viewportWidth = viewport ? viewport.width : document.documentElement.clientWidth;
+  const viewportHeight = viewport ? viewport.height : document.documentElement.clientHeight;
+  const padding = 12;
+  const gap = 18;
+  const minLeft = viewportLeft + padding;
+  const minTop = viewportTop + padding;
+  const maxRight = viewportLeft + viewportWidth - padding;
+  const maxBottom = viewportTop + viewportHeight - padding;
+  mapModeNotice.style.maxWidth = `${Math.max(0, viewportWidth - padding * 2)}px`;
+  const width = mapModeNotice.offsetWidth;
+  const height = mapModeNotice.offsetHeight;
+  const clamp = (value, min, max) => Math.max(min, Math.min(value, Math.max(min, max)));
+  const buttonCenterX = button.left + button.width / 2;
+  const buttonCenterY = button.top + button.height / 2;
+  const beside = window.matchMedia('(min-width: 768px)').matches
+    && button.right + gap + width <= maxRight;
+  const left = beside
+    ? button.right + gap
+    : clamp(buttonCenterX - width / 2, minLeft, maxRight - width);
+  const top = beside
+    ? clamp(buttonCenterY - height / 2, minTop, maxBottom - height)
+    : clamp(button.top - gap - height, minTop, maxBottom - height);
+
+  mapModeNotice.dataset.placement = beside ? 'right' : 'above';
+  mapModeNotice.style.left = `${left}px`;
+  mapModeNotice.style.top = `${top}px`;
+  mapModeNotice.style.setProperty('--notice-arrow-position', `${beside
+    ? clamp(buttonCenterY - top, 20, height - 20)
+    : clamp(buttonCenterX - left, 20, width - 20)}px`);
+}
+
+window.addEventListener('resize', positionMapSwitchGuidance);
+window.visualViewport?.addEventListener('resize', positionMapSwitchGuidance);
+window.visualViewport?.addEventListener('scroll', positionMapSwitchGuidance);
+if (typeof ResizeObserver !== 'undefined') {
+  const guidanceResizeObserver = new ResizeObserver(positionMapSwitchGuidance);
+  guidanceResizeObserver.observe(mapModeNotice);
+  guidanceResizeObserver.observe(overlayToggle);
 }
 
 function showMapModeNotice(message, options = {}) {
   const {
     allowOnContemporary = false,
+    anchorToMapToggle = false,
     actionLabel = MAP_LABELS.contemporaryMap || 'Mapa współczesna',
     onAction = () => setMapMode(false)
   } = options;
@@ -532,7 +584,18 @@ function showMapModeNotice(message, options = {}) {
   mapModeNoticeAction = typeof onAction === 'function' ? onAction : null;
   mapModeNoticeSwitch.hidden = !mapModeNoticeAction;
   mapModeNoticeSwitch.textContent = actionLabel;
+  mapModeNotice.classList.toggle('is-map-switch-guidance', anchorToMapToggle);
+  mapModeNotice.style.removeProperty('left');
+  mapModeNotice.style.removeProperty('top');
+  mapModeNotice.style.removeProperty('max-width');
+  if (anchorToMapToggle) {
+    mapModeNoticeText.id = 'map-switch-guidance-text';
+    overlayToggle.setAttribute('aria-describedby', mapModeNoticeText.id);
+  } else {
+    overlayToggle.removeAttribute('aria-describedby');
+  }
   mapModeNotice.hidden = false;
+  positionMapSwitchGuidance();
 
   if (mapModeNoticeTimeout) {
     clearTimeout(mapModeNoticeTimeout);
@@ -573,7 +636,7 @@ function promptContemporaryMapSwitch(message) {
   highlightContemporaryMapButton();
 
   if (!mapSwitchGuidanceAcknowledged) {
-    showMapModeNotice(message, { onAction: null });
+    showMapModeNotice(message, { onAction: null, anchorToMapToggle: true });
   }
 }
 
@@ -1178,7 +1241,7 @@ function showIllustratedMapEdgeNotice() {
   showMapModeNotice(
     MAP_LABELS.illustratedMapEdge
       || 'To koniec mapy ilustrowanej. Przełącz na mapę współczesną, aby przejść dalej.',
-    { onAction: null }
+    { onAction: null, anchorToMapToggle: true }
   );
 }
 
