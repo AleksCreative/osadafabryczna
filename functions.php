@@ -52,8 +52,8 @@ add_action('parse_request', 'osadafabryczna_serve_pwa_service_worker', 0);
 function osadafabryczna_render_scholarship_footer() {
     $is_english = function_exists('osada_core_get_current_language') && 'en' === osada_core_get_current_language();
     $text = $is_english
-        ? 'This project was carried out as part of a scholarship awarded by the Minister of Culture and National Heritage'
-        : 'Zrealizowano w ramach stypendium Ministra Kultury i Dziedzictwa Narodowego';
+        ? 'This project was carried out as part of a scholarship awarded by the Minister of Culture and National Heritage.'
+        : 'Zrealizowano w ramach stypendium Ministra Kultury i Dziedzictwa Narodowego.';
     $logo_filename = $is_english ? 'logo_MKiDN_ENG.png' : 'logo_MKiDN.png';
     ?>
     <div class="site-footer__scholarship">
