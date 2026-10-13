@@ -4,14 +4,14 @@ get_header();
 $osada_language = function_exists('osada_core_get_current_language') ? osada_core_get_current_language() : 'pl';
 $osada_archive_labels = 'en' === $osada_language
     ? array(
-        'title'       => 'Buildings',
+        'title'       => 'Monuments',
         'read_more'   => 'View details',
         'previous'    => 'Previous',
         'next'        => 'Next',
         'no_results'  => 'No buildings to display.',
     )
     : array(
-        'title'       => post_type_archive_title('', false),
+        'title'       => 'Zabytki',
         'read_more'   => 'Zobacz szczegóły',
         'previous'    => 'Poprzednia',
         'next'        => 'Następna',
@@ -32,7 +32,7 @@ $osada_museum_link_label = $osada_museum_name . ('en' === $osada_language ? ' (o
             ?>
             <div class="archive-description"><?php echo wp_kses_post( $desc ); ?></div>
         <?php endif; ?>
-        <!--<div class="building-consultation">
+        <div class="building-consultation">
             <a class="building-consultation__logo" href="https://www.muzeumzyrardow.pl/" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($osada_museum_link_label); ?>">
                 <img
                     src="<?php echo esc_url(get_theme_file_uri('/dist/assets/' . rawurlencode('logo muzeum mazowsza zachodniego3.png'))); ?>"
@@ -48,7 +48,7 @@ $osada_museum_link_label = $osada_museum_name . ('en' === $osada_language ? ' (o
                     : 'Opisy budynków skonsultowano merytorycznie z pracownikami'); ?>
                 <a href="https://www.muzeumzyrardow.pl/" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($osada_museum_link_label); ?>"><?php echo esc_html($osada_museum_name); ?></a>.
             </p>
-        </div>-->
+        </div>
     </section>
 
     <?php if ( have_posts() ) : ?>

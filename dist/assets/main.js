@@ -248,6 +248,9 @@ let outsideLocationNeedsFocus = false;
 let outsideLocationNoticeShown = false;
 let distantOverviewNoticeShown = false;
 const userMarker = L.marker([0,0], {
+  keyboard: true,
+  title: MAP_LABELS.centerLocation || 'Wyśrodkuj na mojej lokalizacji',
+  alt: MAP_LABELS.centerLocation || 'Wyśrodkuj na mojej lokalizacji',
   icon: L.icon({
     iconUrl: MAP_ASSETS.userLocation || '/wp-content/themes/osadafabryczna/dist/assets/user-location.gif',
     iconSize: [USER_MARKER_SIZE, USER_MARKER_SIZE],
@@ -256,6 +259,7 @@ const userMarker = L.marker([0,0], {
   }),
   zIndexOffset: USER_MARKER_Z_INDEX_OFFSET
 });
+userMarker.on('click', focusMapOnUser);
 let userMarkerAnimationFrame = null;
 
 function updateGeolocationButtonState(isEnabled, isSupported = true) {
@@ -1301,7 +1305,11 @@ mapElement.addEventListener('wheel', event => {
 // Fetch buildings and add markers
 async function addMarkers() {
   try {
-    const response = await fetch(MAP_CONFIG.restUrl || '/wp-json/wp/v2/budynek?acf_format=standard&_embed');
+    // The map needs markers and short panel text, not full descriptions or galleries.
+    const fallbackUrl = '/wp-json/wp/v2/budynek?acf_format=standard&per_page=70'
+      + `&language=${MAP_CONFIG.language === 'en' ? 'en' : 'pl'}`
+      + '&_fields=id,link,title.rendered,marker_icon_width,acf.latitude,acf.longitude,acf.marker_icon,acf.subtitle,acf.short_description';
+    const response = await fetch(MAP_CONFIG.restUrl || fallbackUrl);
 
     if (!response.ok) {
       throw new Error(`Building data request failed with status ${response.status}.`);
@@ -1311,7 +1319,7 @@ async function addMarkers() {
     notifyMapExtensions('setBuildings', budynki);
 
     budynki.forEach(budynek => {
-      const title = budynek.title.rendered;
+      const title = decodeMapTitle(budynek.title?.rendered);
       const lat = budynek.acf.latitude;
       const lng = budynek.acf.longitude;
       const marker_icon = budynek.acf.marker_icon || DEFAULT_BUILDING_MARKER_URL;
@@ -1798,6 +1806,15 @@ function appendSafeRichText(container, html) {
   container.replaceChildren(documentFragment);
 }
 
+function decodeMapTitle(renderedTitle) {
+  const decoder = document.createElement('textarea');
+  // Decode only individual entities, never interpret a whole title as HTML.
+  return String(renderedTitle ?? '').replace(/&(?:#\d+|#x[\da-f]+|[a-z][\da-z]*);/gi, entity => {
+    decoder.innerHTML = entity;
+    return decoder.value;
+  });
+}
+
 function renderBuildingPanelContent(content, budynek) {
   const buildingData = budynek.acf || {};
   const title = document.createElement('h2');
@@ -1807,7 +1824,7 @@ function renderBuildingPanelContent(content, budynek) {
   const extensionArea = document.createElement('div');
 
   title.className = 'map-building-title';
-  title.textContent = budynek.title?.rendered || '';
+  title.textContent = decodeMapTitle(budynek.title?.rendered);
 
   subtitle.className = 'map-building-subtitle';
   subtitle.textContent = buildingData.subtitle || '';

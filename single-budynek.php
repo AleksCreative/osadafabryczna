@@ -221,7 +221,7 @@ $osada_toc_items = 'en' === $osada_language
                                 </div>
                             </section>
                         <?php endif; ?>
-<!--
+
                         <div class="building-consultation">
                             <a class="building-consultation__logo" href="https://www.muzeumzyrardow.pl/" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($osada_museum_link_label); ?>">
                                 <img
@@ -239,7 +239,7 @@ $osada_toc_items = 'en' === $osada_language
                                 <a href="https://www.muzeumzyrardow.pl/" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($osada_museum_link_label); ?>"><?php echo esc_html($osada_museum_name); ?></a>.
                             </p>
                         </div>
--->
+
                         <?php if (!empty($osada_history)) : ?>
                             <section id="historia" class="building-section" aria-labelledby="building-history-title">
                                 <h2 id="building-history-title"><?php echo esc_html('en' === $osada_language ? 'Discover the history' : 'Poznaj historię'); ?></h2>

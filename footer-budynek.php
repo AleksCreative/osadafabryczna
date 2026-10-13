@@ -1,12 +1,12 @@
 <footer class="site-footer site-footer--budynek">
     <div class="footer-inner footer-inner--budynek">
         <div class="site-footer__partners">
-            <!--<?php osadafabryczna_render_scholarship_footer(); ?>
-            <?php osadafabryczna_render_museum_footer(); ?> -->
+            <?php osadafabryczna_render_scholarship_footer(); ?>
+            <?php osadafabryczna_render_museum_footer(); ?>
         </div>
         <?php if (is_active_sidebar('budynek_footer')) : ?>
             <?php dynamic_sidebar('budynek_footer'); ?>
-        <?php else : ?><?php osadafabryczna_render_scholarship_footer(); ?>
+        <?php else : ?>
             <p>© <?php echo esc_html(wp_date('Y')); ?> <?php echo esc_html(get_bloginfo('name')); ?></p>
         <?php endif; ?>
         <p class="site-footer__credit">

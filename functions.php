@@ -150,6 +150,21 @@ function osadafabryczna_get_language_labels($language = null) {
 }
 
 
+/** Only data used by map markers and the short building panel. */
+function osadafabryczna_get_map_rest_fields() {
+    return implode(',', array(
+        'id',
+        'link',
+        'title.rendered',
+        'marker_icon_width',
+        'acf.latitude',
+        'acf.longitude',
+        'acf.marker_icon',
+        'acf.subtitle',
+        'acf.short_description',
+    ));
+}
+
 function osadafabryczna_enqueue_assets() {
     wp_enqueue_style(
         'osadafabryczna-google-fonts',
@@ -296,7 +311,7 @@ function osadafabryczna_enqueue_assets() {
                 'restUrl'  => esc_url_raw(add_query_arg(
                     array(
                         'acf_format' => 'standard',
-                        '_embed'      => '1',
+                        '_fields'     => osadafabryczna_get_map_rest_fields(),
                         'language'    => $language,
                         'per_page'    => '70',
                         'content_version' => (int) get_option('osadafabryczna_buildings_cache_version', 1),
