@@ -85,6 +85,70 @@ function getMapMarkerClassName(building) {
   return [...new Set(classNames.filter(Boolean))].join(' ');
 }
 
+async function fetchMapBuildings(sourceUrl) {
+  const url = new URL(sourceUrl, window.location.href);
+  const buildings = new Map();
+  let page = 1;
+  let totalPages = 1;
+  const requestOptions = MAP_CONFIG.restNonce
+    ? { credentials: 'same-origin', cache: 'no-store', headers: { 'X-WP-Nonce': MAP_CONFIG.restNonce } }
+    : { credentials: 'same-origin' };
+  do {
+    // Keep the original first-page URL compatible with existing offline entries.
+    if (page > 1) url.searchParams.set('page', String(page));
+    const response = await fetch(url.href, requestOptions);
+    if (!response.ok) throw new Error(`Building data request failed with status ${response.status}.`);
+    const batch = await response.json();
+    if (!Array.isArray(batch)) throw new Error('Invalid building collection.');
+    if (page === 1) {
+      const pageHeader = response.headers.get('X-WP-TotalPages');
+      const parsedPages = Number(pageHeader);
+      if (pageHeader !== null && Number.isSafeInteger(parsedPages) && parsedPages >= 0) {
+        totalPages = Math.max(1, parsedPages);
+      } else if (batch.length >= Number(url.searchParams.get('per_page') || 10)) {
+        throw new Error('Missing building pagination information.');
+      }
+    }
+    batch.forEach(building => {
+      if (building && Number.isInteger(building.id) && building.id > 0) buildings.set(building.id, building);
+    });
+    page++;
+  } while (page <= totalPages);
+  return [...buildings.values()];
+}
+
+function getBuildingCoordinates(building) {
+  const latitude = building?.acf?.latitude;
+  const longitude = building?.acf?.longitude;
+  const isNumber = value => (typeof value === 'number' || typeof value === 'string')
+    && String(value).trim() !== '' && Number.isFinite(Number(value));
+  if (!isNumber(latitude) || !isNumber(longitude)) return null;
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  return Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? [lat, lng] : null;
+}
+
+async function loadMapMarkerImage(sourceUrl) {
+  const sources = [...new Set([sourceUrl, DEFAULT_BUILDING_MARKER_URL].filter(Boolean))];
+  for (const source of sources) {
+    try {
+      return await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => img.naturalWidth && img.naturalHeight
+          ? resolve({ url: source, width: img.naturalWidth, height: img.naturalHeight })
+          : reject(new Error('Empty marker image.'));
+        img.onerror = () => reject(new Error('Marker image unavailable.'));
+        img.src = source;
+      });
+    } catch (error) {
+      console.warn('Using a fallback building marker:', source);
+    }
+  }
+  // A local vector keeps the building usable even if both image downloads fail.
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="64" viewBox="0 0 48 64"><path d="M24 62 6 32a22 22 0 1 1 36 0Z" fill="#523b2c" stroke="#fbefe0" stroke-width="2"/><path d="m12 24 12-10 12 10v16H12Z" fill="#fbefe0"/><path d="M21 29h6v11h-6Z" fill="#523b2c"/></svg>';
+  return { url: 'data:image/svg+xml,' + encodeURIComponent(svg), width: 48, height: 64 };
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
 const mapElement = document.getElementById('map');
@@ -1309,34 +1373,25 @@ async function addMarkers() {
     const fallbackUrl = '/wp-json/wp/v2/budynek?acf_format=standard&per_page=70'
       + `&language=${MAP_CONFIG.language === 'en' ? 'en' : 'pl'}`
       + '&_fields=id,link,title.rendered,marker_icon_width,acf.latitude,acf.longitude,acf.marker_icon,acf.subtitle,acf.short_description';
-    const response = await fetch(MAP_CONFIG.restUrl || fallbackUrl);
-
-    if (!response.ok) {
-      throw new Error(`Building data request failed with status ${response.status}.`);
-    }
-
-    const budynki = await response.json();
+    const budynki = await fetchMapBuildings(MAP_CONFIG.restUrl || fallbackUrl);
     notifyMapExtensions('setBuildings', budynki);
 
-    budynki.forEach(budynek => {
+    await Promise.all(budynki.map(async budynek => {
+      try {
       const title = decodeMapTitle(budynek.title?.rendered);
-      const lat = budynek.acf.latitude;
-      const lng = budynek.acf.longitude;
-      const marker_icon = budynek.acf.marker_icon || DEFAULT_BUILDING_MARKER_URL;
+      const coordinates = getBuildingCoordinates(budynek);
+      if (!coordinates) {
+        console.warn(`Skipping "${title}": invalid coordinates.`);
+        return;
+      }
+      const [lat, lng] = coordinates;
+      const img = await loadMapMarkerImage(getSafeUrl(budynek.acf.marker_icon || DEFAULT_BUILDING_MARKER_URL));
+      const marker_icon = img.url;
       const customMarkerWidth = Number.parseInt(
         budynek.marker_icon_width ?? budynek.meta?.marker_icon_width,
         10
       );
 
-      if (!lat || !lng) {
-        console.warn(`Skipping "${title}": missing coordinates.`);
-        return;
-      }
-
-      const img = new Image();
-      img.src = marker_icon;
-
- img.onload = () => {
   // Scale the icon to fit within the target box while preserving its aspect ratio.
   const aspectRatio = img.width / img.height;
   let scale = Math.min(TARGET_HEIGHT / img.height, TARGET_WIDTH / img.width);
@@ -1349,8 +1404,8 @@ async function addMarkers() {
     scale = Math.min(SQUARE_MAX_SIZE / img.width, SQUARE_MAX_SIZE / img.height);
   }
 
-  const hasCustomMarkerWidth = Number.isFinite(customMarkerWidth) && customMarkerWidth >= 24;
-  const isDefaultBuildingMarker = marker_icon === DEFAULT_BUILDING_MARKER_URL;
+  const hasCustomMarkerWidth = Number.isFinite(customMarkerWidth) && customMarkerWidth >= 24 && customMarkerWidth <= 300;
+  const isDefaultBuildingMarker = marker_icon === DEFAULT_BUILDING_MARKER_URL || marker_icon.startsWith('data:');
   const iconWidth = hasCustomMarkerWidth
     ? customMarkerWidth
     : (isDefaultBuildingMarker ? DEFAULT_BUILDING_MARKER_WIDTH : Math.max(24, img.width * scale));
@@ -1368,7 +1423,7 @@ async function addMarkers() {
     className: getMapMarkerClassName(budynek)
   });
 
-  const marker = L.marker([lat, lng], { icon });
+  const marker = L.marker([lat, lng], { icon, title, alt: title, keyboard: true });
   if (markerClusterGroup) {
     markerClusterGroup.addLayer(marker);
   } else if (!shouldShowSettlementOverviewMarker()) {
@@ -1419,14 +1474,15 @@ async function addMarkers() {
   notifyMapExtensions('registerMarker', marker);
 
   markers.push(marker);
-};
-
-      img.onerror = () => {
-        console.warn(`Failed to load image for "${title}":`, marker_icon);
-      };
-    });
+      } catch (error) {
+        console.error('Unable to create building marker:', budynek.id, error);
+      }
+    }));
   } catch (error) {
     console.error('Error fetching buildings:', error);
+    showMapModeNotice(MAP_LABELS.buildingsLoadError || 'Nie udało się wczytać budynków. Sprawdź połączenie i odśwież stronę.', {
+      allowOnContemporary: true, onAction: null
+    });
   }
 }
 
@@ -1469,11 +1525,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  function openInfoPanel() {
+  function openInfoPanel(moveFocus = false) {
+    closePanel();
+    infoPanel.inert = false;
     infoPanel.classList.add('is-open');
     document.body.classList.add('info-panel-open');
     infoPanelToggle.classList.add('is-hidden');
     infoPanel.setAttribute('aria-hidden', 'false');
+    infoPanelToggle.setAttribute('aria-expanded', 'true');
+    if (moveFocus) infoPanelClose.focus({ preventScroll: true });
+    infoPanelToggle.inert = true;
   }
 
   function closeInfoPanel() {
@@ -1482,10 +1543,13 @@ document.addEventListener('DOMContentLoaded', () => {
     infoPanel.classList.remove('is-open');
     document.body.classList.remove('info-panel-open');
     infoPanelToggle.classList.remove('is-hidden');
+    infoPanelToggle.inert = false;
+    infoPanelToggle.setAttribute('aria-expanded', 'false');
     if (panelHadFocus) {
       infoPanelToggle.focus({ preventScroll: true });
     }
     infoPanel.setAttribute('aria-hidden', 'true');
+    infoPanel.inert = true;
   }
 
   let hasSeenInfoPanel = false;
@@ -1511,13 +1575,21 @@ document.addEventListener('DOMContentLoaded', () => {
   infoPanelToggle.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
-    openInfoPanel();
+    openInfoPanel(true);
   });
 
   infoPanelClose.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
     closeInfoPanel();
+  });
+
+  infoPanel.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      closeInfoPanel();
+    }
   });
 
   window.addEventListener('resize', () => {
@@ -1579,12 +1651,15 @@ function closeInfoPanelIfOpen() {
 
   if (infoPanelToggle) {
     infoPanelToggle.classList.remove('is-hidden');
+    infoPanelToggle.inert = false;
+    infoPanelToggle.setAttribute('aria-expanded', 'false');
     if (panelHadFocus) {
       infoPanelToggle.focus({ preventScroll: true });
     }
   }
 
   infoPanel.setAttribute('aria-hidden', 'true');
+  infoPanel.inert = true;
 }
 
 function getPanelMarkerGap() {
@@ -1824,6 +1899,7 @@ function renderBuildingPanelContent(content, budynek) {
   const extensionArea = document.createElement('div');
 
   title.className = 'map-building-title';
+  title.id = 'map-building-title';
   title.textContent = decodeMapTitle(budynek.title?.rendered);
 
   subtitle.className = 'map-building-subtitle';
@@ -1869,12 +1945,15 @@ function openPanel(budynek, marker = null) {
   renderBuildingPanelContent(content, budynek);
 
   activePanelMarker = marker;
+  panel.inert = false;
+  panel.setAttribute('aria-hidden', 'false');
   panel.style.transition = '';
   panel.style.transform = '';
   resetPanelDesktopPosition(panel);
   panel.classList.add('open');
   document.body.classList.add('map-panel-open');
   updateDesktopPanelPosition();
+  document.getElementById('panel-close')?.focus({ preventScroll: true });
 }
 
 function closePanel() {
@@ -1884,6 +1963,13 @@ function closePanel() {
     return;
   }
 
+  if (panel.contains(document.activeElement)) {
+    const markerElement = activePanelMarker?.getElement();
+    const focusTarget = markerElement?.isConnected ? markerElement : document.getElementById('map');
+    focusTarget?.focus({ preventScroll: true });
+  }
+  panel.inert = true;
+  panel.setAttribute('aria-hidden', 'true');
   clearActiveBuildingMarker();
   activePanelMarker = null;
   panel.classList.remove('open');
@@ -1899,6 +1985,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const handle = document.querySelector('.panel-handle');
 
   if (closeBtn && panel) {
+    panel.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        closePanel();
+      }
+    });
     closeBtn.addEventListener('pointerdown', (e) => {
       e.stopPropagation();
     });

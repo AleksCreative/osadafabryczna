@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (!imageTriggers.length) return;
 
-  const lightbox = document.createElement('div');
+  const lightbox = document.createElement('dialog');
   const previousButton = document.createElement('button');
   const nextButton = document.createElement('button');
   const closeButton = document.createElement('button');
@@ -185,11 +185,15 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function closeLightbox() {
-    lightbox.classList.remove('is-open');
+    lightbox.close();
+  }
+
+  lightbox.addEventListener('close', function () {
+    document.documentElement.classList.remove('has-building-lightbox');
     image.removeAttribute('src');
 
     if (lastTrigger) lastTrigger.focus();
-  }
+  });
 
   imageTriggers.forEach(function (trigger) {
     trigger.addEventListener('click', function (event) {
@@ -209,7 +213,8 @@ document.addEventListener('DOMContentLoaded', function () {
             : [trigger]);
       lastTrigger = trigger;
       showImage(activeTriggers.indexOf(trigger));
-      lightbox.classList.add('is-open');
+      lightbox.showModal();
+      document.documentElement.classList.add('has-building-lightbox');
       closeButton.focus();
     });
 
@@ -237,16 +242,17 @@ document.addEventListener('DOMContentLoaded', function () {
     if (event.target === lightbox) closeLightbox();
   });
 
-  document.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape' && lightbox.classList.contains('is-open')) {
-      closeLightbox();
-    }
+  lightbox.addEventListener('keydown', function (event) {
+    // Keep page-level menu shortcuts out of the modal. Native Escape closes it.
+    event.stopPropagation();
 
-    if (event.key === 'ArrowLeft' && lightbox.classList.contains('is-open')) {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
       showImage(activeIndex - 1);
     }
 
-    if (event.key === 'ArrowRight' && lightbox.classList.contains('is-open')) {
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
       showImage(activeIndex + 1);
     }
   });

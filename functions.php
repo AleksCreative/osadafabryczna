@@ -49,6 +49,34 @@ function osadafabryczna_serve_pwa_service_worker($wp) {
 }
 add_action('parse_request', 'osadafabryczna_serve_pwa_service_worker', 0);
 
+/** Explicit permission for the service worker to keep anonymous public HTML. */
+function osadafabryczna_pwa_page_cache_header() {
+    $public = !is_user_logged_in()
+        && !osadafabryczna_access_is_enabled()
+        && !is_preview() && !is_404()
+        // A password-unlocked page is still private, even with a valid cookie.
+        && (!is_singular() || '' === (string) get_post_field('post_password', get_queried_object_id()));
+    header('X-Osada-PWA-Cache: ' . ($public ? 'public' : 'private'));
+}
+add_action('template_redirect', 'osadafabryczna_pwa_page_cache_header', 1);
+
+/** Only the public building collection is needed for offline REST access. */
+function osadafabryczna_pwa_rest_cache_header($response, $server, $request) {
+    $public = 'GET' === $request->get_method()
+        && '/wp/v2/budynek' === rtrim($request->get_route(), '/')
+        && !is_user_logged_in()
+        && !osadafabryczna_access_is_enabled()
+        && in_array($request->get_param('context'), array(null, 'view', 'embed'), true)
+        && in_array($request->get_param('status'), array(null, 'publish', array('publish')), true)
+        && !$request->get_header('X-WP-Nonce')
+        && !$request->get_header('Authorization')
+        && null === $request->get_param('_wpnonce')
+        && null === $request->get_param('password');
+    $response->header('X-Osada-PWA-Cache', $public ? 'public' : 'private');
+    return $response;
+}
+add_filter('rest_post_dispatch', 'osadafabryczna_pwa_rest_cache_header', 20, 3);
+
 function osadafabryczna_render_scholarship_footer() {
     $is_english = function_exists('osada_core_get_current_language') && 'en' === osada_core_get_current_language();
     $text = $is_english
@@ -122,6 +150,7 @@ function osadafabryczna_get_language_labels($language = null) {
             'illustratedMapEdge'   => 'This is the edge of the illustrated map. Switch to the contemporary map to explore further.',
             'dismissNotice'        => 'Dismiss message',
             'readMore'             => 'Read more',
+            'buildingsLoadError'   => 'Unable to load buildings. Check your connection and reload the page.',
             'opensInNewTab'        => 'opens in a new tab',
         );
     }
@@ -145,6 +174,7 @@ function osadafabryczna_get_language_labels($language = null) {
         'illustratedMapEdge'   => 'To koniec mapy ilustrowanej. Przełącz na mapę współczesną, aby przejść dalej.',
         'dismissNotice'        => 'Zamknij komunikat',
         'readMore'             => 'Czytaj więcej',
+        'buildingsLoadError'   => 'Nie udało się wczytać budynków. Sprawdź połączenie i odśwież stronę.',
         'opensInNewTab'        => 'otwiera się w nowej karcie',
     );
 }
@@ -307,6 +337,8 @@ function osadafabryczna_enqueue_assets() {
             'OsadaFabrycznaMap',
             array(
                 'language' => $language,
+                // Cookie authentication in REST also requires a nonce for logged-in visitors.
+                'restNonce' => is_user_logged_in() ? wp_create_nonce('wp_rest') : '',
                 'cartoBasemapKey' => trim((string) get_option('osadafabryczna_carto_basemap_key', '')),
                 'restUrl'  => esc_url_raw(add_query_arg(
                     array(
@@ -572,19 +604,10 @@ function osadafabryczna_use_holding_template($template) {
 }
 add_filter('template_include', 'osadafabryczna_use_holding_template', 99);
 
-function osadafabryczna_protect_buildings_rest_api($result) {
-    if (!osadafabryczna_access_is_enabled() || osadafabryczna_visitor_has_access()) {
-        return $result;
-    }
-
-    $rest_route = isset($GLOBALS['wp']->query_vars['rest_route'])
-        ? (string) $GLOBALS['wp']->query_vars['rest_route']
-        : '';
-    $request_uri = isset($_SERVER['REQUEST_URI'])
-        ? (string) wp_unslash($_SERVER['REQUEST_URI'])
-        : '';
-
-    if (false === strpos($rest_route . $request_uri, '/wp/v2/budynek')) {
+function osadafabryczna_protect_public_rest_api($result) {
+    // Run after WordPress verifies cookie/nonce and application-password authentication.
+    // Preserve authentication errors instead of replacing them with the holding gate.
+    if (is_wp_error($result) || !osadafabryczna_access_is_enabled() || osadafabryczna_visitor_has_access()) {
         return $result;
     }
 
@@ -594,7 +617,7 @@ function osadafabryczna_protect_buildings_rest_api($result) {
         array('status' => 401)
     );
 }
-add_filter('rest_authentication_errors', 'osadafabryczna_protect_buildings_rest_api');
+add_filter('rest_authentication_errors', 'osadafabryczna_protect_public_rest_api', 110);
 
 function osadafabryczna_register_access_settings_page() {
     add_options_page(

@@ -1,7 +1,7 @@
-const SERVICE_WORKER_VERSION = 'osada-fabryczna-v4';
+// Do not reuse v4 responses: their public/private origin cannot be established.
+const SERVICE_WORKER_VERSION = 'osada-fabryczna-v5';
 const STATIC_CACHE = `${SERVICE_WORKER_VERSION}-static`;
 const RUNTIME_CACHE = `${SERVICE_WORKER_VERSION}-runtime`;
-// Keep the existing asset caches when deploying this data-only strategy change.
 const BUILDINGS_CACHE = `${SERVICE_WORKER_VERSION}-buildings`;
 const OFFLINE_URL = OSADA_PWA_CONFIG.offlineUrl;
 const THEME_URL = new URL(OSADA_PWA_CONFIG.themeUrl);
@@ -10,6 +10,8 @@ self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(STATIC_CACHE).then(function (cache) {
       return cache.add(OFFLINE_URL);
+    }).catch(function (error) {
+      console.warn('Offline page unavailable:', error);
     }).then(function () {
       return self.skipWaiting();
     })
@@ -28,6 +30,8 @@ self.addEventListener('activate', function (event) {
             return caches.delete(cacheName);
           })
       );
+    }).catch(function (error) {
+      console.warn('Old cache cleanup unavailable:', error);
     }).then(migrateBuildingsCache).then(function () {
       return self.clients.claim();
     })
@@ -38,7 +42,8 @@ self.addEventListener('fetch', function (event) {
   const request = event.request;
   const url = new URL(request.url);
 
-  if ('GET' !== request.method || url.origin !== self.location.origin || isExcludedPath(url)) {
+  if ('GET' !== request.method || url.origin !== self.location.origin
+    || isExcludedPath(url) || isPrivateRequest(request)) {
     return;
   }
 
@@ -60,51 +65,71 @@ self.addEventListener('fetch', function (event) {
 });
 
 function isExcludedPath(url) {
-  return url.pathname.includes('/wp-admin/')
+  return /\/wp-admin(?:\/|$)/.test(url.pathname)
     || url.pathname.includes('/wp-login.php')
     || url.pathname.includes('/wp-cron.php')
     || url.searchParams.has('preview');
 }
 
-async function networkFirstPage(request) {
-  const runtimeCache = await caches.open(RUNTIME_CACHE);
+function isPrivateRequest(request) {
+  const url = new URL(request.url);
+  return request.headers.has('X-WP-Nonce') || request.headers.has('Authorization')
+    || [...url.searchParams.keys()].some(key =>
+      /^(?:_wpnonce|_ajax_nonce|nonce|preview|preview_id|preview_nonce|password)(?:\[|$)/i.test(key))
+    || url.searchParams.getAll('context').some(value => !['view', 'embed'].includes(value))
+    || url.searchParams.getAll('status').some(value => value !== 'publish')
+    || [...url.searchParams.keys()].some(key => /^(?:context|status)\[/.test(key));
+}
 
+function isCacheableResponse(response, requirePublic = true) {
+  return response && response.ok && !response.redirected
+    && response.headers.get('X-Osada-Holding') !== '1'
+    && response.headers.get('X-Osada-PWA-Cache') !== 'private'
+    && !/(?:^|,)\s*(?:private|no-store)\b/i.test(response.headers.get('Cache-Control') || '')
+    && (!requirePublic || response.headers.get('X-Osada-PWA-Cache') === 'public');
+}
+
+async function readCache(name, request) {
   try {
-    const response = await fetch(request);
-
-    if (
-      response.ok
-      && !request.headers.get('Cookie')?.includes('wordpress_logged_in')
-      && response.headers.get('X-Osada-Holding') !== '1'
-    ) {
-      runtimeCache.put(request, response.clone());
-    }
-
-    return response;
+    return await (await caches.open(name)).match(request);
   } catch (error) {
-    return (await runtimeCache.match(request))
-      || (await caches.match(OFFLINE_URL))
-      || Response.error();
+    return undefined;
   }
 }
 
-async function networkFirstData(request) {
-  const runtimeCache = await caches.open(RUNTIME_CACHE);
+async function writeCache(name, request, response) {
+  try {
+    await (await caches.open(name)).put(request, response.clone());
+  } catch (error) {
+    console.warn('Cache write unavailable:', error);
+  }
+}
 
+async function networkFirstPage(request) {
+  let response;
+  try {
+    response = await fetch(request);
+  } catch (error) {
+    return (await readCache(RUNTIME_CACHE, request))
+      || (await readCache(STATIC_CACHE, OFFLINE_URL))
+      || Response.error();
+  }
+  if (isCacheableResponse(response)) await writeCache(RUNTIME_CACHE, request, response);
+  return response;
+}
+
+async function networkFirstData(request) {
+  let response;
   try {
     // Always revalidate WordPress REST data. The cached response is used only
     // when the visitor is offline, so published and edited buildings appear
     // on the next map load without manually clearing the PWA cache.
-    const response = await fetch(request, { cache: 'no-store' });
-
-    if (response.ok) {
-      await runtimeCache.put(request, response.clone());
-    }
-
-    return response;
+    response = await fetch(request, { cache: 'no-store' });
   } catch (error) {
-    return (await runtimeCache.match(request)) || Response.error();
+    return (await readCache(RUNTIME_CACHE, request)) || Response.error();
   }
+  if (isCacheableResponse(response)) await writeCache(RUNTIME_CACHE, request, response);
+  return response;
 }
 
 function getBuildingsCacheKey(request) {
@@ -114,8 +139,7 @@ function getBuildingsCacheKey(request) {
     || !/\/wp-json\/wp\/v2\/budynek\/?$/.test(url.pathname)
     || !/^[1-9]\d*$/.test(version || '') || !Number.isSafeInteger(Number(version))
     || !['pl', 'en'].includes(url.searchParams.get('language'))
-    || url.searchParams.has('_wpnonce') || url.searchParams.has('preview')
-    || request.headers.has('X-WP-Nonce') || request.headers.has('Authorization')
+    || isPrivateRequest(request)
     || !['view', null].includes(url.searchParams.get('context'))
     || !['publish', null].includes(url.searchParams.get('status'))) {
     return null;
@@ -128,7 +152,7 @@ function getBuildingsCacheKey(request) {
 }
 
 async function isBuildingsResponse(response) {
-  if (!response || !response.ok) return false;
+  if (!isCacheableResponse(response)) return false;
   try {
     return Array.isArray(await response.clone().json());
   } catch (error) {
@@ -232,6 +256,9 @@ async function versionedBuildingsData(request) {
   let networkResponse;
   try {
     networkResponse = await fetch(request, { cache: 'no-store' });
+    // An access denial or private response must never turn into public offline data.
+    if ([401, 403].includes(networkResponse.status)
+      || (networkResponse.ok && !isCacheableResponse(networkResponse))) return networkResponse;
     if (await isBuildingsResponse(networkResponse)) {
       if (buildingsCache) {
         try {
@@ -265,7 +292,8 @@ async function versionedBuildingsData(request) {
 }
 
 async function cacheFirstAsset(request) {
-  const cachedResponse = await caches.match(request);
+  // Only inspect this version's cache, even if cleanup of an old cache failed.
+  const cachedResponse = await readCache(RUNTIME_CACHE, request);
 
   if (cachedResponse) {
     return cachedResponse;
@@ -273,10 +301,7 @@ async function cacheFirstAsset(request) {
 
   const response = await fetch(request);
 
-  if (response.ok) {
-    const runtimeCache = await caches.open(RUNTIME_CACHE);
-    runtimeCache.put(request, response.clone());
-  }
+  if (isCacheableResponse(response, false)) await writeCache(RUNTIME_CACHE, request, response);
 
   return response;
 }

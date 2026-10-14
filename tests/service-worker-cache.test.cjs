@@ -8,10 +8,11 @@ const vm = require('node:vm');
 const workerPath = process.env.OSADA_SW_TEST_PATH || path.join(__dirname, '../dist/assets/service-worker.js');
 const source = fs.readFileSync(workerPath, 'utf8');
 const origin = 'https://osada.example';
-const runtimeName = 'osada-fabryczna-v4-runtime';
-const buildingsName = 'osada-fabryczna-v4-buildings';
+const runtimeName = 'osada-fabryczna-v5-runtime';
+const buildingsName = 'osada-fabryczna-v5-buildings';
+const publicHeaders = { 'X-Osada-PWA-Cache': 'public' };
 const data = value => new Response(JSON.stringify([{ id: value }]), {
-  headers: { 'Content-Type': 'application/json' },
+  headers: { ...publicHeaders, 'Content-Type': 'application/json' },
 });
 const request = (version = 1, language = 'pl', extra = '') => new Request(
   `${origin}/wp-json/wp/v2/budynek?language=${language}&per_page=70&content_version=${version}${extra}`
@@ -23,6 +24,9 @@ function setup() {
   let calls = 0;
   let fetcher = async () => data(1);
   let failOpen = false;
+  let claimed = false;
+  let skipped = false;
+  let failCleanup = false;
   const caches = {
     async open(name) {
       if (failOpen) throw new Error('Storage unavailable');
@@ -31,7 +35,11 @@ function setup() {
         const key = input => typeof input === 'string' ? input : input.url;
         stores.set(name, {
           failPut: false,
-          async match(input) { return entries.get(key(input))?.clone(); },
+          failMatch: false,
+          async match(input) {
+            if (this.failMatch) throw new Error('Read unavailable');
+            return entries.get(key(input))?.clone();
+          },
           async put(input, response) {
             if (this.failPut) throw new Error('Quota exceeded');
             entries.set(key(input), response.clone());
@@ -43,7 +51,10 @@ function setup() {
       }
       return stores.get(name);
     },
-    async keys() { return [...stores.keys()]; },
+    async keys() {
+      if (failCleanup) throw new Error('Cache enumeration unavailable');
+      return [...stores.keys()];
+    },
     async delete(name) { return stores.delete(name); },
     async match(input) {
       for (const cache of stores.values()) {
@@ -59,8 +70,8 @@ function setup() {
     self: {
       location: { origin },
       addEventListener: (name, callback) => { handlers[name] = callback; },
-      skipWaiting: async () => {},
-      clients: { claim: async () => {} },
+      skipWaiting: async () => { skipped = true; },
+      clients: { claim: async () => { claimed = true; } },
     },
     fetch: async (...args) => { calls++; return fetcher(...args); },
   });
@@ -70,6 +81,9 @@ function setup() {
     calls: () => calls,
     fetchWith: fn => { fetcher = fn; },
     failStorage: () => { failOpen = true; },
+    failCleanup: () => { failCleanup = true; },
+    claimed: () => claimed,
+    skipped: () => skipped,
     async get(req) {
       let response;
       handlers.fetch({ request: req, respondWith: promise => { response = promise; } });
@@ -78,6 +92,11 @@ function setup() {
     async activate() {
       let work;
       handlers.activate({ waitUntil: promise => { work = promise; } });
+      await work;
+    },
+    async install() {
+      let work;
+      handlers.install({ waitUntil: promise => { work = promise; } });
       await work;
     },
   };
@@ -128,7 +147,7 @@ test('offline data never crosses language or filter boundaries', async () => {
 test('server errors and malformed JSON cannot replace valid offline data', async () => {
   const s = setup();
   await s.get(request());
-  for (const bad of [new Response('Error', { status: 503 }), new Response('<html>Login</html>'), new Response('{}')]) {
+  for (const bad of [new Response('Error', { status: 503 }), new Response('<html>Bad response</html>', { headers: publicHeaders }), new Response('{}', { headers: publicHeaders })]) {
     s.fetchWith(async () => bad.clone());
     assert.deepEqual(await (await s.get(request(2))).json(), [{ id: 1 }]);
   }
@@ -233,7 +252,7 @@ const richBuilding = {
 test('offline update can extract map-only fields from the old full response', async () => {
   const s = setup();
   s.fetchWith(async () => new Response(JSON.stringify([richBuilding]), {
-    headers: { 'Content-Type': 'application/json', 'X-WP-Total': '1', 'Content-Length': '9999' },
+    headers: { ...publicHeaders, 'Content-Type': 'application/json', 'X-WP-Total': '1', 'Content-Length': '9999' },
   }));
   await s.get(oldMapRequest());
   s.fetchWith(async () => { throw new Error('Offline'); });
@@ -267,7 +286,7 @@ test('map-only offline compatibility preserves language and pagination boundarie
 test('old full response in the runtime cache also supports offline map-only requests', async () => {
   const s = setup();
   const runtime = await s.caches.open(runtimeName);
-  await runtime.put(oldMapRequest(), new Response(JSON.stringify([richBuilding])));
+  await runtime.put(oldMapRequest(), new Response(JSON.stringify([richBuilding]), { headers: publicHeaders }));
   s.fetchWith(async () => { throw new Error('Offline'); });
   const [building] = await (await s.get(mapRequest())).json();
   assert.equal(building.acf.latitude, richBuilding.acf.latitude);
@@ -279,4 +298,168 @@ test('map-only cache cannot satisfy a full building data request', async () => {
   await s.get(mapRequest());
   s.fetchWith(async () => { throw new Error('Offline'); });
   assert.equal((await s.get(oldMapRequest())).type, 'error');
+});
+
+const pageRequest = () => {
+  const req = new Request(`${origin}/`);
+  Object.defineProperty(req, 'mode', { value: 'navigate' });
+  return req;
+};
+
+for (const [kind, makeRequest] of [
+  ['page', pageRequest],
+  ['REST', () => new Request(`${origin}/wp-json/wp/v2/budynek`)],
+  ['asset', () => new Request(`${origin}/theme/main.js`)],
+]) {
+  test(`${kind}: storage unavailable does not block successful network response`, async () => {
+    const s = setup();
+    s.failStorage();
+    assert.deepEqual(await (await s.get(makeRequest())).json(), [{ id: 1 }]);
+    assert.equal(s.calls(), 1);
+  });
+
+  test(`${kind}: quota error does not hide fresh network response`, async () => {
+    const s = setup();
+    const cache = await s.caches.open(runtimeName);
+    cache.failPut = true;
+    assert.deepEqual(await (await s.get(makeRequest())).json(), [{ id: 1 }]);
+    assert.equal((await cache.keys()).length, 0);
+  });
+
+  test(`${kind}: cache read failure still permits network access`, async () => {
+    const s = setup();
+    (await s.caches.open(runtimeName)).failMatch = true;
+    assert.deepEqual(await (await s.get(makeRequest())).json(), [{ id: 1 }]);
+  });
+}
+
+test('REST quota failure returns fresh data while preserving the last offline copy', async () => {
+  const s = setup();
+  const req = new Request(`${origin}/wp-json/wp/v2/budynek`);
+  await s.get(req);
+  (await s.caches.open(runtimeName)).failPut = true;
+  s.fetchWith(async () => data(2));
+  assert.deepEqual(await (await s.get(req)).json(), [{ id: 2 }]);
+  s.fetchWith(async () => { throw new Error('Offline'); });
+  assert.deepEqual(await (await s.get(req)).json(), [{ id: 1 }]);
+});
+
+test('offline page uses saved page, then offline document, then a controlled error', async () => {
+  const s = setup();
+  await s.install();
+  await s.get(pageRequest());
+  s.fetchWith(async () => { throw new Error('Offline'); });
+  assert.deepEqual(await (await s.get(pageRequest())).json(), [{ id: 1 }]);
+  await (await s.caches.open(runtimeName)).delete(pageRequest());
+  assert.equal(await (await s.get(pageRequest())).text(), 'offline');
+  s.failStorage();
+  assert.equal((await s.get(pageRequest())).type, 'error');
+});
+
+test('private requests bypass every cache strategy, including previously saved responses', async () => {
+  const s = setup();
+  const variants = [
+    '?context=edit', '?context=view&context=edit', '?status=draft', '?status[]=private',
+    '?_wpnonce=abc', '?preview=true', '?preview_nonce=abc', '?password=secret',
+  ];
+  const requests = variants.flatMap(query => [
+    new Request(`${origin}/wp-json/wp/v2/pages${query}`),
+    new Request(request().url + query.replace('?', '&')),
+  ]);
+  for (const header of ['X-WP-Nonce', 'Authorization']) {
+    for (const url of [`${origin}/`, request().url, `${origin}/theme/main.js`]) {
+      requests.push(new Request(url, { headers: { [header]: 'test' } }));
+    }
+  }
+  requests.push(new Request(`${origin}/wp-admin`), new Request(`${origin}/wp-admin/`));
+  const runtime = await s.caches.open(runtimeName);
+  for (const req of requests) {
+    await runtime.put(req, data('must not be served'));
+    assert.equal(await s.get(req), undefined, req.url);
+  }
+  assert.equal(s.calls(), 0); // No respondWith: the browser handles the original request.
+});
+
+test('private, holding, no-store and unmarked responses are never saved', async () => {
+  for (const headers of [
+    {}, { 'X-Osada-PWA-Cache': 'private' },
+    { ...publicHeaders, 'Cache-Control': 'no-cache, private' },
+    { ...publicHeaders, 'Cache-Control': 'no-store' },
+    { ...publicHeaders, 'X-Osada-Holding': '1' },
+  ]) {
+    const s = setup();
+    s.fetchWith(async () => new Response('[{"id":2}]', { headers }));
+    for (const req of [pageRequest(), new Request(`${origin}/wp-json/wp/v2/pages`), request()]) {
+      assert.deepEqual(await (await s.get(req)).json(), [{ id: 2 }]);
+    }
+    assert.equal((await (await s.caches.open(runtimeName)).keys()).length, 0);
+    assert.equal((await (await s.caches.open(buildingsName)).keys()).length, 0);
+  }
+});
+
+test('access denial and private building responses do not fall back to public cached data', async () => {
+  for (const response of [new Response('Denied', { status: 401 }), new Response('Forbidden', { status: 403 }),
+    new Response('Private', { headers: { 'X-Osada-PWA-Cache': 'private' } })]) {
+    const s = setup();
+    await s.get(request(1));
+    s.fetchWith(async () => response.clone());
+    const result = await s.get(request(2));
+    assert.equal(result.status, response.status);
+    assert.equal(await result.text(), await response.text());
+  }
+});
+
+test('activation removes all old application caches and leaves other applications alone', async () => {
+  const s = setup();
+  for (const suffix of ['runtime', 'buildings', 'static']) {
+    await (await s.caches.open(`osada-fabryczna-v4-${suffix}`)).put(`${origin}/`, new Response('old private page'));
+  }
+  await s.caches.open('other-app');
+  await s.activate();
+  assert.ok(s.claimed());
+  assert.ok((await s.caches.keys()).includes('other-app'));
+  assert.ok(!(await s.caches.keys()).some(name => name.startsWith('osada-fabryczna-v4-')));
+});
+
+test('cleanup failure cannot expose old cached pages or assets', async () => {
+  const s = setup();
+  const old = await s.caches.open('osada-fabryczna-v4-runtime');
+  await old.put(`${origin}/theme/main.js`, new Response('old private asset'));
+  await old.put(`${origin}/`, new Response('old private page'));
+  s.failCleanup();
+  await s.activate();
+  assert.ok(s.claimed());
+  assert.deepEqual(await (await s.get(new Request(`${origin}/theme/main.js`))).json(), [{ id: 1 }]);
+  s.fetchWith(async () => { throw new Error('Offline'); });
+  assert.equal((await s.get(pageRequest())).type, 'error');
+});
+
+test('installation and activation survive unavailable storage', async () => {
+  const s = setup();
+  s.failStorage();
+  await s.install();
+  await s.activate();
+  assert.ok(s.skipped());
+  assert.ok(s.claimed());
+});
+
+test('private assets and redirects are not retained', async () => {
+  for (const privateResponse of [
+    new Response('private', { headers: { 'X-Osada-PWA-Cache': 'private' } }),
+    new Response('private', { headers: { 'Cache-Control': 'private' } }),
+    new Response('private', { headers: { 'Cache-Control': 'no-store' } }),
+  ]) {
+    const s = setup();
+    s.fetchWith(async () => privateResponse.clone());
+    await s.get(new Request(`${origin}/theme/main.js`));
+    assert.equal((await (await s.caches.open(runtimeName)).keys()).length, 0);
+  }
+  const s = setup();
+  s.fetchWith(async () => {
+    const response = new Response('login', { headers: publicHeaders });
+    Object.defineProperty(response, 'redirected', { value: true });
+    return response;
+  });
+  await s.get(pageRequest());
+  assert.equal((await (await s.caches.open(runtimeName)).keys()).length, 0);
 });

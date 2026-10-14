@@ -21,8 +21,8 @@ $osada_building_close = 'en' === $osada_language ? 'Close panel' : 'Zamknij pane
         <span class="geolocation-toggle__label"><?php echo esc_html($osada_labels['enableLocation'] ?? 'Włącz lokalizację'); ?></span>
     </button>
 
-    <!-- Existing map popup panel remains unchanged -->
-    <div id="slide-panel" class="slide-panel">
+    <!-- Building details panel -->
+    <div id="slide-panel" class="slide-panel" role="region" aria-labelledby="map-building-title" aria-hidden="true" inert>
         <div class="panel-handle"></div>
         <span class="slide-panel-edge slide-panel-edge--left" aria-hidden="true"></span>
         <span class="slide-panel-edge slide-panel-edge--right" aria-hidden="true"></span>
@@ -32,7 +32,7 @@ $osada_building_close = 'en' === $osada_language ? 'Close panel' : 'Zamknij pane
         <div id="panel-content"></div>
     </div>
 
-    <aside id="info-panel" class="info-panel" aria-label="<?php echo esc_attr($osada_info_label); ?>">
+    <aside id="info-panel" class="info-panel" aria-label="<?php echo esc_attr($osada_info_label); ?>" aria-hidden="true" inert>
         <span class="info-panel-edge info-panel-edge--left" aria-hidden="true"></span>
         <span class="info-panel-edge info-panel-edge--right" aria-hidden="true"></span>
         <span class="info-panel-edge info-panel-edge--top" aria-hidden="true"></span>
@@ -56,7 +56,7 @@ $osada_building_close = 'en' === $osada_language ? 'Close panel' : 'Zamknij pane
         </footer>
     </aside>
 
-    <button id="info-panel-toggle" class="info-panel-toggle" type="button" aria-label="<?php echo esc_attr($osada_info_open); ?>">
+    <button id="info-panel-toggle" class="info-panel-toggle" type="button" aria-controls="info-panel" aria-expanded="false" aria-label="<?php echo esc_attr($osada_info_open); ?>">
         <span>INFO</span>
     </button>
 
